@@ -1,0 +1,74 @@
+services:
+
+  merhum-sqlserver:
+    image: "mcr.microsoft.com/mssql/server"
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Password1!
+    volumes:
+      - ./containers/mssql/data:/var/opt/mssql/data
+      - ./containers/mssql/log:/var/opt/mssql/log
+      - ./containers/mssql/secrets:/var/opt/mssql/secrets
+
+  merhum-rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - ./containers/rabbitmq:/var/lib/rabbitmq
+
+  merhum-api:
+    image: ${DOCKER_REGISTRY-}merhumapi
+    build:
+      context: ./MerhumAPI
+      dockerfile: Dockerfile
+    ports:
+      - "5000:8080"
+    depends_on:
+      - merhum-sqlserver
+      - merhum-rabbitmq
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=merhum-sqlserver,1433;Database=IB2500253;User Id=sa;Password=Password1!;TrustServerCertificate=True
+      - RabbitMQ__Host=merhum-rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+      - JWT__Key=your-super-secret-jwt-key-minimum-32-characters-long
+      - JWT__Issuer=MerhumAPI
+      - JWT__Audience=MerhumClients
+      - JWT__ExpiresInMinutes=60
+      - SMTP__Host=smtp.gmail.com
+      - SMTP__Port=587
+      - SMTP__Username=yourapp@gmail.com
+      - SMTP__Password=yourapppassword
+      - SMTP__UseSSL=true
+      - SMTP__SenderName=Merhum Sistem
+      - AppSettings__BaseUrl=http://localhost:5000
+      - AppSettings__SmrtovnicaBaseUrl=http://localhost:5000/smrtovnica
+
+  merhum-worker:
+    image: ${DOCKER_REGISTRY-}merhumworker
+    build:
+      context: ./MerhumWorker
+      dockerfile: Dockerfile
+    depends_on:
+      - merhum-rabbitmq
+    environment:
+      - DOTNET_ENVIRONMENT=Production
+      - RabbitMQ__Host=merhum-rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+      - SMTP__Host=smtp.gmail.com
+      - SMTP__Port=587
+      - SMTP__Username=yourapp@gmail.com
+      - SMTP__Password=yourapppassword
+      - SMTP__UseSSL=true
+      - SMTP__SenderName=Merhum Sistem
+      - AppSettings__SmrtovnicaBaseUrl=http://localhost:5000/smrtovnica

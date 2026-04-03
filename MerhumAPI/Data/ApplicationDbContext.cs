@@ -32,6 +32,15 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(builder);
 
+        // SQL Server does not support multiple cascade paths.
+        // Set all convention-based cascades to Restrict, then selectively override below.
+        foreach (var fk in builder.Model.GetEntityTypes()
+            .SelectMany(e => e.GetForeignKeys())
+            .Where(fk => fk.DeleteBehavior == DeleteBehavior.Cascade && !fk.IsOwnership))
+        {
+            fk.DeleteBehavior = DeleteBehavior.Restrict;
+        }
+
         // Deceased
         builder.Entity<Deceased>(e =>
         {
@@ -110,6 +119,21 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         {
             e.Property(x => x.Status).HasDefaultValue("Ordered");
             e.Property(x => x.OrderedAt).HasDefaultValueSql("GETDATE()");
+
+            e.HasOne(x => x.Deceased)
+             .WithMany(x => x.ServiceOrders)
+             .HasForeignKey(x => x.DeceasedId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(x => x.FuneralHome)
+             .WithMany(x => x.ServiceOrders)
+             .HasForeignKey(x => x.FuneralHomeId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(x => x.ServiceType)
+             .WithMany(x => x.ServiceOrders)
+             .HasForeignKey(x => x.ServiceTypeId)
+             .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Deceased — avoid cascade conflicts

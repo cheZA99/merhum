@@ -3,10 +3,11 @@
     "MerhumAPI": {
       "commandName": "Project",
       "launchBrowser": true,
+      "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "https://localhost:50603;http://localhost:50604"
+      "applicationUrl": "https://localhost:7100;http://localhost:5100"
     }
   }
 }
