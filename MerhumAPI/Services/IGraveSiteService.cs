@@ -10,5 +10,7 @@ public interface IGraveSiteService
     Task<GraveSiteResponse> CreateAsync(GraveSiteRequest request);
     Task<bool> UpdateAsync(int id, GraveSiteRequest request);
     Task<bool> AssignDeceasedAsync(int id, int deceasedId, string baseUrl);
+    Task<bool> UnassignDeceasedAsync(int id);
+    Task<bool> UpdateStatusAsync(int id, string status);
     Task<bool> DeleteAsync(int id);
 }

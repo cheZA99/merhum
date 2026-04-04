@@ -87,12 +87,36 @@ public class GraveSiteService : IGraveSiteService
         var site = await _db.GraveSites.FindAsync(id);
         if (site == null) return false;
 
+        var alreadyAssigned = await _db.GraveSites
+            .AnyAsync(g => g.DeceasedId == deceasedId && g.Id != id);
+        if (alreadyAssigned)
+            throw new InvalidOperationException("Ovaj preminuli je već dodijeljen drugom mezarskom mjestu.");
+
         site.DeceasedId = deceasedId;
         site.Status = "Occupied";
 
         var qrUrl = $"{baseUrl}/api/gravesite/{id}";
         site.QrCodeUrl = QRGenerator.GenerateAndSave(qrUrl, $"gravesite-{id}");
 
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> UnassignDeceasedAsync(int id)
+    {
+        var site = await _db.GraveSites.FindAsync(id);
+        if (site == null) return false;
+        site.DeceasedId = null;
+        site.Status = "Available";
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> UpdateStatusAsync(int id, string status)
+    {
+        var site = await _db.GraveSites.FindAsync(id);
+        if (site == null) return false;
+        site.Status = status;
         await _db.SaveChangesAsync();
         return true;
     }
