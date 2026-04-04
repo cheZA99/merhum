@@ -30,7 +30,8 @@ public class DeceasedController : ControllerBase
     public async Task<ActionResult<IEnumerable<DeceasedResponse>>> GetAll(
         [FromQuery] string? search,
         [FromQuery] int? statusId,
-        [FromQuery] int? cityId)
+        [FromQuery] int? cityId,
+        [FromQuery] bool withoutGraveSite = false)
     {
         var query = _db.Deceased
             .Include(d => d.City).ThenInclude(c => c.Country)
@@ -46,6 +47,9 @@ public class DeceasedController : ControllerBase
 
         if (cityId.HasValue)
             query = query.Where(d => d.CityId == cityId.Value);
+
+        if (withoutGraveSite)
+            query = query.Where(d => !_db.GraveSites.Any(g => g.DeceasedId == d.Id));
 
         var result = await query.OrderByDescending(d => d.CreatedAt).Select(d => new DeceasedResponse
         {

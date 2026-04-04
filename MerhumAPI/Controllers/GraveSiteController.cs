@@ -61,8 +61,33 @@ public class GraveSiteController : ControllerBase
     [Authorize(Policy = "DesktopAccess")]
     public async Task<IActionResult> AssignDeceased(int id, [FromBody] AssignDeceasedRequest request)
     {
-        var baseUrl = _configuration["AppSettings:BaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
-        var updated = await _graveSiteService.AssignDeceasedAsync(id, request.DeceasedId, baseUrl);
+        try
+        {
+            var baseUrl = _configuration["AppSettings:BaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
+            var updated = await _graveSiteService.AssignDeceasedAsync(id, request.DeceasedId, baseUrl);
+            if (!updated) return NotFound(ApiResponse<object>.Fail("Grave site not found."));
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ApiResponse<object>.Fail(ex.Message));
+        }
+    }
+
+    [HttpPatch("{id:int}/unassign")]
+    [Authorize(Policy = "DesktopAccess")]
+    public async Task<IActionResult> UnassignDeceased(int id)
+    {
+        var updated = await _graveSiteService.UnassignDeceasedAsync(id);
+        if (!updated) return NotFound(ApiResponse<object>.Fail("Grave site not found."));
+        return NoContent();
+    }
+
+    [HttpPatch("{id:int}/status")]
+    [Authorize(Policy = "DesktopAccess")]
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateGraveSiteStatusRequest request)
+    {
+        var updated = await _graveSiteService.UpdateStatusAsync(id, request.Status);
         if (!updated) return NotFound(ApiResponse<object>.Fail("Grave site not found."));
         return NoContent();
     }
@@ -75,4 +100,9 @@ public class GraveSiteController : ControllerBase
         if (!deleted) return NotFound(ApiResponse<object>.Fail("Grave site not found."));
         return NoContent();
     }
+}
+
+public class UpdateGraveSiteStatusRequest
+{
+    public string Status { get; set; } = string.Empty;
 }
