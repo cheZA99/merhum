@@ -1,5 +1,6 @@
 using MassTransit;
 using MerhumAPI.Data;
+using MerhumAPI.Middleware;
 using MerhumAPI.Models;
 using MerhumAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -94,7 +95,15 @@ builder.Services.AddMassTransit(x =>
 // Application Services
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IObituaryService, ObituaryService>();
+builder.Services.AddScoped<ICondolenceService, CondolenceService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IMosqueService, MosqueService>();
+builder.Services.AddScoped<IImamService, ImamService>();
+builder.Services.AddScoped<ICemeteryService, CemeteryService>();
+builder.Services.AddScoped<IGraveSiteService, GraveSiteService>();
+builder.Services.AddScoped<IFuneralHomeService, FuneralHomeService>();
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+builder.Services.AddScoped<IServiceOrderService, ServiceOrderService>();
 
 // CORS
 builder.Services.AddCors(options =>
@@ -148,6 +157,7 @@ builder.Services.AddDirectoryBrowser();
 var app = builder.Build();
 
 // Middleware
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
