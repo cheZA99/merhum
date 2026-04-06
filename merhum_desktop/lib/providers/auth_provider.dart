@@ -60,6 +60,13 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void forceLogout() {
+    isLoggedIn = false;
+    firstName = null;
+    role = null;
+    notifyListeners();
+  }
+
   Future<void> checkAuthStatus() async {
     isLoggedIn = await _authService.isLoggedIn();
     if (isLoggedIn) {

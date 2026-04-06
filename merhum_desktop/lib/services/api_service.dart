@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../config/api_config.dart';
 import 'auth_service.dart';
 
 class ApiService {
   late final Dio _dio;
   final AuthService _authService;
+  VoidCallback? onUnauthorized;
 
   ApiService(this._authService) {
     _dio = Dio(
@@ -29,6 +31,7 @@ class ApiService {
       onError: (error, handler) async {
         if (error.response?.statusCode == 401) {
           await _authService.logout();
+          onUnauthorized?.call();
         }
         handler.next(error);
       },

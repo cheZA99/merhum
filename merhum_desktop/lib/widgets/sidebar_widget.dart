@@ -21,7 +21,7 @@ const _items = [
   SidebarItem('Pogrebna preduzeća', Icons.business),
   SidebarItem('Nalozi za usluge', Icons.shopping_cart),
   SidebarItem('Izvještaji', Icons.bar_chart),
-  SidebarItem('Referentni podaci', Icons.settings),
+  SidebarItem('Šifarnici', Icons.settings),
   SidebarItem('Korisnici', Icons.manage_accounts),
 ];
 
