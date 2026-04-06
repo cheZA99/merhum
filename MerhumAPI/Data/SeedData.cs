@@ -25,9 +25,9 @@ public static class SeedData
 				await roleManager.CreateAsync(new IdentityRole(role));
 		}
 
-		var bih = new Country { Name = "Bosnia and Herzegovina", Code = "BA" };
-		var hrv = new Country { Name = "Croatia", Code = "HR" };
-		var srb = new Country { Name = "Serbia", Code = "RS" };
+		var bih = new Country { Name = "Bosna i Hercegovina", Code = "BA" };
+		var hrv = new Country { Name = "Hrvatska", Code = "HR" };
+		var srb = new Country { Name = "Srbija", Code = "RS" };
 		db.Countries.AddRange(bih, hrv, srb);
 		await db.SaveChangesAsync();
 
@@ -44,12 +44,12 @@ public static class SeedData
 
 		var serviceTypes = new[]
 		{
-			new ServiceType { Name = "Gasul", Description = "Ritual washing of the deceased" },
-			new ServiceType { Name = "Ćefini", Description = "Funeral shroud preparation" },
-			new ServiceType { Name = "Tabut", Description = "Funeral casket/bier" },
-			new ServiceType { Name = "Transport", Description = "Transport of the deceased" },
-			new ServiceType { Name = "Burial", Description = "Grave digging and burial" },
-			new ServiceType { Name = "Grave Cleaning", Description = "Cleaning and maintenance of the grave site" }
+			new ServiceType { Name = "Gasul", Description = "Obredno kupanje preminulog prema islamskom obredu" },
+			new ServiceType { Name = "Ćefini", Description = "Priprema i nabavka ćefina (platno za zavijanje preminulog)" },
+			new ServiceType { Name = "Tabut", Description = "Osiguravanje tabuta za prijevoz preminulog" },
+			new ServiceType { Name = "Transport", Description = "Prevoz preminulog do mjesta ukopa" },
+			new ServiceType { Name = "Ukop", Description = "Iskop mezara i obavljanje ukopa" },
+			new ServiceType { Name = "Čišćenje mezara", Description = "Čišćenje i održavanje mezarskog mjesta" }
 		};
 		db.ServiceTypes.AddRange(serviceTypes);
 		await db.SaveChangesAsync();
@@ -83,17 +83,17 @@ public static class SeedData
 		db.Imams.AddRange(imam1, imam2, imam3, imam4, imam5);
 		await db.SaveChangesAsync();
 
-		var cem1 = new Cemetery { Name = "Bare Cemetery", Address = "Bare bb, Sarajevo", CityId = sarajevo.Id, TotalPlaces = 5000, Latitude = 43.8452600m, Longitude = 18.3769400m };
-		var cem2 = new Cemetery { Name = "Sutina Cemetery", Address = "Sutina bb, Mostar", CityId = mostar.Id, TotalPlaces = 3000, Latitude = 43.3465200m, Longitude = 17.8033900m };
-		var cem3 = new Cemetery { Name = "Krušćica Cemetery", Address = "Krušćica bb, Tuzla", CityId = tuzla.Id, TotalPlaces = 2500, Latitude = 44.5312400m, Longitude = 18.6901200m };
-		var cem4 = new Cemetery { Name = "Svrakino Cemetery", Address = "Svrakino Selo bb, Zenica", CityId = zenica.Id, TotalPlaces = 2000, Latitude = 44.2037700m, Longitude = 17.9077500m };
+		var cem1 = new Cemetery { Name = "Groblje Bare", Address = "Bare bb, Sarajevo", CityId = sarajevo.Id, TotalPlaces = 5000, Latitude = 43.8452600m, Longitude = 18.3769400m };
+		var cem2 = new Cemetery { Name = "Groblje Sutina", Address = "Sutina bb, Mostar", CityId = mostar.Id, TotalPlaces = 3000, Latitude = 43.3465200m, Longitude = 17.8033900m };
+		var cem3 = new Cemetery { Name = "Groblje Krušćica", Address = "Krušćica bb, Tuzla", CityId = tuzla.Id, TotalPlaces = 2500, Latitude = 44.5312400m, Longitude = 18.6901200m };
+		var cem4 = new Cemetery { Name = "Groblje Svrakino", Address = "Svrakino Selo bb, Zenica", CityId = zenica.Id, TotalPlaces = 2000, Latitude = 44.2037700m, Longitude = 17.9077500m };
 		db.Cemeteries.AddRange(cem1, cem2, cem3, cem4);
 		await db.SaveChangesAsync();
 
-		var sec1A = new CemeterySection { Name = "Section A", CemeteryId = cem1.Id };
-		var sec1B = new CemeterySection { Name = "Section B", CemeteryId = cem1.Id };
-		var sec2A = new CemeterySection { Name = "Section A", CemeteryId = cem2.Id };
-		var sec2B = new CemeterySection { Name = "Section B", CemeteryId = cem2.Id };
+		var sec1A = new CemeterySection { Name = "Sektor A", CemeteryId = cem1.Id };
+		var sec1B = new CemeterySection { Name = "Sektor B", CemeteryId = cem1.Id };
+		var sec2A = new CemeterySection { Name = "Sektor A", CemeteryId = cem2.Id };
+		var sec2B = new CemeterySection { Name = "Sektor B", CemeteryId = cem2.Id };
 		db.CemeterySections.AddRange(sec1A, sec1B, sec2A, sec2B);
 		await db.SaveChangesAsync();
 

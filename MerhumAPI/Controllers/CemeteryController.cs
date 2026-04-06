@@ -8,6 +8,7 @@ namespace MerhumAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class CemeteryController : ControllerBase
 {
     private readonly ICemeteryService _cemeteryService;
@@ -15,7 +16,6 @@ public class CemeteryController : ControllerBase
     public CemeteryController(ICemeteryService cemeteryService) => _cemeteryService = cemeteryService;
 
     [HttpGet]
-    [AllowAnonymous]
     public async Task<ActionResult<PagedResponse<CemeteryResponse>>> GetAll(
         [FromQuery] string? search,
         [FromQuery] int pageNumber = 1,
@@ -26,7 +26,6 @@ public class CemeteryController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<CemeteryResponse>>> GetById(int id)
     {
         var cemetery = await _cemeteryService.GetByIdAsync(id);

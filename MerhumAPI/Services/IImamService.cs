@@ -5,7 +5,7 @@ namespace MerhumAPI.Services;
 
 public interface IImamService
 {
-    Task<PagedResponse<ImamResponse>> GetAllAsync(int? mosqueId, bool? isActive, int pageNumber, int pageSize);
+    Task<PagedResponse<ImamResponse>> GetAllAsync(int? mosqueId, bool? isActive, string? name, int pageNumber, int pageSize);
     Task<ImamResponse?> GetByIdAsync(int id);
     Task<ImamResponse> CreateAsync(ImamRequest request);
     Task<bool> UpdateAsync(int id, ImamRequest request);

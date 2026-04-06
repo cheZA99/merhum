@@ -12,7 +12,7 @@ public class ImamService : IImamService
 
     public ImamService(ApplicationDbContext db) => _db = db;
 
-    public async Task<PagedResponse<ImamResponse>> GetAllAsync(int? mosqueId, bool? isActive, int pageNumber, int pageSize)
+    public async Task<PagedResponse<ImamResponse>> GetAllAsync(int? mosqueId, bool? isActive, string? name, int pageNumber, int pageSize)
     {
         var query = _db.Imams.Include(i => i.Mosque).AsQueryable();
 
@@ -21,6 +21,9 @@ public class ImamService : IImamService
 
         if (isActive.HasValue)
             query = query.Where(i => i.IsActive == isActive.Value);
+
+        if (!string.IsNullOrWhiteSpace(name))
+            query = query.Where(i => i.FirstName.Contains(name) || i.LastName.Contains(name));
 
         var total = await query.CountAsync();
         var items = await query

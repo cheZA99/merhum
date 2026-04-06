@@ -8,6 +8,7 @@ namespace MerhumAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class FuneralHomeController : ControllerBase
 {
     private readonly IFuneralHomeService _funeralHomeService;
@@ -15,7 +16,6 @@ public class FuneralHomeController : ControllerBase
     public FuneralHomeController(IFuneralHomeService funeralHomeService) => _funeralHomeService = funeralHomeService;
 
     [HttpGet]
-    [AllowAnonymous]
     public async Task<ActionResult<PagedResponse<FuneralHomeResponse>>> GetAll(
         [FromQuery] string? search,
         [FromQuery] int pageNumber = 1,
@@ -26,7 +26,6 @@ public class FuneralHomeController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<FuneralHomeResponse>>> GetById(int id)
     {
         var home = await _funeralHomeService.GetByIdAsync(id);

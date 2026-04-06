@@ -19,10 +19,11 @@ public class ImamController : ControllerBase
     public async Task<ActionResult<PagedResponse<ImamResponse>>> GetAll(
         [FromQuery] int? mosqueId,
         [FromQuery] bool? isActive,
+        [FromQuery] string? name,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20)
     {
-        var result = await _imamService.GetAllAsync(mosqueId, isActive, pageNumber, pageSize);
+        var result = await _imamService.GetAllAsync(mosqueId, isActive, name, pageNumber, pageSize);
         return Ok(result);
     }
 

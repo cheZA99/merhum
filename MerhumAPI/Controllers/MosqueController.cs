@@ -8,6 +8,7 @@ namespace MerhumAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class MosqueController : ControllerBase
 {
     private readonly IMosqueService _mosqueService;
@@ -15,7 +16,6 @@ public class MosqueController : ControllerBase
     public MosqueController(IMosqueService mosqueService) => _mosqueService = mosqueService;
 
     [HttpGet]
-    [AllowAnonymous]
     public async Task<ActionResult<PagedResponse<MosqueResponse>>> GetAll(
         [FromQuery] string? search,
         [FromQuery] int pageNumber = 1,
@@ -26,7 +26,6 @@ public class MosqueController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<MosqueResponse>>> GetById(int id)
     {
         var mosque = await _mosqueService.GetByIdAsync(id);
