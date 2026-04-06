@@ -34,7 +34,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Dashboard', style: AppTextStyles.heading1),
+          const Text('Kontrolna tabla', style: AppTextStyles.heading1),
           const SizedBox(height: 24),
           Row(
             children: const [

@@ -8,17 +8,17 @@ class MosqueProvider extends ChangeNotifier {
 
   MosqueProvider(this._service);
 
-  List<MosqueModel> _svi = [];
-  List<Map<String, dynamic>> gradovi = [];
+  List<MosqueModel> _all = [];
+  List<Map<String, dynamic>> cities = [];
   bool isLoading = false;
   String? errorMessage;
-  String? searchNaziv;
-  int? filterGradId;
+  String? searchName;
+  int? filterCityId;
 
   // Client-side city filter — the API does not support filtering by cityId
-  List<MosqueModel> get stavke {
-    if (filterGradId == null) return _svi;
-    return _svi.where((m) => m.gradId == filterGradId).toList();
+  List<MosqueModel> get mosques {
+    if (filterCityId == null) return _all;
+    return _all.where((m) => m.cityId == filterCityId).toList();
   }
 
   Future<void> loadAll() async {
@@ -27,20 +27,20 @@ class MosqueProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _svi = await _service.getAll(search: searchNaziv);
+      _all = await _service.getAll(search: searchName);
     } on DioException catch (e) {
       errorMessage = _parseError(e);
     } catch (e) {
-      errorMessage = 'Greska pri ucitavanju.';
+      errorMessage = 'Error loading.';
     } finally {
       isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> loadGradovi() async {
+  Future<void> loadCities() async {
     try {
-      gradovi = await _service.getGradovi();
+      cities = await _service.getCities();
     } catch (_) {
     }
     notifyListeners();
@@ -73,7 +73,7 @@ class MosqueProvider extends ChangeNotifier {
   Future<bool> delete(int id) async {
     try {
       await _service.delete(id);
-      _svi.removeWhere((m) => m.id == id);
+      _all.removeWhere((m) => m.id == id);
       notifyListeners();
       return true;
     } on DioException catch (e) {
@@ -83,24 +83,24 @@ class MosqueProvider extends ChangeNotifier {
     }
   }
 
-  void setSearch(String naziv) {
-    searchNaziv = naziv.isEmpty ? null : naziv;
+  void setSearch(String name) {
+    searchName = name.isEmpty ? null : name;
     loadAll();
   }
 
-  void setFilterGrad(int? gradId) {
-    filterGradId = gradId;
+  void setFilterCity(int? cityId) {
+    filterCityId = cityId;
     notifyListeners(); // re-filter only, no API call
   }
 
   String _parseError(DioException e) {
     final data = e.response?.data;
     if (data is Map) {
-      return data['message'] as String? ?? data['title'] as String? ?? 'Greska na serveru.';
+      return data['message'] as String? ?? data['title'] as String? ?? 'Server error.';
     }
-    if (e.type == DioExceptionType.connectionError) return 'Nema veze sa serverom.';
-    if (e.response?.statusCode == 404) return 'Mesdid nije pronadjen.';
-    if (e.response?.statusCode == 409) return 'Mesdid s tim imenom vec postoji.';
-    return 'Neocekivana greska (${e.response?.statusCode}).';
+    if (e.type == DioExceptionType.connectionError) return 'No server connection.';
+    if (e.response?.statusCode == 404) return 'Mosque not found.';
+    if (e.response?.statusCode == 409) return 'A mosque with that name already exists.';
+    return 'Unexpected error (${e.response?.statusCode}).';
   }
 }

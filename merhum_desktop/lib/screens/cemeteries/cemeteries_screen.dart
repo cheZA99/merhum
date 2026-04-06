@@ -63,13 +63,13 @@ class _CemeteriesScreenState extends State<CemeteriesScreen> {
     return Consumer<CemeteryProvider>(
       builder: (context, provider, _) => Row(
         children: [
-          const Text('Cemeteries', style: AppTextStyles.heading1),
+          const Text('Groblja', style: AppTextStyles.heading1),
           const Spacer(),
           SizedBox(
             width: 220,
             child: TextField(
               decoration: const InputDecoration(
-                hintText: 'Search by name...',
+                hintText: 'Pretraži po nazivu...',
                 prefixIcon: Icon(Icons.search, size: 18),
                 isDense: true,
                 border: OutlineInputBorder(),
@@ -85,11 +85,11 @@ class _CemeteriesScreenState extends State<CemeteriesScreen> {
           const SizedBox(width: 12),
           DropdownButton<int?>(
             value: provider.filterCityId,
-            hint: const Text('All cities'),
+            hint: const Text('Svi gradovi'),
             underline: const SizedBox(),
             items: [
               const DropdownMenuItem<int?>(
-                  value: null, child: Text('All cities')),
+                  value: null, child: Text('Svi gradovi')),
               ...provider.cities.map((g) => DropdownMenuItem<int?>(
                     value: g['id'] as int,
                     child: Text(g['name'] as String? ?? ''),
@@ -104,7 +104,7 @@ class _CemeteriesScreenState extends State<CemeteriesScreen> {
           FilledButton.icon(
             onPressed: () => _openForm(context, null),
             icon: const Icon(Icons.add, size: 18),
-            label: const Text('Add cemetery'),
+            label: const Text('Dodaj groblje'),
             style:
                 FilledButton.styleFrom(backgroundColor: AppColors.primary),
           ),
@@ -131,7 +131,7 @@ class _CemeteriesScreenState extends State<CemeteriesScreen> {
                 const SizedBox(height: 12),
                 TextButton(
                     onPressed: provider.loadAll,
-                    child: const Text('Try again')),
+                    child: const Text('Pokušaj ponovo')),
               ],
             ),
           );
@@ -139,7 +139,7 @@ class _CemeteriesScreenState extends State<CemeteriesScreen> {
 
         if (allItems.isEmpty) {
           return const Center(
-              child: Text('No cemeteries found.', style: AppTextStyles.body));
+              child: Text('Nema pronađenih grobalja.', style: AppTextStyles.body));
         }
 
         final totalPages =
@@ -179,14 +179,14 @@ class _CemeteriesScreenState extends State<CemeteriesScreen> {
           headingRowColor: WidgetStateProperty.all(AppColors.background),
           columnSpacing: 20,
           columns: const [
-            DataColumn(label: Text('Name')),
-            DataColumn(label: Text('City')),
-            DataColumn(label: Text('Total')),
-            DataColumn(label: Text('Occupied')),
-            DataColumn(label: Text('Available')),
-            DataColumn(label: Text('Occupancy')),
-            DataColumn(label: Text('Active')),
-            DataColumn(label: Text('Actions')),
+            DataColumn(label: Text('Naziv')),
+            DataColumn(label: Text('Grad')),
+            DataColumn(label: Text('Ukupno')),
+            DataColumn(label: Text('Zauzeto')),
+            DataColumn(label: Text('Slobodno')),
+            DataColumn(label: Text('Popunjenost')),
+            DataColumn(label: Text('Aktivan')),
+            DataColumn(label: Text('Akcije')),
           ],
           rows: items.map((g) => _buildRow(context, g, provider)).toList(),
         ),
@@ -238,17 +238,17 @@ class _CemeteriesScreenState extends State<CemeteriesScreen> {
         children: [
           IconButton(
             icon: const Icon(Icons.edit, size: 18),
-            tooltip: 'Edit',
+            tooltip: 'Uredi',
             onPressed: () => _openForm(context, g),
           ),
           IconButton(
             icon: const Icon(Icons.list, size: 18, color: AppColors.primary),
-            tooltip: 'Grave sites',
+            tooltip: 'Mezarska mjesta',
             onPressed: () => _openGraveSites(context, g),
           ),
           IconButton(
             icon: const Icon(Icons.delete, size: 18, color: AppColors.error),
-            tooltip: 'Delete',
+            tooltip: 'Obriši',
             onPressed: () => _confirmDelete(context, g, provider),
           ),
         ],
@@ -265,7 +265,7 @@ class _CemeteriesScreenState extends State<CemeteriesScreen> {
           onPressed:
               _currentPage > 0 ? () => setState(() => _currentPage--) : null,
         ),
-        Text('Page ${_currentPage + 1} of $totalPages  ($total total)',
+        Text('Stranica ${_currentPage + 1} od $totalPages  (ukupno $total)',
             style: AppTextStyles.caption),
         IconButton(
           icon: const Icon(Icons.chevron_right),
@@ -291,12 +291,12 @@ class _CemeteriesScreenState extends State<CemeteriesScreen> {
     if (result == 'created') {
       setState(() => _currentPage = 0);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Cemetery added successfully.'),
+        content: Text('Groblje je uspješno dodano.'),
         backgroundColor: AppColors.success,
       ));
     } else if (result == 'updated') {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Cemetery updated successfully.'),
+        content: Text('Groblje je uspješno ažurirano.'),
         backgroundColor: AppColors.success,
       ));
     }
@@ -325,20 +325,20 @@ class _CemeteriesScreenState extends State<CemeteriesScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Confirm deletion'),
+        title: const Text('Potvrdi brisanje'),
         content: Text(
-          'Are you sure you want to delete the cemetery "${g.name}"?\n\n'
-          'All grave sites in this cemetery will also be deleted.',
+          'Da li ste sigurni da želite obrisati groblje "${g.name}"?\n\n'
+          'Sva mezarska mjesta u ovom groblju će takođe biti obrisana.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('Odustani'),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Delete'),
+            child: const Text('Obriši'),
           ),
         ],
       ),
@@ -349,8 +349,8 @@ class _CemeteriesScreenState extends State<CemeteriesScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(success
-              ? 'Cemetery deleted successfully.'
-              : (provider.errorMessage ?? 'Error deleting.')),
+              ? 'Groblje je uspješno obrisano.'
+              : (provider.errorMessage ?? 'Greška pri brisanju.')),
           backgroundColor: success ? AppColors.success : AppColors.error,
         ));
       }

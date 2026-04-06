@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/groblje_provider.dart';
-import '../providers/mezarsko_mjesto_provider.dart';
+import '../providers/cemetery_provider.dart';
+import '../providers/grave_site_provider.dart';
 import '../screens/dashboard/dashboard_screen.dart';
-import '../screens/groblja/groblja_screen.dart';
-import '../screens/mezarska_mjesta/mezarska_mjesta_screen.dart';
+import '../screens/cemeteries/cemeteries_screen.dart';
+import '../screens/grave_sites/grave_sites_screen.dart';
 import '../screens/mosques/mosques_screen.dart';
 
 // Add new screens here as they are implemented
@@ -20,21 +20,21 @@ void navigateByIndex(BuildContext context, int index) {
     case 5:
       screen = MultiProvider(
         providers: [
-          ChangeNotifierProvider.value(value: context.read<GrobljeProvider>()),
+          ChangeNotifierProvider.value(value: context.read<CemeteryProvider>()),
           ChangeNotifierProvider.value(
-              value: context.read<MezarskoMjestoProvider>()),
+              value: context.read<GraveSiteProvider>()),
         ],
-        child: const GrobljaScreen(),
+        child: const CemeteriesScreen(),
       );
       break;
     case 6:
       screen = MultiProvider(
         providers: [
-          ChangeNotifierProvider.value(value: context.read<GrobljeProvider>()),
+          ChangeNotifierProvider.value(value: context.read<CemeteryProvider>()),
           ChangeNotifierProvider.value(
-              value: context.read<MezarskoMjestoProvider>()),
+              value: context.read<GraveSiteProvider>()),
         ],
-        child: const MezarskaMjestaScreen(),
+        child: const GraveSitesScreen(),
       );
       break;
     default:

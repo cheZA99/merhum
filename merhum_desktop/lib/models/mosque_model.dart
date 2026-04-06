@@ -1,83 +1,83 @@
 class MosqueModel {
   final int id;
-  final String naziv;
-  final String adresa;
-  final int gradId;
-  final String gradNaziv;
-  final String? telefon;
+  final String name;
+  final String address;
+  final int cityId;
+  final String cityName;
+  final String? phone;
   final String? email;
-  final int? kapacitet;
+  final int? capacity;
   final double? latitude;
   final double? longitude;
-  final bool jeAktivan;
+  final bool isActive;
 
   const MosqueModel({
     required this.id,
-    required this.naziv,
-    required this.adresa,
-    required this.gradId,
-    required this.gradNaziv,
-    this.telefon,
+    required this.name,
+    required this.address,
+    required this.cityId,
+    required this.cityName,
+    this.phone,
     this.email,
-    this.kapacitet,
+    this.capacity,
     this.latitude,
     this.longitude,
-    required this.jeAktivan,
+    required this.isActive,
   });
 
   factory MosqueModel.fromJson(Map<String, dynamic> json) {
     return MosqueModel(
       id: json['id'] as int,
-      naziv: json['name'] as String? ?? '',
-      adresa: json['address'] as String? ?? '',
-      gradId: json['cityId'] as int? ?? 0,
-      gradNaziv: json['cityName'] as String? ?? '',
-      telefon: json['phone'] as String?,
+      name: json['name'] as String? ?? '',
+      address: json['address'] as String? ?? '',
+      cityId: json['cityId'] as int? ?? 0,
+      cityName: json['cityName'] as String? ?? '',
+      phone: json['phone'] as String?,
       email: json['email'] as String?,
-      kapacitet: json['capacity'] as int?,
+      capacity: json['capacity'] as int?,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
-      jeAktivan: json['isActive'] as bool? ?? true,
+      isActive: json['isActive'] as bool? ?? true,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'name': naziv,
-        'address': adresa,
-        'cityId': gradId,
-        'phone': telefon,
+        'name': name,
+        'address': address,
+        'cityId': cityId,
+        'phone': phone,
         'email': email,
-        'capacity': kapacitet,
+        'capacity': capacity,
         'latitude': latitude,
         'longitude': longitude,
-        'isActive': jeAktivan,
+        'isActive': isActive,
       };
 
   MosqueModel copyWith({
     int? id,
-    String? naziv,
-    String? adresa,
-    int? gradId,
-    String? gradNaziv,
-    String? telefon,
+    String? name,
+    String? address,
+    int? cityId,
+    String? cityName,
+    String? phone,
     String? email,
-    int? kapacitet,
+    int? capacity,
     double? latitude,
     double? longitude,
-    bool? jeAktivan,
+    bool? isActive,
   }) {
     return MosqueModel(
       id: id ?? this.id,
-      naziv: naziv ?? this.naziv,
-      adresa: adresa ?? this.adresa,
-      gradId: gradId ?? this.gradId,
-      gradNaziv: gradNaziv ?? this.gradNaziv,
-      telefon: telefon ?? this.telefon,
+      name: name ?? this.name,
+      address: address ?? this.address,
+      cityId: cityId ?? this.cityId,
+      cityName: cityName ?? this.cityName,
+      phone: phone ?? this.phone,
       email: email ?? this.email,
-      kapacitet: kapacitet ?? this.kapacitet,
+      capacity: capacity ?? this.capacity,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
-      jeAktivan: jeAktivan ?? this.jeAktivan,
+      isActive: isActive ?? this.isActive,
     );
   }
 }

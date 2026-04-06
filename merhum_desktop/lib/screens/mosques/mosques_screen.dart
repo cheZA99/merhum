@@ -24,7 +24,7 @@ class _MosquesScreenState extends State<MosquesScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final p = context.read<MosqueProvider>();
       p.loadAll();
-      p.loadGradovi();
+      p.loadCities();
     });
   }
 
@@ -83,20 +83,20 @@ class _MosquesScreenState extends State<MosquesScreen> {
             ),
             const SizedBox(width: 12),
             DropdownButton<int?>(
-              value: provider.filterGradId,
+              value: provider.filterCityId,
               hint: const Text('Svi gradovi'),
               underline: const SizedBox(),
               items: [
                 const DropdownMenuItem<int?>(
                     value: null, child: Text('Svi gradovi')),
-                ...provider.gradovi.map((g) => DropdownMenuItem<int?>(
+                ...provider.cities.map((g) => DropdownMenuItem<int?>(
                       value: g['id'] as int,
                       child: Text(g['name'] as String? ?? ''),
                     )),
               ],
               onChanged: (v) {
                 setState(() => _currentPage = 0);
-                provider.setFilterGrad(v);
+                provider.setFilterCity(v);
               },
             ),
             const SizedBox(width: 12),
@@ -128,17 +128,17 @@ class _MosquesScreenState extends State<MosquesScreen> {
                     style: const TextStyle(color: AppColors.error)),
                 const SizedBox(height: 12),
                 TextButton(
-                    onPressed: provider.loadAll, child: const Text('Pokusaj ponovo')),
+                    onPressed: provider.loadAll, child: const Text('Pokušaj ponovo')),
               ],
             ),
           );
         }
 
-        final allItems = provider.stavke;
+        final allItems = provider.mosques;
 
         if (allItems.isEmpty) {
           return const Center(
-            child: Text('Nema mesdžida.', style: AppTextStyles.body),
+            child: Text('Nema pronađenih mesdžida.', style: AppTextStyles.body),
           );
         }
 
@@ -184,17 +184,17 @@ class _MosquesScreenState extends State<MosquesScreen> {
   DataRow _buildRow(
       BuildContext context, MosqueModel m, MosqueProvider provider) {
     return DataRow(cells: [
-      DataCell(Text(m.naziv, style: AppTextStyles.body)),
-      DataCell(Text(m.gradNaziv, style: AppTextStyles.body)),
-      DataCell(Text(m.telefon ?? '-', style: AppTextStyles.body)),
+      DataCell(Text(m.name, style: AppTextStyles.body)),
+      DataCell(Text(m.cityName, style: AppTextStyles.body)),
+      DataCell(Text(m.phone ?? '-', style: AppTextStyles.body)),
       DataCell(Text(m.email ?? '-', style: AppTextStyles.body)),
       DataCell(Text(
-          m.kapacitet != null ? m.kapacitet.toString() : '-',
+          m.capacity != null ? m.capacity.toString() : '-',
           style: AppTextStyles.body)),
       DataCell(
         Icon(
-          m.jeAktivan ? Icons.check_circle : Icons.cancel,
-          color: m.jeAktivan ? AppColors.success : AppColors.error,
+          m.isActive ? Icons.check_circle : Icons.cancel,
+          color: m.isActive ? AppColors.success : AppColors.error,
           size: 20,
         ),
       ),
@@ -226,7 +226,7 @@ class _MosquesScreenState extends State<MosquesScreen> {
               _currentPage > 0 ? () => setState(() => _currentPage--) : null,
         ),
         Text(
-          'Stranica ${_currentPage + 1} od $totalPages  ($total ukupno)',
+          'Stranica ${_currentPage + 1} od $totalPages  (ukupno $total)',
           style: AppTextStyles.caption,
         ),
         IconButton(
@@ -254,12 +254,12 @@ class _MosquesScreenState extends State<MosquesScreen> {
     if (result == 'created') {
       setState(() => _currentPage = 0);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Mesdžid uspješno dodan.'),
+        content: Text('Mesdžid je uspješno dodan.'),
         backgroundColor: AppColors.success,
       ));
     } else if (result == 'updated') {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Mesdžid uspješno ažuriran.'),
+        content: Text('Mesdžid je uspješno ažuriran.'),
         backgroundColor: AppColors.success,
       ));
     }
@@ -270,9 +270,9 @@ class _MosquesScreenState extends State<MosquesScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Potvrda brisanja'),
+        title: const Text('Potvrdi brisanje'),
         content:
-            Text('Jeste li sigurni da želite obrisati mesdžid "${m.naziv}"?'),
+            Text('Da li ste sigurni da želite obrisati mesdžid "${m.name}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -292,7 +292,7 @@ class _MosquesScreenState extends State<MosquesScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(success
-              ? 'Mesdžid uspješno obrisan.'
+              ? 'Mesdžid je uspješno obrisan.'
               : (provider.errorMessage ?? 'Greška pri brisanju.')),
           backgroundColor: success ? AppColors.success : AppColors.error,
         ));

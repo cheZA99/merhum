@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 import 'providers/auth_provider.dart';
-import 'providers/groblje_provider.dart';
-import 'providers/mezarsko_mjesto_provider.dart';
+import 'providers/cemetery_provider.dart';
+import 'providers/grave_site_provider.dart';
 import 'providers/mosque_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'services/api_service.dart';
 import 'services/auth_service.dart';
-import 'services/groblje_service.dart';
-import 'services/mezarsko_mjesto_service.dart';
+import 'services/cemetery_service.dart';
+import 'services/grave_site_service.dart';
 import 'services/mosque_service.dart';
 import 'utils/constants.dart';
 
@@ -23,7 +23,7 @@ void main() async {
       minimumSize: Size(1200, 700),
       size: Size(1400, 800),
       center: true,
-      title: 'Merhum — Administrativni panel',
+      title: 'Merhum — Admin panel',
     ),
   );
 
@@ -44,10 +44,10 @@ void main() async {
           create: (_) => MosqueProvider(MosqueService(apiService)),
         ),
         ChangeNotifierProvider(
-          create: (_) => GrobljeProvider(GrobljeService(apiService)),
+          create: (_) => CemeteryProvider(CemeteryService(apiService)),
         ),
         ChangeNotifierProvider(
-          create: (_) => MezarskoMjestoProvider(MezarskoMjestoService(apiService)),
+          create: (_) => GraveSiteProvider(GraveSiteService(apiService)),
         ),
       ],
       child: const MerhumApp(),

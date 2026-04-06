@@ -91,7 +91,7 @@ class _CemeteryFormScreenState extends State<CemeteryFormScreen> {
     final cities = context.watch<CemeteryProvider>().cities;
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEdit ? 'Edit cemetery' : 'New cemetery'),
+        title: Text(_isEdit ? 'Uredi groblje' : 'Novo groblje'),
         backgroundColor: Colors.white,
         foregroundColor: AppColors.textDark,
         elevation: 1,
@@ -113,10 +113,10 @@ class _CemeteryFormScreenState extends State<CemeteryFormScreen> {
               children: [
                 _field(
                   controller: _nameCtrl,
-                  label: 'Name',
+                  label: 'Naziv',
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Name is required.';
-                    if (v.trim().length > 200) return 'Maximum 200 characters.';
+                    if (v == null || v.trim().isEmpty) return 'Naziv je obavezan.';
+                    if (v.trim().length > 200) return 'Maksimum 200 karaktera.';
                     return null;
                   },
                 ),
@@ -124,7 +124,7 @@ class _CemeteryFormScreenState extends State<CemeteryFormScreen> {
                 DropdownButtonFormField<int>(
                   value: _selectedCityId,
                   decoration: const InputDecoration(
-                      labelText: 'City', border: OutlineInputBorder()),
+                      labelText: 'Grad', border: OutlineInputBorder()),
                   items: cities
                       .map((g) => DropdownMenuItem<int>(
                             value: g['id'] as int,
@@ -132,28 +132,28 @@ class _CemeteryFormScreenState extends State<CemeteryFormScreen> {
                           ))
                       .toList(),
                   onChanged: (v) => setState(() => _selectedCityId = v),
-                  validator: (v) => v == null ? 'City is required.' : null,
+                  validator: (v) => v == null ? 'Grad je obavezan.' : null,
                 ),
                 const SizedBox(height: 16),
                 _field(
                   controller: _addressCtrl,
-                  label: 'Address',
+                  label: 'Adresa',
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Address is required.';
-                    if (v.trim().length > 300) return 'Maximum 300 characters.';
+                    if (v == null || v.trim().isEmpty) return 'Adresa je obavezna.';
+                    if (v.trim().length > 300) return 'Maksimum 300 karaktera.';
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 _field(
                   controller: _totalCtrl,
-                  label: 'Total plots',
+                  label: 'Ukupno mjesta',
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Total plots is required.';
+                    if (v == null || v.isEmpty) return 'Ukupno mjesta je obavezno.';
                     final n = int.tryParse(v);
-                    if (n == null || n <= 0) return 'Must be greater than 0.';
+                    if (n == null || n <= 0) return 'Mora biti veće od 0.';
                     return null;
                   },
                 ),
@@ -163,11 +163,11 @@ class _CemeteryFormScreenState extends State<CemeteryFormScreen> {
                     Expanded(
                       child: _field(
                         controller: _latCtrl,
-                        label: 'Latitude',
+                        label: 'Geografska širina',
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         validator: (v) {
                           if (v == null || v.isEmpty) return null;
-                          if (double.tryParse(v) == null) return 'Invalid number.';
+                          if (double.tryParse(v) == null) return 'Neispravan broj.';
                           return null;
                         },
                       ),
@@ -176,11 +176,11 @@ class _CemeteryFormScreenState extends State<CemeteryFormScreen> {
                     Expanded(
                       child: _field(
                         controller: _lngCtrl,
-                        label: 'Longitude',
+                        label: 'Geografska dužina',
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         validator: (v) {
                           if (v == null || v.isEmpty) return null;
-                          if (double.tryParse(v) == null) return 'Invalid number.';
+                          if (double.tryParse(v) == null) return 'Neispravan broj.';
                           return null;
                         },
                       ),
@@ -188,11 +188,11 @@ class _CemeteryFormScreenState extends State<CemeteryFormScreen> {
                   ],
                 ),
                 const SizedBox(height: 4),
-                const Text('Enter the GPS coordinates of the cemetery.',
+                const Text('Unesite GPS koordinate groblja.',
                     style: AppTextStyles.caption),
                 const SizedBox(height: 16),
                 SwitchListTile(
-                  title: const Text('Active'),
+                  title: const Text('Aktivan'),
                   value: _isActive,
                   onChanged: (v) => setState(() => _isActive = v),
                   activeColor: AppColors.primary,
@@ -204,7 +204,7 @@ class _CemeteryFormScreenState extends State<CemeteryFormScreen> {
                   children: [
                     OutlinedButton(
                       onPressed: () => Navigator.of(context).pop(null),
-                      child: const Text('Cancel'),
+                      child: const Text('Odustani'),
                     ),
                     const SizedBox(width: 12),
                     FilledButton(
@@ -217,7 +217,7 @@ class _CemeteryFormScreenState extends State<CemeteryFormScreen> {
                               height: 20,
                               child: CircularProgressIndicator(
                                   strokeWidth: 2, color: Colors.white))
-                          : const Text('Save'),
+                          : const Text('Sačuvaj'),
                     ),
                   ],
                 ),

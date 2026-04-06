@@ -10,7 +10,7 @@ class SidebarItem {
 }
 
 const _items = [
-  SidebarItem('Dashboard', Icons.dashboard),
+  SidebarItem('Kontrolna tabla', Icons.dashboard),
   SidebarItem('Preminuli', Icons.people),
   SidebarItem('Smrtovnice', Icons.article),
   SidebarItem('Termini', Icons.calendar_today),
@@ -19,7 +19,7 @@ const _items = [
   SidebarItem('Mezarska mjesta', Icons.map),
   SidebarItem('Imami', Icons.person),
   SidebarItem('Pogrebna preduzeća', Icons.business),
-  SidebarItem('Narudžbe usluga', Icons.shopping_cart),
+  SidebarItem('Nalozi za usluge', Icons.shopping_cart),
   SidebarItem('Izvještaji', Icons.bar_chart),
   SidebarItem('Referentni podaci', Icons.settings),
   SidebarItem('Korisnici', Icons.manage_accounts),
@@ -94,7 +94,7 @@ class SidebarWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        auth.ime ?? 'Korisnik',
+                        auth.firstName ?? 'Korisnik',
                         style: const TextStyle(
                             color: Colors.white, fontSize: 13),
                         overflow: TextOverflow.ellipsis,

@@ -17,16 +17,16 @@ class MosqueFormScreen extends StatefulWidget {
 class _MosqueFormScreenState extends State<MosqueFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  late final TextEditingController _nazivCtrl;
-  late final TextEditingController _adresaCtrl;
-  late final TextEditingController _telefonCtrl;
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _addressCtrl;
+  late final TextEditingController _phoneCtrl;
   late final TextEditingController _emailCtrl;
-  late final TextEditingController _kapacitetCtrl;
+  late final TextEditingController _capacityCtrl;
   late final TextEditingController _latCtrl;
   late final TextEditingController _lngCtrl;
 
-  int? _selectedGradId;
-  bool _jeAktivan = true;
+  int? _selectedCityId;
+  bool _isActive = true;
   bool _isSaving = false;
 
   bool get _isEdit => widget.mosque != null;
@@ -35,27 +35,27 @@ class _MosqueFormScreenState extends State<MosqueFormScreen> {
   void initState() {
     super.initState();
     final m = widget.mosque;
-    _nazivCtrl = TextEditingController(text: m?.naziv ?? '');
-    _adresaCtrl = TextEditingController(text: m?.adresa ?? '');
-    _telefonCtrl = TextEditingController(text: m?.telefon ?? '');
+    _nameCtrl = TextEditingController(text: m?.name ?? '');
+    _addressCtrl = TextEditingController(text: m?.address ?? '');
+    _phoneCtrl = TextEditingController(text: m?.phone ?? '');
     _emailCtrl = TextEditingController(text: m?.email ?? '');
-    _kapacitetCtrl = TextEditingController(
-        text: m?.kapacitet != null ? m!.kapacitet.toString() : '');
+    _capacityCtrl = TextEditingController(
+        text: m?.capacity != null ? m!.capacity.toString() : '');
     _latCtrl = TextEditingController(
         text: m?.latitude != null ? m!.latitude.toString() : '');
     _lngCtrl = TextEditingController(
         text: m?.longitude != null ? m!.longitude.toString() : '');
-    _selectedGradId = m?.gradId;
-    _jeAktivan = m?.jeAktivan ?? true;
+    _selectedCityId = m?.cityId;
+    _isActive = m?.isActive ?? true;
   }
 
   @override
   void dispose() {
-    _nazivCtrl.dispose();
-    _adresaCtrl.dispose();
-    _telefonCtrl.dispose();
+    _nameCtrl.dispose();
+    _addressCtrl.dispose();
+    _phoneCtrl.dispose();
     _emailCtrl.dispose();
-    _kapacitetCtrl.dispose();
+    _capacityCtrl.dispose();
     _latCtrl.dispose();
     _lngCtrl.dispose();
     super.dispose();
@@ -67,15 +67,15 @@ class _MosqueFormScreenState extends State<MosqueFormScreen> {
     setState(() => _isSaving = true);
 
     final data = {
-      'name': _nazivCtrl.text.trim(),
-      'address': _adresaCtrl.text.trim(),
-      'cityId': _selectedGradId,
-      'phone': _telefonCtrl.text.trim().isEmpty ? null : _telefonCtrl.text.trim(),
+      'name': _nameCtrl.text.trim(),
+      'address': _addressCtrl.text.trim(),
+      'cityId': _selectedCityId,
+      'phone': _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
       'email': _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
-      'capacity': _kapacitetCtrl.text.isEmpty ? null : int.tryParse(_kapacitetCtrl.text),
+      'capacity': _capacityCtrl.text.isEmpty ? null : int.tryParse(_capacityCtrl.text),
       'latitude': _latCtrl.text.isEmpty ? null : double.tryParse(_latCtrl.text),
       'longitude': _lngCtrl.text.isEmpty ? null : double.tryParse(_lngCtrl.text),
-      'isActive': _jeAktivan,
+      'isActive': _isActive,
     };
 
     final provider = context.read<MosqueProvider>();
@@ -91,7 +91,7 @@ class _MosqueFormScreenState extends State<MosqueFormScreen> {
       Navigator.of(context).pop(_isEdit ? 'updated' : 'created');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(provider.errorMessage ?? 'Greska pri snimanju.'),
+        content: Text(provider.errorMessage ?? 'Error saving.'),
         backgroundColor: AppColors.error,
       ));
     }
@@ -99,7 +99,7 @@ class _MosqueFormScreenState extends State<MosqueFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final gradovi = context.watch<MosqueProvider>().gradovi;
+    final cities = context.watch<MosqueProvider>().cities;
 
     return Scaffold(
       appBar: AppBar(
@@ -124,7 +124,7 @@ class _MosqueFormScreenState extends State<MosqueFormScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _field(
-                  controller: _nazivCtrl,
+                  controller: _nameCtrl,
                   label: 'Naziv',
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Naziv je obavezan.';
@@ -135,23 +135,23 @@ class _MosqueFormScreenState extends State<MosqueFormScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
-                  value: _selectedGradId,
+                  value: _selectedCityId,
                   decoration: const InputDecoration(
                     labelText: 'Grad',
                     border: OutlineInputBorder(),
                   ),
-                  items: gradovi
+                  items: cities
                       .map((g) => DropdownMenuItem<int>(
                             value: g['id'] as int,
                             child: Text(g['name'] as String? ?? ''),
                           ))
                       .toList(),
-                  onChanged: (v) => setState(() => _selectedGradId = v),
+                  onChanged: (v) => setState(() => _selectedCityId = v),
                   validator: (v) => v == null ? 'Grad je obavezan.' : null,
                 ),
                 const SizedBox(height: 16),
                 _field(
-                  controller: _adresaCtrl,
+                  controller: _addressCtrl,
                   label: 'Adresa',
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Adresa je obavezna.';
@@ -161,7 +161,7 @@ class _MosqueFormScreenState extends State<MosqueFormScreen> {
                 ),
                 const SizedBox(height: 16),
                 _field(
-                  controller: _telefonCtrl,
+                  controller: _phoneCtrl,
                   label: 'Telefon',
                   keyboardType: TextInputType.phone,
                   validator: (v) {
@@ -182,21 +182,21 @@ class _MosqueFormScreenState extends State<MosqueFormScreen> {
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return null;
                     if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(v.trim())) {
-                      return 'Unesite ispravan email.';
+                      return 'Unesite ispravnu e-mail adresu.';
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 _field(
-                  controller: _kapacitetCtrl,
+                  controller: _capacityCtrl,
                   label: 'Kapacitet',
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   validator: (v) {
                     if (v == null || v.isEmpty) return null;
                     final n = int.tryParse(v);
-                    if (n == null || n <= 0) return 'Kapacitet mora biti veci od 0.';
+                    if (n == null || n <= 0) return 'Kapacitet mora biti veći od 0.';
                     return null;
                   },
                 ),
@@ -206,7 +206,7 @@ class _MosqueFormScreenState extends State<MosqueFormScreen> {
                     Expanded(
                       child: _field(
                         controller: _latCtrl,
-                        label: 'Latitude',
+                        label: 'Geografska širina',
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
                         validator: (v) {
@@ -220,7 +220,7 @@ class _MosqueFormScreenState extends State<MosqueFormScreen> {
                     Expanded(
                       child: _field(
                         controller: _lngCtrl,
-                        label: 'Longitude',
+                        label: 'Geografska dužina',
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
                         validator: (v) {
@@ -234,14 +234,14 @@ class _MosqueFormScreenState extends State<MosqueFormScreen> {
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'Koordinate mozete pronaci na Google Maps.',
+                  'Koordinate možete pronaći na Google Mapama.',
                   style: AppTextStyles.caption,
                 ),
                 const SizedBox(height: 16),
                 SwitchListTile(
                   title: const Text('Aktivan'),
-                  value: _jeAktivan,
-                  onChanged: (v) => setState(() => _jeAktivan = v),
+                  value: _isActive,
+                  onChanged: (v) => setState(() => _isActive = v),
                   activeColor: AppColors.primary,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -267,7 +267,7 @@ class _MosqueFormScreenState extends State<MosqueFormScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text('Spremi'),
+                          : const Text('Sačuvaj'),
                     ),
                   ],
                 ),

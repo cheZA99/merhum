@@ -9,7 +9,7 @@ class AuthProvider extends ChangeNotifier {
 
   bool isLoggedIn = false;
   String? role;
-  String? ime;
+  String? firstName;
   bool isLoading = false;
 
   AuthProvider({required AuthService authService, required ApiService apiService})
@@ -29,19 +29,19 @@ class AuthProvider extends ChangeNotifier {
       final data = response.data;
       final token = data['data']?['token'] ?? data['token'];
       final userRole = data['data']?['role'] ?? data['role'] ?? 'Admin';
-      final firstName = data['data']?['firstName'] ?? data['data']?['ime'] ?? data['ime'] ?? username;
-      final lastName = data['data']?['lastName'] ?? data['data']?['prezime'] ?? data['prezime'] ?? '';
+      final first = data['data']?['firstName'] ?? data['data']?['ime'] ?? data['ime'] ?? username;
+      final last = data['data']?['lastName'] ?? data['data']?['prezime'] ?? data['prezime'] ?? '';
 
       await _authService.saveSession(
         token: token,
         role: userRole,
-        ime: firstName,
-        prezime: lastName,
+        firstName: first,
+        lastName: last,
       );
 
       isLoggedIn = true;
       role = userRole;
-      ime = firstName;
+      firstName = first;
       return true;
     } on DioException catch (e) {
       debugPrint('LOGIN ERROR: ${e.type} | ${e.message} | ${e.response?.statusCode} | ${e.response?.data}');
@@ -56,7 +56,7 @@ class AuthProvider extends ChangeNotifier {
     await _authService.logout();
     isLoggedIn = false;
     role = null;
-    ime = null;
+    firstName = null;
     notifyListeners();
   }
 
@@ -64,7 +64,7 @@ class AuthProvider extends ChangeNotifier {
     isLoggedIn = await _authService.isLoggedIn();
     if (isLoggedIn) {
       role = await _authService.getRole();
-      ime = await _authService.getIme();
+      firstName = await _authService.getFirstName();
     }
     notifyListeners();
   }

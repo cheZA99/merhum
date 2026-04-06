@@ -4,28 +4,28 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AuthService {
   static const _keyToken = 'token';
   static const _keyRole = 'role';
-  static const _keyIme = 'ime';
-  static const _keyPrezime = 'prezime';
+  static const _keyFirstName = 'firstName';
+  static const _keyLastName = 'lastName';
 
   Future<void> saveSession({
     required String token,
     required String role,
-    required String ime,
-    required String prezime,
+    required String firstName,
+    required String lastName,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyToken, token);
     await prefs.setString(_keyRole, role);
-    await prefs.setString(_keyIme, ime);
-    await prefs.setString(_keyPrezime, prezime);
+    await prefs.setString(_keyFirstName, firstName);
+    await prefs.setString(_keyLastName, lastName);
   }
 
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyToken);
     await prefs.remove(_keyRole);
-    await prefs.remove(_keyIme);
-    await prefs.remove(_keyPrezime);
+    await prefs.remove(_keyFirstName);
+    await prefs.remove(_keyLastName);
   }
 
   Future<bool> isLoggedIn() async {
@@ -43,13 +43,13 @@ class AuthService {
     return prefs.getString(_keyRole);
   }
 
-  Future<String?> getIme() async {
+  Future<String?> getFirstName() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyIme);
+    return prefs.getString(_keyFirstName);
   }
 
-  Future<String?> getPrezime() async {
+  Future<String?> getLastName() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyPrezime);
+    return prefs.getString(_keyLastName);
   }
 }

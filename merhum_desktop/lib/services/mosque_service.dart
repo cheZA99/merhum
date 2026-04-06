@@ -40,7 +40,7 @@ class MosqueService {
     await _api.delete('/api/mosque/$id');
   }
 
-  Future<List<Map<String, dynamic>>> getGradovi() async {
+  Future<List<Map<String, dynamic>>> getCities() async {
     final response = await _api.get('/api/referencedata/cities');
     final raw = response.data;
     final list = raw is List ? raw : (raw['data'] as List? ?? []);
