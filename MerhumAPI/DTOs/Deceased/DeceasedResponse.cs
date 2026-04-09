@@ -19,4 +19,6 @@ public class DeceasedResponse
     public int ProcedureStatusId { get; set; }
     public DateTime CreatedAt { get; set; }
     public string? ObituarySlug { get; set; }
+    public int CityId { get; set; }
+    public string CreatedByUsername { get; set; } = string.Empty;
 }

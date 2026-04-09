@@ -37,6 +37,7 @@ public class DeceasedController : ControllerBase
             .Include(d => d.City).ThenInclude(c => c.Country)
             .Include(d => d.ProcedureStatus)
             .Include(d => d.Obituary)
+            .Include(d => d.User)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -68,7 +69,9 @@ public class DeceasedController : ControllerBase
             ProcedureStatusId = d.ProcedureStatusId,
             ProcedureStatusName = d.ProcedureStatus.Name,
             CreatedAt = d.CreatedAt,
-            ObituarySlug = d.Obituary != null ? d.Obituary.UniqueSlug : null
+            ObituarySlug = d.Obituary != null ? d.Obituary.UniqueSlug : null,
+            CityId = d.CityId,
+            CreatedByUsername = d.User.UserName ?? ""
         }).ToListAsync();
 
         return Ok(result);
@@ -83,6 +86,7 @@ public class DeceasedController : ControllerBase
             .Include(x => x.City).ThenInclude(c => c.Country)
             .Include(x => x.ProcedureStatus)
             .Include(x => x.Obituary)
+            .Include(x => x.User)
             .FirstOrDefaultAsync(x => x.Id == id);
 
         if (d == null) return NotFound();
@@ -104,7 +108,9 @@ public class DeceasedController : ControllerBase
             ProcedureStatusId = d.ProcedureStatusId,
             ProcedureStatusName = d.ProcedureStatus.Name,
             CreatedAt = d.CreatedAt,
-            ObituarySlug = d.Obituary?.UniqueSlug
+            ObituarySlug = d.Obituary?.UniqueSlug,
+            CityId = d.CityId,
+            CreatedByUsername = d.User.UserName ?? ""
         });
     }
 
@@ -256,6 +262,28 @@ public class DeceasedController : ControllerBase
         _db.Deceased.Remove(deceased);
         await _db.SaveChangesAsync();
         return NoContent();
+    }
+
+    [HttpGet("{id:int}/status-history")]
+    [Authorize(Policy = "DesktopAccess")]
+    public async Task<IActionResult> GetStatusHistory(int id)
+    {
+        var history = await _db.StatusHistories
+            .Include(h => h.ProcedureStatus)
+            .Include(h => h.ChangedByUser)
+            .Where(h => h.DeceasedId == id)
+            .OrderBy(h => h.ChangedAt)
+            .Select(h => new {
+                h.Id,
+                h.DeceasedId,
+                h.StatusId,
+                StatusName = h.ProcedureStatus.Name,
+                h.Note,
+                h.ChangedAt,
+                ChangedByUsername = h.ChangedByUser.UserName ?? ""
+            })
+            .ToListAsync();
+        return Ok(history);
     }
 }
 
