@@ -19,7 +19,7 @@ public class ServiceOrderService : IServiceOrderService
         _publishEndpoint = publishEndpoint;
     }
 
-    public async Task<PagedResponse<ServiceOrderResponse>> GetAllAsync(int? deceasedId, string? status, int pageNumber, int pageSize)
+    public async Task<PagedResponse<ServiceOrderResponse>> GetAllAsync(int? deceasedId, string? status, int? funeralHomeId, DateTime? dateFrom, DateTime? dateTo, int pageNumber, int pageSize)
     {
         var query = _db.ServiceOrders
             .Include(s => s.Deceased)
@@ -32,6 +32,15 @@ public class ServiceOrderService : IServiceOrderService
 
         if (!string.IsNullOrWhiteSpace(status))
             query = query.Where(s => s.Status == status);
+
+        if (funeralHomeId.HasValue)
+            query = query.Where(s => s.FuneralHomeId == funeralHomeId.Value);
+
+        if (dateFrom.HasValue)
+            query = query.Where(s => s.OrderedAt >= dateFrom.Value);
+
+        if (dateTo.HasValue)
+            query = query.Where(s => s.OrderedAt <= dateTo.Value);
 
         var total = await query.CountAsync();
         var items = await query
@@ -87,14 +96,40 @@ public class ServiceOrderService : IServiceOrderService
         return ToResponse(order);
     }
 
-    public async Task<bool> UpdateStatusAsync(int id, string status)
+    public async Task<ServiceOrderResponse?> UpdateAsync(int id, ServiceOrderUpdateRequest request)
+    {
+        var order = await _db.ServiceOrders.FindAsync(id);
+        if (order == null) return null;
+
+        order.DeceasedId = request.DeceasedId;
+        order.FuneralHomeId = request.FuneralHomeId;
+        order.ServiceTypeId = request.ServiceTypeId;
+        order.Price = request.Price;
+        order.Note = request.Note;
+
+        if (!string.IsNullOrWhiteSpace(request.Status))
+            order.Status = request.Status;
+
+        if (request.Status == "Completed")
+            order.CompletedAt = request.CompletedAt ?? DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+
+        await _db.Entry(order).Reference(s => s.Deceased).LoadAsync();
+        await _db.Entry(order).Reference(s => s.FuneralHome).LoadAsync();
+        await _db.Entry(order).Reference(s => s.ServiceType).LoadAsync();
+
+        return ToResponse(order);
+    }
+
+    public async Task<bool> UpdateStatusAsync(int id, string status, DateTime? completedAt)
     {
         var order = await _db.ServiceOrders.FindAsync(id);
         if (order == null) return false;
 
         order.Status = status;
         if (status == "Completed")
-            order.CompletedAt = DateTime.UtcNow;
+            order.CompletedAt = completedAt ?? DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
         return true;

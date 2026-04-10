@@ -21,10 +21,14 @@ public class AppointmentController : ControllerBase
     public async Task<ActionResult<PagedResponse<AppointmentResponse>>> GetAll(
         [FromQuery] int? deceasedId,
         [FromQuery] string? status,
+        [FromQuery] int? mosqueId,
+        [FromQuery] int? imamId,
+        [FromQuery] DateTime? dateFrom,
+        [FromQuery] DateTime? dateTo,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20)
     {
-        var result = await _appointmentService.GetAllAsync(deceasedId, status, pageNumber, pageSize);
+        var result = await _appointmentService.GetAllAsync(deceasedId, status, mosqueId, imamId, dateFrom, dateTo, pageNumber, pageSize);
         return Ok(result);
     }
 
@@ -46,6 +50,15 @@ public class AppointmentController : ControllerBase
 
         var appointment = await _appointmentService.CreateAsync(request, userId);
         return CreatedAtAction(nameof(GetById), new { id = appointment.Id }, ApiResponse<AppointmentResponse>.Ok(appointment));
+    }
+
+    [HttpPut("{id:int}")]
+    [Authorize(Policy = "DesktopAccess")]
+    public async Task<ActionResult<ApiResponse<AppointmentResponse>>> Update(int id, [FromBody] AppointmentRequest request)
+    {
+        var updated = await _appointmentService.UpdateAsync(id, request);
+        if (updated == null) return NotFound(ApiResponse<AppointmentResponse>.Fail("Appointment not found."));
+        return Ok(ApiResponse<AppointmentResponse>.Ok(updated));
     }
 
     [HttpPatch("{id:int}/status")]

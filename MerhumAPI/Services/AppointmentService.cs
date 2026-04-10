@@ -19,7 +19,7 @@ public class AppointmentService : IAppointmentService
         _publishEndpoint = publishEndpoint;
     }
 
-    public async Task<PagedResponse<AppointmentResponse>> GetAllAsync(int? deceasedId, string? status, int pageNumber, int pageSize)
+    public async Task<PagedResponse<AppointmentResponse>> GetAllAsync(int? deceasedId, string? status, int? mosqueId, int? imamId, DateTime? dateFrom, DateTime? dateTo, int pageNumber, int pageSize)
     {
         var query = _db.Appointments
             .Include(a => a.Deceased)
@@ -34,6 +34,18 @@ public class AppointmentService : IAppointmentService
 
         if (!string.IsNullOrWhiteSpace(status))
             query = query.Where(a => a.Status == status);
+
+        if (mosqueId.HasValue)
+            query = query.Where(a => a.MosqueId == mosqueId.Value);
+
+        if (imamId.HasValue)
+            query = query.Where(a => a.ImamId == imamId.Value);
+
+        if (dateFrom.HasValue)
+            query = query.Where(a => a.FuneralDateTime >= dateFrom.Value);
+
+        if (dateTo.HasValue)
+            query = query.Where(a => a.FuneralDateTime <= dateTo.Value);
 
         var total = await query.CountAsync();
         var items = await query
@@ -112,6 +124,32 @@ public class AppointmentService : IAppointmentService
                 appointment.FuneralDateTime
             ));
         }
+
+        return ToResponse(appointment);
+    }
+
+    public async Task<AppointmentResponse?> UpdateAsync(int id, AppointmentRequest request)
+    {
+        var appointment = await _db.Appointments.FindAsync(id);
+        if (appointment == null) return null;
+
+        appointment.DeceasedId = request.DeceasedId;
+        appointment.MosqueId = request.MosqueId;
+        appointment.CemeteryId = request.CemeteryId;
+        appointment.ImamId = request.ImamId;
+        appointment.GraveSiteId = request.GraveSiteId;
+        appointment.FuneralDateTime = request.FuneralDateTime;
+        appointment.Note = request.Note;
+
+        await _db.SaveChangesAsync();
+
+        await _db.Entry(appointment).Reference(a => a.Deceased).LoadAsync();
+        await _db.Entry(appointment).Reference(a => a.Mosque).LoadAsync();
+        await _db.Entry(appointment).Reference(a => a.Cemetery).LoadAsync();
+        if (appointment.ImamId.HasValue)
+            await _db.Entry(appointment).Reference(a => a.Imam).LoadAsync();
+        if (appointment.GraveSiteId.HasValue)
+            await _db.Entry(appointment).Reference(a => a.GraveSite).LoadAsync();
 
         return ToResponse(appointment);
     }
