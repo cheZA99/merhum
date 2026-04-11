@@ -9,10 +9,16 @@ import 'providers/grave_site_provider.dart';
 import 'providers/imam_provider.dart';
 import 'providers/mosque_provider.dart';
 import 'providers/appointment_provider.dart';
+import 'providers/obituary_provider.dart';
 import 'providers/reference_provider.dart';
+import 'providers/report_provider.dart';
 import 'providers/service_order_provider.dart';
+import 'providers/user_provider.dart';
 import 'services/appointment_service.dart';
+import 'services/obituary_service.dart';
+import 'services/report_service.dart';
 import 'services/service_order_service.dart';
+import 'services/user_service.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'services/api_service.dart';
@@ -75,6 +81,15 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => ServiceOrderProvider(ServiceOrderService(apiService)),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ObituaryProvider(ObituaryService(apiService)),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ReportProvider(ReportService(apiService)),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => UserProvider(UserService(apiService)),
         ),
       ],
       child: const MerhumApp(),

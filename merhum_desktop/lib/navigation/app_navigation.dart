@@ -6,8 +6,11 @@ import '../providers/deceased_provider.dart';
 import '../providers/funeral_home_provider.dart';
 import '../providers/grave_site_provider.dart';
 import '../providers/imam_provider.dart';
+import '../providers/obituary_provider.dart';
 import '../providers/reference_provider.dart';
+import '../providers/report_provider.dart';
 import '../providers/service_order_provider.dart';
+import '../providers/user_provider.dart';
 import '../screens/appointments/appointments_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/cemeteries/cemeteries_screen.dart';
@@ -16,8 +19,11 @@ import '../screens/funeral_homes/funeral_homes_screen.dart';
 import '../screens/grave_sites/grave_sites_screen.dart';
 import '../screens/imams/imams_screen.dart';
 import '../screens/mosques/mosques_screen.dart';
+import '../screens/obituaries/obituaries_screen.dart';
 import '../screens/reference_data/reference_data_screen.dart';
+import '../screens/reports/reports_screen.dart';
 import '../screens/service_orders/service_orders_screen.dart';
+import '../screens/users/users_screen.dart';
 
 // Add new screens here as they are implemented
 void navigateByIndex(BuildContext context, int index) {
@@ -30,6 +36,12 @@ void navigateByIndex(BuildContext context, int index) {
       screen = ChangeNotifierProvider.value(
         value: context.read<DeceasedProvider>(),
         child: const DeceasedScreen(),
+      );
+      break;
+    case 2:
+      screen = ChangeNotifierProvider.value(
+        value: context.read<ObituaryProvider>(),
+        child: const ObituariesScreen(),
       );
       break;
     case 3:
@@ -79,10 +91,22 @@ void navigateByIndex(BuildContext context, int index) {
         child: const ServiceOrdersScreen(),
       );
       break;
+    case 10:
+      screen = ChangeNotifierProvider.value(
+        value: context.read<ReportProvider>(),
+        child: const ReportsScreen(),
+      );
+      break;
     case 11:
       screen = ChangeNotifierProvider.value(
         value: context.read<ReferenceProvider>(),
         child: const ReferenceDataScreen(),
+      );
+      break;
+    case 12:
+      screen = ChangeNotifierProvider.value(
+        value: context.read<UserProvider>(),
+        child: const UsersScreen(),
       );
       break;
     default:
