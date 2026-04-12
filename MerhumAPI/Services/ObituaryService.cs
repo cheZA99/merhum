@@ -22,24 +22,31 @@ public class ObituaryService : IObituaryService
         _configuration = configuration;
     }
 
-    public async Task<PagedResponse<ObituaryResponse>> GetAllAsync(bool? isPublic, int pageNumber, int pageSize)
+    public async Task<PagedResponse<ObituaryResponse>> GetAllAsync(bool? isPublic, bool? isActive, string? deceasedName, int pageNumber, int pageSize)
     {
         var query = _db.Obituaries
             .Include(o => o.Deceased)
+            .Include(o => o.CreatedByUser)
+            .Include(o => o.Condolences)
             .AsQueryable();
 
         if (isPublic.HasValue)
             query = query.Where(o => o.IsPublic == isPublic.Value);
+
+        if (isActive.HasValue)
+            query = query.Where(o => o.IsActive == isActive.Value);
+
+        if (!string.IsNullOrWhiteSpace(deceasedName))
+            query = query.Where(o => (o.Deceased.FirstName + " " + o.Deceased.LastName).Contains(deceasedName));
 
         var total = await query.CountAsync();
         var items = await query
             .OrderByDescending(o => o.CreatedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .Select(o => MapToResponse(o))
             .ToListAsync();
 
-        return PagedResponse<ObituaryResponse>.Create(items, total, pageNumber, pageSize);
+        return PagedResponse<ObituaryResponse>.Create(items.Select(MapToResponse).ToList(), total, pageNumber, pageSize);
     }
 
     public async Task<ObituaryResponse?> GetByIdAsync(int id)
@@ -47,6 +54,7 @@ public class ObituaryService : IObituaryService
         var o = await _db.Obituaries
             .Include(x => x.Deceased).ThenInclude(d => d.City)
             .Include(x => x.Condolences)
+            .Include(x => x.CreatedByUser)
             .FirstOrDefaultAsync(x => x.Id == id);
         return o == null ? null : MapToResponse(o);
     }
@@ -143,12 +151,17 @@ public class ObituaryService : IObituaryService
         Id = o.Id,
         DeceasedId = o.DeceasedId,
         DeceasedFullName = o.Deceased != null ? $"{o.Deceased.FirstName} {o.Deceased.LastName}" : string.Empty,
+        DeceasedPhotoUrl = o.Deceased?.PhotoUrl,
+        DeceasedDateOfDeath = o.Deceased?.DateOfDeath,
         UniqueSlug = o.UniqueSlug,
         QrCodeUrl = o.QrCodeUrl,
         ViewCount = o.ViewCount,
         IsPublic = o.IsPublic,
         IsActive = o.IsActive,
         CreatedAt = o.CreatedAt,
+        CreatedByUsername = o.CreatedByUser?.UserName,
+        CondolenceCount = o.Condolences.Count,
+        ApprovedCondolenceCount = o.Condolences.Count(c => c.IsApproved),
         Condolences = o.Condolences.Select(c => new CondolenceResponse
         {
             Id = c.Id,

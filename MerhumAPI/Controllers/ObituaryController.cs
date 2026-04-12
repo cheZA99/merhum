@@ -19,10 +19,12 @@ public class ObituaryController : ControllerBase
     [Authorize(Policy = "DesktopAccess")]
     public async Task<ActionResult<PagedResponse<ObituaryResponse>>> GetAll(
         [FromQuery] bool? isPublic,
+        [FromQuery] bool? isActive,
+        [FromQuery] string? deceasedName,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20)
     {
-        var result = await _obituaryService.GetAllAsync(isPublic, pageNumber, pageSize);
+        var result = await _obituaryService.GetAllAsync(isPublic, isActive, deceasedName, pageNumber, pageSize);
         return Ok(result);
     }
 
