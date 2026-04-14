@@ -132,11 +132,11 @@ public static class SeedData
 
 		var userDefs = new[]
 		{
-			(Username: "desktop", FullName: "Admin Korisnik", Email: "desktop@merhum.ba", Password: "test", Role: "Administrator"),
-			(Username: "mobile", FullName: "Porodica Korisnik", Email: "mobile@merhum.ba", Password: "test", Role: "Porodica"),
-			(Username: "korisnik", FullName: "Javni Korisnik", Email: "korisnik@merhum.ba", Password: "test", Role: "JavniKorisnik"),
-			(Username: "imam", FullName: "Imam Korisnik", Email: "imam@merhum.ba", Password: "test", Role: "Imam"),
-			(Username: "pogrebnopreduzece", FullName: "Pogrebno Preduzece", Email: "pogrebno@merhum.ba", Password: "test", Role: "PogrebnoPreduzeće")
+			(Username: "desktop", FirstName: "Admin", LastName: "Korisnik", Email: "desktop@merhum.ba", Password: "test", Role: "Administrator"),
+			(Username: "mobile", FirstName: "Porodica", LastName: "Korisnik", Email: "mobile@merhum.ba", Password: "test", Role: "Porodica"),
+			(Username: "korisnik", FirstName: "Javni", LastName: "Korisnik", Email: "korisnik@merhum.ba", Password: "test", Role: "JavniKorisnik"),
+			(Username: "imam", FirstName: "Imam", LastName: "Korisnik", Email: "imam@merhum.ba", Password: "test", Role: "Imam"),
+			(Username: "pogrebnopreduzece", FirstName: "Pogrebno", LastName: "Preduzece", Email: "pogrebno@merhum.ba", Password: "test", Role: "PogrebnoPreduzeće")
 		};
 
 		var createdUsers = new Dictionary<string, ApplicationUser>();
@@ -146,7 +146,8 @@ public static class SeedData
 			{
 				UserName = u.Username,
 				Email = u.Email,
-				FullName = u.FullName,
+				FirstName = u.FirstName,
+				LastName = u.LastName,
 				EmailConfirmed = true
 			};
 			var result = await userManager.CreateAsync(user, u.Password);

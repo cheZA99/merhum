@@ -176,5 +176,14 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .HasForeignKey(x => x.UserId)
              .OnDelete(DeleteBehavior.SetNull);
         });
+
+        // ApplicationUser — optional city FK
+        builder.Entity<ApplicationUser>(e =>
+        {
+            e.HasOne(x => x.City)
+             .WithMany()
+             .HasForeignKey(x => x.CityId)
+             .OnDelete(DeleteBehavior.SetNull);
+        });
     }
 }

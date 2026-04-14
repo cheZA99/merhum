@@ -94,6 +94,7 @@ builder.Services.AddMassTransit(x =>
 
 // Application Services
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IObituaryService, ObituaryService>();
 builder.Services.AddScoped<ICondolenceService, CondolenceService>();
 builder.Services.AddScoped<IReportService, ReportService>();

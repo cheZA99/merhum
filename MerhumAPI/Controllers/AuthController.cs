@@ -1,6 +1,8 @@
+using MerhumAPI.Common;
 using MerhumAPI.DTOs.Auth;
 using MerhumAPI.Models;
 using MerhumAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -47,10 +49,54 @@ public class AuthController : ControllerBase
         {
             Token = token,
             Username = user.UserName ?? string.Empty,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
             FullName = user.FullName,
+            Role = roles.FirstOrDefault() ?? string.Empty,
             Roles = roles,
             ExpiresAt = DateTime.UtcNow.AddMinutes(expiresInMinutes)
         });
+    }
+
+    /// <summary>Admin creates a new user with a specified role</summary>
+    [HttpPost("register-admin")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<ActionResult<ApiResponse<object>>> RegisterAdmin([FromBody] AdminRegisterRequest request)
+    {
+        var existing = await _userManager.FindByNameAsync(request.Username);
+        if (existing != null)
+            return Conflict(ApiResponse<object>.Fail("Korisničko ime je zauzeto."));
+
+        var emailExisting = await _userManager.FindByEmailAsync(request.Email);
+        if (emailExisting != null)
+            return Conflict(ApiResponse<object>.Fail("Email adresa je zauzeta."));
+
+        var validRoles = new[] { "Administrator", "Porodica", "JavniKorisnik", "Imam", "PogrebnoPreduzeće" };
+        if (!validRoles.Contains(request.Role))
+            return BadRequest(ApiResponse<object>.Fail("Neispravna uloga."));
+
+        var user = new ApplicationUser
+        {
+            UserName = request.Username,
+            Email = request.Email,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            PhoneNumber = request.Phone,
+            CityId = request.CityId,
+            EmailConfirmed = true,
+            IsActive = true
+        };
+
+        var result = await _userManager.CreateAsync(user, request.Password);
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            return BadRequest(ApiResponse<object>.Fail(errors));
+        }
+
+        await _userManager.AddToRoleAsync(user, request.Role);
+
+        return Ok(ApiResponse<object>.Ok(new { user.Id }, "Korisnik uspješno kreiran."));
     }
 
     /// <summary>Get current user info</summary>

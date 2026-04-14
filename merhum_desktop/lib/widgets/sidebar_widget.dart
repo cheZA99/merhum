@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../screens/auth/login_screen.dart';
 import '../utils/constants.dart';
 
 class SidebarItem {
@@ -111,7 +112,19 @@ class SidebarWidget extends StatelessWidget {
                   icon:
                       const Icon(Icons.logout, color: Colors.white70, size: 18),
                   tooltip: 'Odjava',
-                  onPressed: () => context.read<AuthProvider>().logout(),
+                  onPressed: () async {
+                    await context.read<AuthProvider>().logout();
+                    if (context.mounted) {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        PageRouteBuilder(
+                          pageBuilder: (_, __, ___) => const LoginScreen(),
+                          transitionDuration: Duration.zero,
+                          reverseTransitionDuration: Duration.zero,
+                        ),
+                        (_) => false,
+                      );
+                    }
+                  },
                 ),
               ],
             ),

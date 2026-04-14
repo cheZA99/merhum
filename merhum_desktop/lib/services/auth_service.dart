@@ -6,18 +6,21 @@ class AuthService {
   static const _keyRole = 'role';
   static const _keyFirstName = 'firstName';
   static const _keyLastName = 'lastName';
+  static const _keyUsername = 'username';
 
   Future<void> saveSession({
     required String token,
     required String role,
     required String firstName,
     required String lastName,
+    String? username,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyToken, token);
     await prefs.setString(_keyRole, role);
     await prefs.setString(_keyFirstName, firstName);
     await prefs.setString(_keyLastName, lastName);
+    if (username != null) await prefs.setString(_keyUsername, username);
   }
 
   Future<void> logout() async {
@@ -26,6 +29,7 @@ class AuthService {
     await prefs.remove(_keyRole);
     await prefs.remove(_keyFirstName);
     await prefs.remove(_keyLastName);
+    await prefs.remove(_keyUsername);
   }
 
   Future<bool> isLoggedIn() async {
@@ -51,5 +55,10 @@ class AuthService {
   Future<String?> getLastName() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_keyLastName);
+  }
+
+  Future<String?> getUsername() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyUsername);
   }
 }
