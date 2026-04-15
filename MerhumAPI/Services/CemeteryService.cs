@@ -24,7 +24,24 @@ public class CemeteryService : ICemeteryService
             .OrderBy(c => c.Name)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .Select(c => ToResponse(c))
+            .Select(c => new CemeteryResponse
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Address = c.Address,
+                CityId = c.CityId,
+                CityName = c.City != null ? c.City.Name : string.Empty,
+                TotalPlaces = c.TotalPlaces,
+                OccupiedPlaces = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == "Occupied"),
+                AvailablePlaces = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == "Available"),
+                ReservedPlaces = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == "Reserved"),
+                FillPercentage = c.TotalPlaces > 0
+                    ? Math.Round((double)_db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == "Occupied") / c.TotalPlaces * 100, 1)
+                    : 0.0,
+                Latitude = c.Latitude,
+                Longitude = c.Longitude,
+                IsActive = c.IsActive
+            })
             .ToListAsync();
 
         return PagedResponse<CemeteryResponse>.Create(items, total, pageNumber, pageSize);
@@ -33,7 +50,28 @@ public class CemeteryService : ICemeteryService
     public async Task<CemeteryResponse?> GetByIdAsync(int id)
     {
         var c = await _db.Cemeteries.Include(x => x.City).FirstOrDefaultAsync(x => x.Id == id);
-        return c == null ? null : ToResponse(c);
+        if (c == null) return null;
+
+        var occupied = await _db.GraveSites.CountAsync(g => g.CemeteryId == id && g.Status == "Occupied");
+        var available = await _db.GraveSites.CountAsync(g => g.CemeteryId == id && g.Status == "Available");
+        var reserved = await _db.GraveSites.CountAsync(g => g.CemeteryId == id && g.Status == "Reserved");
+
+        return new CemeteryResponse
+        {
+            Id = c.Id,
+            Name = c.Name,
+            Address = c.Address,
+            CityId = c.CityId,
+            CityName = c.City?.Name ?? string.Empty,
+            TotalPlaces = c.TotalPlaces,
+            OccupiedPlaces = occupied,
+            AvailablePlaces = available,
+            ReservedPlaces = reserved,
+            FillPercentage = c.TotalPlaces > 0 ? Math.Round((double)occupied / c.TotalPlaces * 100, 1) : 0.0,
+            Latitude = c.Latitude,
+            Longitude = c.Longitude,
+            IsActive = c.IsActive
+        };
     }
 
     public async Task<CemeteryResponse> CreateAsync(CemeteryRequest request)
