@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import '../config/api_config.dart';
 import 'auth_service.dart';
 
@@ -16,6 +17,7 @@ class ApiService {
         receiveTimeout: const Duration(seconds: 30),
       ),
     );
+    _dio.interceptors.add(PrettyDioLogger());
     _dio.interceptors.add(_buildInterceptor());
   }
 
