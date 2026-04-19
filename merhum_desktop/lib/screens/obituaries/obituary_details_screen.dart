@@ -68,7 +68,6 @@ class _ObituaryDetailsScreenState extends State<ObituaryDetailsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Left column — obituary info
           Expanded(
             flex: 1,
             child: Column(
@@ -81,7 +80,6 @@ class _ObituaryDetailsScreenState extends State<ObituaryDetailsScreen> {
             ),
           ),
           const SizedBox(width: 24),
-          // Right column — condolences
           Expanded(
             flex: 1,
             child: _buildCondolencesCard(o, p, isAdmin),

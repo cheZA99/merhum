@@ -29,16 +29,13 @@ class ObituaryProvider extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  // Filters
   bool? filterIsPublic;
   bool? filterIsActive;
   String? filterDeceasedName;
 
-  // Dropdown data for create form
   List<Map<String, dynamic>> _deceased = [];
   List<Map<String, dynamic>> get deceased => _deceased;
 
-  // Details
   ObituaryModel? _selected;
   ObituaryModel? get selected => _selected;
 

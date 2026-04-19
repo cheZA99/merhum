@@ -28,12 +28,10 @@ class UserProvider extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  // Filters
   String? filterName;
   String? filterRole;
   bool? filterIsLocked;
 
-  // Dropdown data
   List<Map<String, dynamic>> _cities = [];
   List<Map<String, dynamic>> get cities => _cities;
 

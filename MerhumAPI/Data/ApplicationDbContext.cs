@@ -8,13 +8,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-    // Reference tables
     public DbSet<Country> Countries => Set<Country>();
     public DbSet<City> Cities => Set<City>();
     public DbSet<ServiceType> ServiceTypes => Set<ServiceType>();
     public DbSet<CemeterySection> CemeterySections => Set<CemeterySection>();
 
-    // Functional tables
     public DbSet<ProcedureStatus> ProcedureStatuses => Set<ProcedureStatus>();
     public DbSet<Deceased> Deceased => Set<Deceased>();
     public DbSet<StatusHistory> StatusHistories => Set<StatusHistory>();
@@ -41,19 +39,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             fk.DeleteBehavior = DeleteBehavior.Restrict;
         }
 
-        // Deceased
         builder.Entity<Deceased>(e =>
         {
             e.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
         });
 
-        // StatusHistory
         builder.Entity<StatusHistory>(e =>
         {
             e.Property(x => x.ChangedAt).HasDefaultValueSql("GETDATE()");
         });
 
-        // Obituary — one-to-one with Deceased
         builder.Entity<Obituary>(e =>
         {
             e.HasIndex(x => x.DeceasedId).IsUnique();
@@ -64,14 +59,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             e.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
         });
 
-        // Condolence
         builder.Entity<Condolence>(e =>
         {
             e.Property(x => x.IsApproved).HasDefaultValue(false);
             e.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
         });
 
-        // GraveSite
         builder.Entity<GraveSite>(e =>
         {
             e.Property(x => x.Status).HasDefaultValue("Available");
@@ -82,7 +75,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .OnDelete(DeleteBehavior.SetNull);
         });
 
-        // Appointment — avoid multiple cascade paths
         builder.Entity<Appointment>(e =>
         {
             e.Property(x => x.Status).HasDefaultValue("Scheduled");
@@ -114,7 +106,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // ServiceOrder
         builder.Entity<ServiceOrder>(e =>
         {
             e.Property(x => x.Status).HasDefaultValue("Ordered");
@@ -136,7 +127,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // Deceased — avoid cascade conflicts
         builder.Entity<Deceased>(e =>
         {
             e.HasOne(x => x.User)
@@ -150,7 +140,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // StatusHistory — avoid cascade conflicts
         builder.Entity<StatusHistory>(e =>
         {
             e.HasOne(x => x.ChangedByUser)
@@ -159,7 +148,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // Obituary — avoid cascade on user
         builder.Entity<Obituary>(e =>
         {
             e.HasOne(x => x.CreatedByUser)
@@ -168,7 +156,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // Condolence — optional user FK
         builder.Entity<Condolence>(e =>
         {
             e.HasOne(x => x.User)
@@ -177,7 +164,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .OnDelete(DeleteBehavior.SetNull);
         });
 
-        // ApplicationUser — optional city FK
         builder.Entity<ApplicationUser>(e =>
         {
             e.HasOne(x => x.City)

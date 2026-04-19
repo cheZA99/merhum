@@ -8,8 +8,6 @@ class ReferenceService {
   final ApiService _api;
   ReferenceService(this._api);
 
-  // Countries
-
   Future<List<CountryModel>> getCountries() async {
     final response = await _api.get('/api/referencedata/countries');
     final raw = response.data;
@@ -30,8 +28,6 @@ class ReferenceService {
   Future<void> deleteCountry(int id) async {
     await _api.delete('/api/referencedata/countries/$id');
   }
-
-  // Cities
 
   Future<List<CityModel>> getCities({int? countryId}) async {
     final params = <String, dynamic>{};
@@ -58,8 +54,6 @@ class ReferenceService {
     await _api.delete('/api/referencedata/cities/$id');
   }
 
-  // Service types
-
   Future<List<ServiceTypeModel>> getServiceTypes() async {
     final response = await _api.get('/api/referencedata/service-types');
     final raw = response.data;
@@ -80,8 +74,6 @@ class ReferenceService {
   Future<void> deleteServiceType(int id) async {
     await _api.delete('/api/referencedata/service-types/$id');
   }
-
-  // Cemetery sections
 
   Future<List<CemeterySectorModel>> getSectors({int? cemeteryId}) async {
     final params = <String, dynamic>{};
@@ -107,8 +99,6 @@ class ReferenceService {
   Future<void> deleteSector(int id) async {
     await _api.delete('/api/referencedata/cemetery-sections/$id');
   }
-
-  // Cemeteries for dropdown
 
   Future<List<Map<String, dynamic>>> getCemeteries() async {
     final response =

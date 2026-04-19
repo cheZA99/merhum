@@ -12,7 +12,6 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
 	   builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -21,7 +20,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 		  maxRetryDelay: TimeSpan.FromSeconds(10),
 		  errorNumbersToAdd: null)));
 
-// Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
 	options.Password.RequiredLength = 4;
@@ -33,7 +31,6 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// JWT Authentication
 var jwtKey = builder.Configuration["JWT:Key"]
     ?? throw new InvalidOperationException("JWT:Key is missing from configuration.");
 
@@ -56,7 +53,6 @@ builder.Services.AddAuthentication(options =>
 	};
 });
 
-// Authorization Policies
 builder.Services.AddAuthorization(options =>
 {
 	options.AddPolicy("AdminOnly", policy => policy.RequireRole("Administrator"));
@@ -66,7 +62,6 @@ builder.Services.AddAuthorization(options =>
 	options.AddPolicy("PogrebnoAccess", policy => policy.RequireRole("PogrebnoPreduzeće", "Administrator"));
 });
 
-// MassTransit / RabbitMQ
 builder.Services.AddMassTransit(x =>
 {
 	x.UsingRabbitMq((ctx, cfg) =>
@@ -92,7 +87,6 @@ builder.Services.AddMassTransit(x =>
 	});
 });
 
-// Application Services
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IObituaryService, ObituaryService>();
@@ -106,7 +100,6 @@ builder.Services.AddScoped<IFuneralHomeService, FuneralHomeService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IServiceOrderService, ServiceOrderService>();
 
-// CORS
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy("FlutterPolicy", policy =>
@@ -118,7 +111,6 @@ builder.Services.AddCors(options =>
 	});
 });
 
-// Controllers & Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -152,12 +144,10 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Static Files
 builder.Services.AddDirectoryBrowser();
 
 var app = builder.Build();
 
-// Middleware
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
@@ -174,7 +164,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Seed Data
 _ = Task.Run(async () =>
 {
 	await Task.Delay(3000);

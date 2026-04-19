@@ -24,7 +24,6 @@ public class DeceasedController : ControllerBase
         _publishEndpoint = publishEndpoint;
     }
 
-    /// <summary>Get all deceased with optional filtering</summary>
     [HttpGet]
     [Authorize(Policy = "DesktopAccess")]
     public async Task<ActionResult<IEnumerable<DeceasedResponse>>> GetAll(
@@ -77,7 +76,6 @@ public class DeceasedController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>Get single deceased by id</summary>
     [HttpGet("{id:int}")]
     [Authorize(Policy = "MobileAccess")]
     public async Task<ActionResult<DeceasedResponse>> GetById(int id)
@@ -114,7 +112,6 @@ public class DeceasedController : ControllerBase
         });
     }
 
-    /// <summary>Register a new deceased person</summary>
     [HttpPost]
     [Authorize(Policy = "DesktopAccess")]
     public async Task<ActionResult<DeceasedResponse>> Create([FromBody] DeceasedRequest request)
@@ -171,7 +168,6 @@ public class DeceasedController : ControllerBase
         });
     }
 
-    /// <summary>Update deceased record</summary>
     [HttpPut("{id:int}")]
     [Authorize(Policy = "DesktopAccess")]
     public async Task<IActionResult> Update(int id, [FromBody] DeceasedRequest request)
@@ -195,7 +191,6 @@ public class DeceasedController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Update procedure status</summary>
     [HttpPatch("{id:int}/status")]
     [Authorize(Policy = "DesktopAccess")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
@@ -221,7 +216,6 @@ public class DeceasedController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Upload photo for deceased</summary>
     [HttpPost("{id:int}/photo")]
     [Authorize(Policy = "DesktopAccess")]
     public async Task<IActionResult> UploadPhoto(int id, IFormFile file)
@@ -251,7 +245,6 @@ public class DeceasedController : ControllerBase
         return Ok(new { photoUrl = deceased.PhotoUrl });
     }
 
-    /// <summary>Delete deceased record</summary>
     [HttpDelete("{id:int}")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete(int id)

@@ -29,7 +29,6 @@ public class AuthController : ControllerBase
         _configuration = configuration;
     }
 
-    /// <summary>Login and receive JWT token</summary>
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
     {
@@ -58,7 +57,6 @@ public class AuthController : ControllerBase
         });
     }
 
-    /// <summary>Admin creates a new user with a specified role</summary>
     [HttpPost("register-admin")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<ApiResponse<object>>> RegisterAdmin([FromBody] AdminRegisterRequest request)
@@ -99,7 +97,6 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<object>.Ok(new { user.Id }, "Korisnik uspješno kreiran."));
     }
 
-    /// <summary>Get current user info</summary>
     [HttpGet("me")]
     [Microsoft.AspNetCore.Authorization.Authorize]
     public async Task<IActionResult> Me()

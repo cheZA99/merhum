@@ -94,7 +94,6 @@ class _CemeteryMapWidgetState extends State<CemeteryMapWidget> {
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'ba.merhum.desktop',
               ),
-              // Cemetery marker
               if (hasCemeteryCoords)
                 MarkerLayer(
                   markers: [
@@ -110,7 +109,6 @@ class _CemeteryMapWidgetState extends State<CemeteryMapWidget> {
                     ),
                   ],
                 ),
-              // Grave site markers
               if (mapSites.isNotEmpty)
                 MarkerLayer(
                   markers: mapSites.map((m) {
@@ -153,7 +151,6 @@ class _CemeteryMapWidgetState extends State<CemeteryMapWidget> {
             ],
           ),
         ),
-        // Info panel for the selected site
         if (_selected != null)
           Container(
             color: Colors.white,
@@ -182,7 +179,6 @@ class _CemeteryMapWidgetState extends State<CemeteryMapWidget> {
               ],
             ),
           ),
-        // Legend
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(

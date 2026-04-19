@@ -69,8 +69,6 @@ class ReportPdfGenerator {
     );
   }
 
-  // ── Shared helpers ──────────────────────────────────────────────────────────
-
   static pw.Widget _table({
     required List<String> headers,
     required List<List<String>> rows,
@@ -121,8 +119,6 @@ class ReportPdfGenerator {
     );
   }
 
-  // ── Burial report ───────────────────────────────────────────────────────────
-
   static Future<File> burialReport(Map<String, dynamic> data, int year) {
     final byMonth = (data['byMonth'] as List? ?? []).cast<Map<String, dynamic>>();
     final byCemetery = (data['byCemetery'] as List? ?? []).cast<Map<String, dynamic>>();
@@ -167,8 +163,6 @@ class ReportPdfGenerator {
     );
   }
 
-  // ── Cemetery capacity report ────────────────────────────────────────────────
-
   static Future<File> cemeteryCapacityReport(Map<String, dynamic> data) {
     final cemeteries = (data['cemeteries'] as List? ?? []).cast<Map<String, dynamic>>();
 
@@ -195,8 +189,6 @@ class ReportPdfGenerator {
       'popunjenost_groblja_${DateFormat('yyyyMMdd').format(DateTime.now())}',
     );
   }
-
-  // ── Services report ─────────────────────────────────────────────────────────
 
   static Future<File> servicesReport(Map<String, dynamic> data, int year) {
     final byType = (data['byServiceType'] as List? ?? []).cast<Map<String, dynamic>>();
@@ -245,8 +237,6 @@ class ReportPdfGenerator {
     );
   }
 
-  // ── Obituaries stats report ─────────────────────────────────────────────────
-
   static Future<File> obituariesStatsReport(Map<String, dynamic> data) {
     final topViewed = (data['topViewed'] as List? ?? []).cast<Map<String, dynamic>>();
 
@@ -282,8 +272,6 @@ class ReportPdfGenerator {
       'smrtovnice_${DateFormat('yyyyMMdd').format(DateTime.now())}',
     );
   }
-
-  // ── Financial report ────────────────────────────────────────────────────────
 
   static Future<File> financialReport(Map<String, dynamic> data, int year) {
     final byMonth = (data['byMonth'] as List? ?? []).cast<Map<String, dynamic>>();

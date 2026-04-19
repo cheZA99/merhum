@@ -99,8 +99,6 @@ class ReferenceProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Country CRUD
-
   Future<bool> createCountry(Map<String, dynamic> data) async {
     try {
       await _service.createCountry(data);
@@ -137,8 +135,6 @@ class ReferenceProvider extends ChangeNotifier {
       return false;
     }
   }
-
-  // City CRUD
 
   Future<bool> createCity(Map<String, dynamic> data) async {
     try {
@@ -177,8 +173,6 @@ class ReferenceProvider extends ChangeNotifier {
     }
   }
 
-  // Service type CRUD
-
   Future<bool> createServiceType(Map<String, dynamic> data) async {
     try {
       await _service.createServiceType(data);
@@ -215,8 +209,6 @@ class ReferenceProvider extends ChangeNotifier {
       return false;
     }
   }
-
-  // Sector CRUD
 
   Future<bool> createSector(Map<String, dynamic> data) async {
     try {

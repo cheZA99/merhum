@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'constants.dart';
 
-// Maps API values to display labels and back
 class GraveSiteStatus {
   static const available = 'Available';
   static const occupied = 'Occupied';

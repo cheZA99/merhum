@@ -96,7 +96,6 @@ public class UserService : IUserService
         var updateResult = await _userManager.UpdateAsync(user);
         if (!updateResult.Succeeded) return false;
 
-        // Change role if needed
         var currentRoles = await _userManager.GetRolesAsync(user);
         var currentRole = currentRoles.FirstOrDefault();
         if (currentRole != request.Role)
@@ -106,7 +105,6 @@ public class UserService : IUserService
             await _userManager.AddToRoleAsync(user, request.Role);
         }
 
-        // Change password if provided
         if (!string.IsNullOrWhiteSpace(request.NewPassword))
         {
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);

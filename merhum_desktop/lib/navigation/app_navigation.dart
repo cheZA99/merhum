@@ -25,7 +25,6 @@ import '../screens/reports/reports_screen.dart';
 import '../screens/service_orders/service_orders_screen.dart';
 import '../screens/users/users_screen.dart';
 
-// Add new screens here as they are implemented
 void navigateByIndex(BuildContext context, int index) {
   Widget screen;
   switch (index) {
