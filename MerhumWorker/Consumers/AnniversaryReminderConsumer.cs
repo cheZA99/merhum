@@ -1,17 +1,18 @@
 using MassTransit;
 using MerhumWorker.Messages;
 using MerhumWorker.Services;
+using MerhumWorker.Templates;
 
 namespace MerhumWorker.Consumers;
 
 public class AnniversaryReminderConsumer : IConsumer<AnniversaryReminderMessage>
 {
-    private readonly EmailService _emailService;
+    private readonly IEmailService _emailService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AnniversaryReminderConsumer> _logger;
 
     public AnniversaryReminderConsumer(
-        EmailService emailService,
+        IEmailService emailService,
         IConfiguration configuration,
         ILogger<AnniversaryReminderConsumer> logger)
     {
@@ -23,29 +24,25 @@ public class AnniversaryReminderConsumer : IConsumer<AnniversaryReminderMessage>
     public async Task Consume(ConsumeContext<AnniversaryReminderMessage> context)
     {
         var msg = context.Message;
-        _logger.LogInformation("Processing AnniversaryReminder for DeceasedId={Id}, Years={Years}", msg.DeceasedId, msg.YearsElapsed);
+        _logger.LogInformation("Received AnniversaryReminder DeceasedId={Id} Years={Years}", msg.DeceasedId, msg.YearsElapsed);
 
         if (string.IsNullOrWhiteSpace(msg.ContactPersonEmail))
         {
-            _logger.LogWarning("No contact email for anniversary reminder for deceased {Id}, skipping.", msg.DeceasedId);
+            _logger.LogWarning("No contact email for anniversary reminder of deceased {Id}, skipping.", msg.DeceasedId);
             return;
         }
 
-        var yearWord = msg.YearsElapsed == 1 ? "year" : "years";
-        var obituaryLine = msg.ObituarySlug != null
-            ? $"""<p>Visit the digital obituary: <a href="{_configuration["AppSettings:SmrtovnicaBaseUrl"]}/{msg.ObituarySlug}">View Obituary</a></p>"""
-            : string.Empty;
+        string? obituaryUrl = null;
+        if (!string.IsNullOrWhiteSpace(msg.ObituarySlug))
+        {
+            var baseUrl = _configuration["AppSettings:ObituaryBaseUrl"]
+                          ?? _configuration["AppSettings:SmrtovnicaBaseUrl"]
+                          ?? "http://localhost:5000/smrtovnica";
+            obituaryUrl = $"{baseUrl.TrimEnd('/')}/{msg.ObituarySlug}";
+        }
 
-        var subject = $"Remembering {msg.DeceasedFullName} — {msg.YearsElapsed} {yearWord}";
-        var body = $"""
-            <h2>Dear {msg.ContactPersonName},</h2>
-            <p>Today marks <strong>{msg.YearsElapsed} {yearWord}</strong> since the passing of <strong>{msg.DeceasedFullName}</strong> on {msg.DateOfDeath:d}.</p>
-            <p>May Allah grant them eternal peace and paradise.</p>
-            {obituaryLine}
-            <br/>
-            <p>Merhum System</p>
-            """;
-
-        await _emailService.SendAsync(msg.ContactPersonEmail, msg.ContactPersonName, subject, body);
+        var body = AnniversaryTemplate.Build(msg, obituaryUrl);
+        var subject = AnniversaryTemplate.BuildSubject(msg);
+        await _emailService.SendEmailAsync(msg.ContactPersonEmail, msg.ContactPersonName, subject, body);
     }
 }
