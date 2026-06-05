@@ -1,19 +1,17 @@
 using MassTransit;
 using MerhumWorker.Consumers;
-using MerhumWorker.Messages;
 using MerhumWorker.Services;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-// Email Service
-builder.Services.AddSingleton<EmailService>();
+builder.Services.AddSingleton<IEmailService, EmailService>();
 
-// MassTransit / RabbitMQ
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<FuneralRegisteredConsumer>();
     x.AddConsumer<AppointmentConfirmedConsumer>();
     x.AddConsumer<ImamNotificationConsumer>();
+    x.AddConsumer<ServiceOrderedConsumer>();
     x.AddConsumer<ObituaryCreatedConsumer>();
     x.AddConsumer<AnniversaryReminderConsumer>();
 
@@ -48,6 +46,12 @@ builder.Services.AddMassTransit(x =>
             e.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
         });
 
+        cfg.ReceiveEndpoint("merhum.usluga.narucena", e =>
+        {
+            e.ConfigureConsumer<ServiceOrderedConsumer>(ctx);
+            e.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
+        });
+
         cfg.ReceiveEndpoint("merhum.smrtovnica.kreirana", e =>
         {
             e.ConfigureConsumer<ObituaryCreatedConsumer>(ctx);
@@ -62,5 +66,8 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
+
 var host = builder.Build();
-host.Run();
+await host.RunAsync();
