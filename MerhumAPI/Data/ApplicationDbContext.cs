@@ -25,6 +25,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<FuneralHome> FuneralHomes => Set<FuneralHome>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<ServiceOrder> ServiceOrders => Set<ServiceOrder>();
+    public DbSet<ChatLog> ChatLogs => Set<ChatLog>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -170,6 +171,22 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .WithMany()
              .HasForeignKey(x => x.CityId)
              .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<ChatLog>(e =>
+        {
+            e.Property(x => x.Message).IsRequired().HasColumnType("NVARCHAR(2000)");
+            e.Property(x => x.Response).IsRequired().HasColumnType("NVARCHAR(MAX)");
+            e.Property(x => x.Context).HasColumnType("NVARCHAR(MAX)");
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
+
+            e.HasOne(x => x.User)
+             .WithMany()
+             .HasForeignKey(x => x.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(x => x.UserId);
+            e.HasIndex(x => x.CreatedAt);
         });
     }
 }
