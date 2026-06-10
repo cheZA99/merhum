@@ -3,6 +3,7 @@ using MerhumAPI.Data;
 using MerhumAPI.Middleware;
 using MerhumAPI.Models;
 using MerhumAPI.Services;
+using MerhumAPI.Services.Chat;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -99,6 +100,10 @@ builder.Services.AddScoped<IGraveSiteService, GraveSiteService>();
 builder.Services.AddScoped<IFuneralHomeService, FuneralHomeService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IServiceOrderService, ServiceOrderService>();
+
+builder.Services.AddHttpClient<IGroqService, GroqService>();
+builder.Services.AddScoped<IContextBuilderService, ContextBuilderService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
 builder.Services.AddCors(options =>
 {
