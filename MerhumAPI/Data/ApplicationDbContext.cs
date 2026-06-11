@@ -26,6 +26,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<ServiceOrder> ServiceOrders => Set<ServiceOrder>();
     public DbSet<ChatLog> ChatLogs => Set<ChatLog>();
+    public DbSet<Payment> Payments => Set<Payment>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -171,6 +172,21 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .WithMany()
              .HasForeignKey(x => x.CityId)
              .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<Payment>(e =>
+        {
+            e.Property(x => x.Status).HasDefaultValue("Pending");
+            e.Property(x => x.Currency).HasDefaultValue("EUR");
+            e.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
+
+            e.HasOne(x => x.ServiceOrder)
+             .WithMany()
+             .HasForeignKey(x => x.ServiceOrderId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(x => x.ServiceOrderId);
+            e.HasIndex(x => x.PaypalOrderId);
         });
 
         builder.Entity<ChatLog>(e =>
