@@ -4,6 +4,7 @@ using MerhumAPI.Middleware;
 using MerhumAPI.Models;
 using MerhumAPI.Services;
 using MerhumAPI.Services.Chat;
+using MerhumAPI.Services.Payment;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -85,6 +86,7 @@ builder.Services.AddMassTransit(x =>
 		cfg.Message<MerhumAPI.Messages.CommunityNotificationMessage>(m => m.SetEntityName("merhum.dzemat.notifikacija"));
 		cfg.Message<MerhumAPI.Messages.ObituaryCreatedMessage>(m => m.SetEntityName("merhum.smrtovnica.kreirana"));
 		cfg.Message<MerhumAPI.Messages.AnniversaryReminderMessage>(m => m.SetEntityName("merhum.godisnjica"));
+		cfg.Message<MerhumAPI.Messages.PaymentCompletedMessage>(m => m.SetEntityName("merhum.placanje.izvrseno"));
 	});
 });
 
@@ -104,6 +106,9 @@ builder.Services.AddScoped<IServiceOrderService, ServiceOrderService>();
 builder.Services.AddHttpClient<IGroqService, GroqService>();
 builder.Services.AddScoped<IContextBuilderService, ContextBuilderService>();
 builder.Services.AddScoped<IChatService, ChatService>();
+
+builder.Services.AddHttpClient<IPayPalService, PayPalService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 builder.Services.AddCors(options =>
 {
