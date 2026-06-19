@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/appointment_provider.dart';
 import '../../providers/deceased_provider.dart';
 import '../../providers/service_order_provider.dart';
+import '../../providers/payment_provider.dart';
 import '../../models/procedure_status_model.dart';
+import '../../models/service_order_model.dart';
 import '../../utils/constants.dart';
 import '../../utils/date_formatter.dart';
 import '../../widgets/status_timeline_widget.dart';
@@ -20,14 +23,30 @@ class ProcedureStatusScreen extends StatefulWidget {
 }
 
 class _ProcedureStatusScreenState extends State<ProcedureStatusScreen> {
+  bool _paying = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DeceasedProvider>().loadById(widget.deceasedId);
       context.read<AppointmentProvider>().loadForDeceased(widget.deceasedId);
-      context.read<ServiceOrderProvider>().loadForDeceased(widget.deceasedId);
+      _loadOrdersAndPayments();
     });
+  }
+
+  Future<void> _loadOrdersAndPayments() async {
+    await context.read<ServiceOrderProvider>().loadForDeceased(widget.deceasedId);
+    if (!mounted) return;
+    final orderIds = context
+        .read<ServiceOrderProvider>()
+        .orders
+        .where((o) => o.deceasedId == widget.deceasedId)
+        .map((o) => o.id)
+        .toList();
+    if (orderIds.isNotEmpty) {
+      await context.read<PaymentProvider>().loadStatuses(orderIds);
+    }
   }
 
   @override
@@ -35,6 +54,7 @@ class _ProcedureStatusScreenState extends State<ProcedureStatusScreen> {
     final dp = context.watch<DeceasedProvider>();
     final ap = context.watch<AppointmentProvider>();
     final sp = context.watch<ServiceOrderProvider>();
+    final pp = context.watch<PaymentProvider>();
 
     final d = dp.selected;
 
@@ -50,7 +70,7 @@ class _ProcedureStatusScreenState extends State<ProcedureStatusScreen> {
                   onRefresh: () async {
                     await context.read<DeceasedProvider>().loadById(widget.deceasedId);
                     await context.read<AppointmentProvider>().loadForDeceased(widget.deceasedId);
-                    await context.read<ServiceOrderProvider>().loadForDeceased(widget.deceasedId);
+                    await _loadOrdersAndPayments();
                   },
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
@@ -83,7 +103,7 @@ class _ProcedureStatusScreenState extends State<ProcedureStatusScreen> {
                         ],
                         const Text('Narudžbe usluga', style: AppTextStyles.heading2),
                         const SizedBox(height: 8),
-                        _buildOrders(sp),
+                        _buildOrders(sp, pp),
                         const SizedBox(height: 20),
                       ],
                     ),
@@ -187,7 +207,7 @@ class _ProcedureStatusScreenState extends State<ProcedureStatusScreen> {
     );
   }
 
-  Widget _buildOrders(ServiceOrderProvider sp) {
+  Widget _buildOrders(ServiceOrderProvider sp, PaymentProvider pp) {
     final orders = sp.orders.where((o) => o.deceasedId == widget.deceasedId).toList();
     if (orders.isEmpty) {
       return Card(
@@ -199,22 +219,119 @@ class _ProcedureStatusScreenState extends State<ProcedureStatusScreen> {
       );
     }
     return Column(
-      children: orders.map((o) => Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: ListTile(
-          leading: const Icon(Icons.shopping_bag_outlined, color: AppColors.primary),
-          title: Text(o.serviceTypeName ?? 'Usluga'),
-          subtitle: Text('${o.funeralHomeName ?? ''} • ${DateFormatter.money(o.price)}'),
-          trailing: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
+      children: orders.map((o) {
+        final paid = pp.isPaid(o.id);
+        return Card(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.shopping_bag_outlined, color: AppColors.primary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(o.serviceTypeName ?? 'Usluga', style: AppTextStyles.heading3),
+                          const SizedBox(height: 2),
+                          Text('${o.funeralHomeName ?? ''} • ${DateFormatter.money(o.price)}',
+                              style: AppTextStyles.caption),
+                        ],
+                      ),
+                    ),
+                    _paymentBadge(paid),
+                  ],
+                ),
+                if (!paid) ...[
+                  const SizedBox(height: 12),
+                  ElevatedButton.icon(
+                    onPressed: _paying ? null : () => _pay(o),
+                    icon: const Icon(Icons.payment, size: 18),
+                    label: const Text('Plati'),
+                  ),
+                ],
+              ],
             ),
-            child: Text(o.status, style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
           ),
-        ),
-      )).toList(),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _paymentBadge(bool paid) {
+    final color = paid ? AppColors.success : AppColors.warning;
+    final label = paid ? 'Plaćeno' : 'Nije plaćeno';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(label, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
+    );
+  }
+
+  Future<void> _pay(ServiceOrderModel order) async {
+    final pp = context.read<PaymentProvider>();
+    setState(() => _paying = true);
+
+    final init = await pp.initiate(order.id);
+    if (!mounted) return;
+    setState(() => _paying = false);
+
+    if (init == null) {
+      _showSnack('Greška pri pokretanju plaćanja.', AppColors.error);
+      return;
+    }
+
+    final approvalUrl = init['approvalUrl'] as String? ?? '';
+    final paypalOrderId = init['paypalOrderId'] as String? ?? '';
+    if (approvalUrl.isEmpty || paypalOrderId.isEmpty) {
+      _showSnack('Greška pri pokretanju plaćanja.', AppColors.error);
+      return;
+    }
+
+    final uri = Uri.parse(approvalUrl);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (!mounted) return;
+      _showSnack('Nije moguće otvoriti PayPal stranicu.', AppColors.error);
+      return;
+    }
+
+    if (!mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Potvrda plaćanja'),
+        content: const Text(
+            'Nakon što završite plaćanje na PayPal stranici, vratite se u aplikaciju i pritisnite "Potvrdi plaćanje".'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Otkaži')),
+          ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Potvrdi plaćanje')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _paying = true);
+    final ok = await pp.capture(paypalOrderId, order.id);
+    if (!mounted) return;
+    setState(() => _paying = false);
+
+    if (ok) {
+      _showSnack('Plaćanje uspješno izvršeno.', AppColors.success);
+    } else {
+      _showSnack('Plaćanje nije uspjelo. Molimo pokušajte ponovo.', AppColors.error);
+    }
+  }
+
+  void _showSnack(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: color),
     );
   }
 }
