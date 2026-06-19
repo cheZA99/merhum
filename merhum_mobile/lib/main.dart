@@ -5,6 +5,7 @@ import 'providers/obituary_provider.dart';
 import 'providers/deceased_provider.dart';
 import 'providers/appointment_provider.dart';
 import 'providers/service_order_provider.dart';
+import 'providers/payment_provider.dart';
 import 'providers/chat_provider.dart';
 import 'screens/public/home_screen.dart';
 import 'screens/family/family_dashboard_screen.dart';
@@ -28,6 +29,7 @@ class MerhumMobileApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DeceasedProvider()),
         ChangeNotifierProvider(create: (_) => AppointmentProvider()),
         ChangeNotifierProvider(create: (_) => ServiceOrderProvider()),
+        ChangeNotifierProvider(create: (_) => PaymentProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
       ],
       child: MaterialApp(
