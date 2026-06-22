@@ -4,6 +4,7 @@ using MerhumAPI.Middleware;
 using MerhumAPI.Models;
 using MerhumAPI.Services;
 using MerhumAPI.Services.Chat;
+using MerhumAPI.Services.MachineLearning;
 using MerhumAPI.Services.Payment;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -109,6 +110,9 @@ builder.Services.AddScoped<IChatService, ChatService>();
 
 builder.Services.AddHttpClient<IPayPalService, PayPalService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+
+builder.Services.AddScoped<ITrainingDataService, TrainingDataService>();
+builder.Services.AddSingleton<ICemeteryPredictionService, CemeteryPredictionService>();
 
 builder.Services.AddCors(options =>
 {
