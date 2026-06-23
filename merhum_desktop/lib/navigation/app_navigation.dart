@@ -7,6 +7,7 @@ import '../providers/funeral_home_provider.dart';
 import '../providers/grave_site_provider.dart';
 import '../providers/imam_provider.dart';
 import '../providers/obituary_provider.dart';
+import '../providers/prediction_provider.dart';
 import '../providers/reference_provider.dart';
 import '../providers/report_provider.dart';
 import '../providers/service_order_provider.dart';
@@ -20,6 +21,7 @@ import '../screens/grave_sites/grave_sites_screen.dart';
 import '../screens/imams/imams_screen.dart';
 import '../screens/mosques/mosques_screen.dart';
 import '../screens/obituaries/obituaries_screen.dart';
+import '../screens/predictions/predictions_screen.dart';
 import '../screens/reference_data/reference_data_screen.dart';
 import '../screens/reports/reports_screen.dart';
 import '../screens/service_orders/service_orders_screen.dart';
@@ -106,6 +108,12 @@ void navigateByIndex(BuildContext context, int index) {
       screen = ChangeNotifierProvider.value(
         value: context.read<UserProvider>(),
         child: const UsersScreen(),
+      );
+      break;
+    case 13:
+      screen = ChangeNotifierProvider.value(
+        value: context.read<PredictionProvider>(),
+        child: const PredictionsScreen(),
       );
       break;
     default:

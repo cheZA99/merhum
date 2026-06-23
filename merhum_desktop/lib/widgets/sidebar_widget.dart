@@ -24,6 +24,7 @@ const _items = [
   SidebarItem('Izvještaji', Icons.bar_chart),
   SidebarItem('Šifarnici', Icons.settings),
   SidebarItem('Korisnici', Icons.manage_accounts),
+  SidebarItem('Predviđanja', Icons.insights),
 ];
 
 class SidebarWidget extends StatelessWidget {
