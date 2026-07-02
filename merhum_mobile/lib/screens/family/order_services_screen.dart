@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/service_order_provider.dart';
 import '../../utils/constants.dart';
-import '../../utils/date_formatter.dart';
 
 class OrderServicesScreen extends StatefulWidget {
   final int deceasedId;
@@ -14,6 +14,7 @@ class OrderServicesScreen extends StatefulWidget {
 
 class _OrderServicesScreenState extends State<OrderServicesScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _priceCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
   int? _funeralHomeId;
   int? _serviceTypeId;
@@ -31,6 +32,7 @@ class _OrderServicesScreenState extends State<OrderServicesScreen> {
 
   @override
   void dispose() {
+    _priceCtrl.dispose();
     _notesCtrl.dispose();
     super.dispose();
   }
@@ -42,7 +44,8 @@ class _OrderServicesScreenState extends State<OrderServicesScreen> {
       'deceasedId': widget.deceasedId,
       'funeralHomeId': _funeralHomeId,
       'serviceTypeId': _serviceTypeId,
-      'notes': _notesCtrl.text.trim(),
+      'price': double.parse(_priceCtrl.text),
+      'note': _notesCtrl.text.trim(),
     });
     if (!mounted) return;
     setState(() => _submitting = false);
@@ -58,18 +61,9 @@ class _OrderServicesScreenState extends State<OrderServicesScreen> {
     }
   }
 
-  double? _selectedPrice(List<Map<String, dynamic>> types) {
-    if (_serviceTypeId == null) return null;
-    final t = types.firstWhere((e) => e['id'] == _serviceTypeId, orElse: () => {});
-    final p = t['price'];
-    if (p == null) return null;
-    return (p as num).toDouble();
-  }
-
   @override
   Widget build(BuildContext context) {
     final sp = context.watch<ServiceOrderProvider>();
-    final price = _selectedPrice(sp.serviceTypes);
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Naruči usluge')),
@@ -102,24 +96,18 @@ class _OrderServicesScreenState extends State<OrderServicesScreen> {
                   onChanged: (v) => setState(() => _serviceTypeId = v),
                   validator: (v) => v == null ? 'Obavezno polje' : null,
                 ),
-                if (price != null) ...[
-                  const SizedBox(height: 14),
-                  Card(
-                    color: AppColors.primaryLight.withOpacity(0.12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.attach_money, color: AppColors.primary),
-                          const SizedBox(width: 8),
-                          const Text('Cijena: ', style: AppTextStyles.body),
-                          Text(DateFormatter.money(price), style: AppTextStyles.heading3),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _priceCtrl,
+                  decoration: const InputDecoration(labelText: 'Cijena', suffixText: 'KM'),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+                  validator: (v) {
+                    final val = double.tryParse(v ?? '');
+                    if (val == null || val <= 0) return 'Unesite cijenu veću od 0';
+                    return null;
+                  },
+                ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _notesCtrl,

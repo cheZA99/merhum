@@ -39,6 +39,16 @@ class ObituaryProvider extends ChangeNotifier {
   ObituaryModel? _selected;
   ObituaryModel? get selected => _selected;
 
+  int _todayCount = 0;
+  int get todayCount => _todayCount;
+
+  Future<void> loadTodayCount() async {
+    try {
+      _todayCount = await _service.getTodayCount();
+    } catch (_) {}
+    notifyListeners();
+  }
+
   Future<void> loadAll() async {
     _isLoading = true;
     _errorMessage = null;

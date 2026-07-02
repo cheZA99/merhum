@@ -223,7 +223,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
       ),
       hint: const Text('Odaberite grad (opcionalno)'),
       items: [
-        const DropdownMenuItem<int?>(value: null, child: Text('— Bez grada —')),
+        const DropdownMenuItem<int?>(value: null, child: Text('Bez grada')),
         ...p.cities.map((c) => DropdownMenuItem<int?>(
               value: c['id'] as int,
               child: Text(c['name'] as String? ?? ''),
@@ -315,7 +315,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : const Text('Spremi'),
+              : const Text('Sačuvaj'),
         ),
       ],
     );

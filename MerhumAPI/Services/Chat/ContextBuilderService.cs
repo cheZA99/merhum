@@ -65,7 +65,7 @@ public class ContextBuilderService : IContextBuilderService
                 var occupancy = c.TotalPlaces > 0
                     ? Math.Round(((double)(c.TotalPlaces - free) / c.TotalPlaces) * 100.0, 1)
                     : 0.0;
-                sb.AppendLine($"- {c.Name} ({c.City.Name}) – ukupno mjesta: {c.TotalPlaces}, slobodno: {free}, popunjenost: {occupancy.ToString(culture)}%");
+                sb.AppendLine($"- {c.Name} ({c.City.Name}) - ukupno mjesta: {c.TotalPlaces}, slobodno: {free}, popunjenost: {occupancy.ToString(culture)}%");
             }
         }
         sb.AppendLine();
@@ -91,7 +91,7 @@ public class ContextBuilderService : IContextBuilderService
             {
                 var imamNames = m.Imams.Where(i => i.IsActive).Select(i => $"{i.FirstName} {i.LastName}").ToList();
                 var imamText = imamNames.Count > 0 ? string.Join(", ", imamNames) : "nema dostupnih imama";
-                sb.AppendLine($"- {m.Name} ({m.City.Name}) – imami: {imamText}");
+                sb.AppendLine($"- {m.Name} ({m.City.Name}) - imami: {imamText}");
             }
         }
         sb.AppendLine();
@@ -186,7 +186,7 @@ public class ContextBuilderService : IContextBuilderService
         {
             foreach (var a in appointments)
             {
-                sb.AppendLine($"- {a.FuneralDateTime.ToString("dd.MM.yyyy HH:mm", culture)} – {a.Deceased.FirstName} {a.Deceased.LastName}, džamija {a.Mosque.Name}, groblje {a.Cemetery.Name}");
+                sb.AppendLine($"- {a.FuneralDateTime.ToString("dd.MM.yyyy HH:mm", culture)} - {a.Deceased.FirstName} {a.Deceased.LastName}, džamija {a.Mosque.Name}, groblje {a.Cemetery.Name}");
             }
         }
 

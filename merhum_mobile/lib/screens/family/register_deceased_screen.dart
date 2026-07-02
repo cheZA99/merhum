@@ -72,16 +72,19 @@ class _RegisterDeceasedScreenState extends State<RegisterDeceasedScreen> {
       return;
     }
     setState(() => _submitting = true);
+    String dateOnly(DateTime d) =>
+        '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
     final body = {
       'firstName': _firstNameCtrl.text.trim(),
       'lastName': _lastNameCtrl.text.trim(),
-      if (_dateOfBirth != null) 'dateOfBirth': _dateOfBirth!.toIso8601String(),
-      'dateOfDeath': _dateOfDeath!.toIso8601String(),
+      if (_dateOfBirth != null) 'dateOfBirth': dateOnly(_dateOfBirth!),
+      'dateOfDeath': dateOnly(_dateOfDeath!),
       'placeOfDeath': _placeOfDeathCtrl.text.trim(),
       if (_cityId != null) 'cityId': _cityId,
-      'contactPerson': _contactNameCtrl.text.trim(),
-      'contactPhone': _contactPhoneCtrl.text.trim(),
-      'contactEmail': _contactEmailCtrl.text.trim(),
+      'contactPersonName': _contactNameCtrl.text.trim(),
+      'contactPersonPhone': _contactPhoneCtrl.text.trim(),
+      if (_contactEmailCtrl.text.trim().isNotEmpty)
+        'contactPersonEmail': _contactEmailCtrl.text.trim(),
       'procedureStatusId': 1,
     };
     final result = await context.read<DeceasedProvider>().create(body);

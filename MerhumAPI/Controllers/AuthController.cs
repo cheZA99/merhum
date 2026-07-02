@@ -57,6 +57,42 @@ public class AuthController : ControllerBase
         });
     }
 
+    [HttpPost("register")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<object>>> Register([FromBody] RegisterRequest request)
+    {
+        var existing = await _userManager.FindByNameAsync(request.Username);
+        if (existing != null)
+            return Conflict(ApiResponse<object>.Fail("Korisničko ime je zauzeto."));
+
+        var emailExisting = await _userManager.FindByEmailAsync(request.Email);
+        if (emailExisting != null)
+            return Conflict(ApiResponse<object>.Fail("Email adresa je zauzeta."));
+
+        var user = new ApplicationUser
+        {
+            UserName = request.Username,
+            Email = request.Email,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            PhoneNumber = request.Phone,
+            EmailConfirmed = true,
+            IsActive = true
+        };
+
+        var result = await _userManager.CreateAsync(user, request.Password);
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            return BadRequest(ApiResponse<object>.Fail(errors));
+        }
+
+        // public registration is family-only; other roles via register-admin
+        await _userManager.AddToRoleAsync(user, "Porodica");
+
+        return Ok(ApiResponse<object>.Ok(new { user.Id }, "Registracija uspješna."));
+    }
+
     [HttpPost("register-admin")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<ApiResponse<object>>> RegisterAdmin([FromBody] AdminRegisterRequest request)

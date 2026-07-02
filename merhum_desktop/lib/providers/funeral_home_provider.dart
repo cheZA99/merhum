@@ -17,7 +17,7 @@ class FuneralHomeProvider extends ChangeNotifier {
   int totalPages = 1;
   static const int pageSize = 10;
 
-  // Client-side city filter — API only supports search by name
+  // city filter is client-side, API only searches by name
   List<FuneralHomeModel> get funeralHomes {
     if (filterCityId == null) return _all;
     return _all.where((h) => h.cityId == filterCityId).toList();

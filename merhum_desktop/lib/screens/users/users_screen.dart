@@ -282,7 +282,7 @@ class _UsersScreenState extends State<UsersScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: _roleChip(u.role),
         ),
-        _cell(u.cityName ?? '—',
+        _cell(u.cityName ?? '-',
             style: u.cityName == null
                 ? const TextStyle(color: AppColors.textLight, fontSize: 13)
                 : null),

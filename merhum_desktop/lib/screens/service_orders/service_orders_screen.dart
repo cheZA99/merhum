@@ -70,7 +70,7 @@ class _ServiceOrdersScreenState extends State<ServiceOrdersScreen> {
 
   Widget _buildHeader() {
     final title = widget.deceasedName != null
-        ? 'Nalozi za usluge — ${widget.deceasedName}'
+        ? 'Nalozi za usluge - ${widget.deceasedName}'
         : 'Nalozi za usluge';
     return Row(
       children: [
@@ -308,7 +308,7 @@ class _ServiceOrdersScreenState extends State<ServiceOrdersScreen> {
         _cell(
           o.completedAt != null
               ? DateFormat('dd.MM.yyyy').format(o.completedAt!.toLocal())
-              : '—',
+              : '-',
           style: o.completedAt == null
               ? const TextStyle(color: AppColors.textLight, fontSize: 13)
               : null,

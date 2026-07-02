@@ -8,8 +8,6 @@ public class TrainingDataService :ITrainingDataService
 {
 	private readonly ApplicationDbContext _db;
 
-	// A cemetery is treated as full when there are no free spots, so we never
-	// divide by zero and we clamp the calculated label to a sane horizon.
 	private const double MaxMonthsHorizon = 600.0;
 
 	public TrainingDataService(ApplicationDbContext db) => _db = db;
@@ -25,7 +23,6 @@ public class TrainingDataService :ITrainingDataService
 			if (features == null)
 				continue;
 
-			// Only real rows with a usable fill rate help the model learn.
 			if (features.AverageBurialsPerMonth > 0)
 			{
 				data.Add(new CemeteryData
@@ -80,9 +77,7 @@ public class TrainingDataService :ITrainingDataService
 		};
 	}
 
-	// Burial rate from completed funerals (Held appointments). Primary window is the
-	// last 12 months; if there is older history but nothing recent, fall back to the
-	// full span so the rate stays meaningful even with sparse data.
+	// burial rate over last 12 months, fall back to full history if nothing recent
 	private async Task<(double rate, int count)> CalculateBurialRateAsync(int cemeteryId)
 	{
 		var now = DateTime.UtcNow;
@@ -107,7 +102,7 @@ public class TrainingDataService :ITrainingDataService
 
 	private static IEnumerable<CemeteryData> GenerateSyntheticData(int rows)
 	{
-		// Fixed seed so training data is reproducible between runs.
+		// fixed seed for reproducible synthetic data
 		var random = new Random(42);
 		var result = new List<CemeteryData>(rows);
 
@@ -121,7 +116,6 @@ public class TrainingDataService :ITrainingDataService
 			var freeSpots = Math.Max(0, capacity - occupancy);
 			var monthsUntilFull = freeSpots / burialsPerMonth;
 
-			// Small noise so the model does not just memorize an exact formula.
 			var noise = (float)((random.NextDouble() - 0.5) * 2.0);
 			monthsUntilFull = Math.Max(0, monthsUntilFull + noise);
 

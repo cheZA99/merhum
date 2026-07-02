@@ -19,6 +19,8 @@ class DeceasedProvider extends ChangeNotifier {
   String? filterSearch;
   int? filterCityId;
   int? filterStatusId;
+  int totalDeceasedCount = 0;
+  List<DeceasedModel> recentDeceased = [];
 
   List<DeceasedModel> get deceasedList {
     final start = (currentPage - 1) * pageSize;
@@ -49,6 +51,21 @@ class DeceasedProvider extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> loadTotalDeceasedCount() async {
+    try {
+      totalDeceasedCount = await _service.getTotalCount();
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  Future<void> loadRecentDeceased() async {
+    try {
+      final list = await _service.getAll();
+      recentDeceased = list.take(5).toList();
+    } catch (_) {}
+    notifyListeners();
   }
 
   Future<void> loadStatuses() async {

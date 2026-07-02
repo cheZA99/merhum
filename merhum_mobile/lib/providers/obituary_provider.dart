@@ -7,7 +7,6 @@ class ObituaryProvider extends ChangeNotifier {
   List<ObituaryModel> _results = [];
   List<ObituaryModel> _recent = [];
   ObituaryModel? _detail;
-  List<CondolenceModel> _condolences = [];
   List<Map<String, dynamic>> _upcomingFunerals = [];
   bool _isLoading = false;
   bool _isLoadingDetail = false;
@@ -16,7 +15,7 @@ class ObituaryProvider extends ChangeNotifier {
   List<ObituaryModel> get results => _results;
   List<ObituaryModel> get recent => _recent;
   ObituaryModel? get detail => _detail;
-  List<CondolenceModel> get condolences => _condolences;
+  List<CondolenceModel> get condolences => _detail?.condolences ?? [];
   List<Map<String, dynamic>> get upcomingFunerals => _upcomingFunerals;
   bool get isLoading => _isLoading;
   bool get isLoadingDetail => _isLoadingDetail;
@@ -49,20 +48,11 @@ class ObituaryProvider extends ChangeNotifier {
     notifyListeners();
     try {
       _detail = await ObituaryService.getBySlug(slug);
-      await _loadCondolences(slug);
     } catch (e) {
       _error = e.toString();
     } finally {
       _isLoadingDetail = false;
       notifyListeners();
-    }
-  }
-
-  Future<void> _loadCondolences(String slug) async {
-    try {
-      _condolences = await ObituaryService.getCondolences(slug);
-    } catch (_) {
-      _condolences = [];
     }
   }
 
@@ -79,11 +69,10 @@ class ObituaryProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> addCondolence(String slug, String authorName, String text) async {
+  Future<bool> addCondolence(String slug, int obituaryId, String authorName, String text) async {
     try {
-      await ObituaryService.addCondolence(slug, authorName, text);
-      await _loadCondolences(slug);
-      notifyListeners();
+      await ObituaryService.addCondolence(obituaryId, authorName, text);
+      await loadDetail(slug);
       return true;
     } catch (_) {
       return false;

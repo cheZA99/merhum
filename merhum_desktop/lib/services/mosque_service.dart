@@ -14,7 +14,7 @@ class MosqueService {
     final response = await _api.get('/api/mosque', queryParams: params);
     final raw = response.data as Map<String, dynamic>;
 
-    // PagedResponse<T> — data is a list
+    // PagedResponse<T>, data is the list
     final list = raw['data'] as List? ?? [];
     return list.map((e) => MosqueModel.fromJson(e as Map<String, dynamic>)).toList();
   }
@@ -31,7 +31,7 @@ class MosqueService {
     return MosqueModel.fromJson(raw['data'] as Map<String, dynamic>);
   }
 
-  // PUT returns 204 NoContent — no body to parse, caller refreshes
+  // PUT returns 204, caller refreshes
   Future<void> update(int id, Map<String, dynamic> data) async {
     await _api.put('/api/mosque/$id', data: data);
   }

@@ -24,7 +24,7 @@ class _ObituaryDetailScreenState extends State<ObituaryDetailScreen> {
     });
   }
 
-  void _showCondolenceSheet() {
+  void _showCondolenceSheet(int obituaryId) {
     final nameCtrl = TextEditingController();
     final textCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -69,6 +69,7 @@ class _ObituaryDetailScreenState extends State<ObituaryDetailScreen> {
                             setSheetState(() => sending = true);
                             final ok = await context.read<ObituaryProvider>().addCondolence(
                                   widget.slug,
+                                  obituaryId,
                                   nameCtrl.text.trim(),
                                   textCtrl.text.trim(),
                                 );
@@ -140,7 +141,7 @@ class _ObituaryDetailScreenState extends State<ObituaryDetailScreen> {
                         Text(o.deceasedFullName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
                         const SizedBox(height: 4),
                         Text(
-                          '${DateFormatter.date(o.dateOfBirth)} — ${DateFormatter.date(o.dateOfDeath)}',
+                          '${DateFormatter.date(o.dateOfBirth)} - ${DateFormatter.date(o.dateOfDeath)}',
                           style: const TextStyle(color: Colors.white70),
                         ),
                         if (o.dateOfBirth != null) ...[
@@ -182,7 +183,7 @@ class _ObituaryDetailScreenState extends State<ObituaryDetailScreen> {
                         const SizedBox(width: 16),
                         const Icon(Icons.chat_bubble_outline, size: 16, color: AppColors.textLight),
                         const SizedBox(width: 4),
-                        Text('${o.condolenceCount} kondolencija', style: AppTextStyles.caption),
+                        Text('${p.condolences.length} kondolencija', style: AppTextStyles.caption),
                       ],
                     ),
                   ),
@@ -198,7 +199,7 @@ class _ObituaryDetailScreenState extends State<ObituaryDetailScreen> {
                           const Text('Još nema kondolencija.', style: AppTextStyles.bodyMedium),
                           const SizedBox(height: 8),
                           OutlinedButton(
-                            onPressed: _showCondolenceSheet,
+                            onPressed: () => _showCondolenceSheet(o.id),
                             style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: const BorderSide(color: AppColors.primary)),
                             child: const Text('Budite prvi'),
                           ),
@@ -227,7 +228,7 @@ class _ObituaryDetailScreenState extends State<ObituaryDetailScreen> {
                           SizedBox(
                             width: double.infinity,
                             child: OutlinedButton.icon(
-                              onPressed: _showCondolenceSheet,
+                              onPressed: () => _showCondolenceSheet(o.id),
                               icon: const Icon(Icons.add, color: AppColors.primary),
                               label: const Text('Dodaj kondolenciju', style: TextStyle(color: AppColors.primary)),
                               style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.primary)),

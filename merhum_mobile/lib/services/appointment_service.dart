@@ -3,15 +3,12 @@ import 'api_service.dart';
 
 class AppointmentService {
   static Future<List<AppointmentModel>> getMyAppointments({bool upcoming = false}) async {
-    final res = await ApiService.get('/api/termini', queryParams: {
-      'myOnly': true,
-      if (upcoming) 'upcoming': true,
-      'pageSize': 100,
-    });
+    // no imam-user link yet, so this returns all upcoming; screen splits them client-side
+    final res = await ApiService.get('/api/appointment/upcoming');
     final data = res.data;
     List items;
     if (data is Map) {
-      items = (data['items'] as List? ?? []);
+      items = (data['data'] as List? ?? []);
     } else {
       items = (data as List? ?? []);
     }

@@ -99,7 +99,7 @@ public class CemeteryPredictionService :ICemeteryPredictionService
 
 		var prediction = engine.Predict(input);
 
-		// Keep the prediction within a sane range clamp before turning it into a date.
+		// clamp to a reasonable month range
 		var months = Math.Clamp(prediction.PredictedMonthsUntilFull, 0f, 1200f);
 
 		return new CemeteryPredictionResultDto

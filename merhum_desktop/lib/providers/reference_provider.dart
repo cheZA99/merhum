@@ -74,7 +74,7 @@ class ReferenceProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final raw = await _service.getSectors(cemeteryId: cemeteryId);
-      // Enrich cemeteryName client-side since backend doesn't return it
+      // backend doesn't send cemeteryName, fill it here
       sectors = raw.map((s) {
         final match = cemeteries.firstWhere(
           (c) => c['id'] == s.cemeteryId,

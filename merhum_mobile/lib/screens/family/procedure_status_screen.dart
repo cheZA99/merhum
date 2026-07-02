@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../providers/appointment_provider.dart';
 import '../../providers/deceased_provider.dart';
 import '../../providers/service_order_provider.dart';
@@ -12,6 +11,7 @@ import '../../utils/date_formatter.dart';
 import '../../widgets/status_timeline_widget.dart';
 import 'create_obituary_screen.dart';
 import 'order_services_screen.dart';
+import 'paypal_webview_screen.dart';
 import 'schedule_appointment_screen.dart';
 
 class ProcedureStatusScreen extends StatefulWidget {
@@ -78,7 +78,7 @@ class _ProcedureStatusScreenState extends State<ProcedureStatusScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildStatusCard(d.procedureStatusName ?? '—', d.procedureStatusId ?? 0),
+                        _buildStatusCard(d.procedureStatusName ?? '-', d.procedureStatusId ?? 0),
                         const SizedBox(height: 20),
                         const Text('Faze procedure', style: AppTextStyles.heading2),
                         const SizedBox(height: 12),
@@ -126,7 +126,7 @@ class _ProcedureStatusScreenState extends State<ProcedureStatusScreen> {
           children: [
             const Text('Trenutni status', style: TextStyle(color: Colors.white70, fontSize: 13)),
             const SizedBox(height: 6),
-            Text(statusName, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+            Text(ProcedureStatusModel.labelFor(statusName), style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 14),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
@@ -295,27 +295,10 @@ class _ProcedureStatusScreenState extends State<ProcedureStatusScreen> {
       return;
     }
 
-    final uri = Uri.parse(approvalUrl);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      if (!mounted) return;
-      _showSnack('Nije moguće otvoriti PayPal stranicu.', AppColors.error);
-      return;
-    }
-
-    if (!mounted) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Potvrda plaćanja'),
-        content: const Text(
-            'Nakon što završite plaćanje na PayPal stranici, vratite se u aplikaciju i pritisnite "Potvrdi plaćanje".'),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Otkaži')),
-          ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Potvrdi plaćanje')),
-        ],
-      ),
+    final result = await Navigator.of(context).push<PayPalResult>(
+      MaterialPageRoute(builder: (_) => PayPalWebViewScreen(approvalUrl: approvalUrl)),
     );
-    if (confirmed != true) return;
+    if (!mounted || result != PayPalResult.approved) return;
 
     setState(() => _paying = true);
     final ok = await pp.capture(paypalOrderId, order.id);

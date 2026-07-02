@@ -338,7 +338,7 @@ class _AppointmentFormScreenState extends State<AppointmentFormScreen> {
       ),
       disabledHint: const Text('Prvo odaberite groblje', style: TextStyle(color: AppColors.textLight)),
       items: _graveSites.map((s) {
-        final sector = s['sectionName'] != null ? ' — ${s['sectionName']}' : '';
+        final sector = s['sectionName'] != null ? ' - ${s['sectionName']}' : '';
         return DropdownMenuItem<int?>(
           value: s['id'] as int,
           child: Text('${s['plotNumber']}$sector'),

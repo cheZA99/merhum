@@ -1,6 +1,7 @@
 using MassTransit;
 using MerhumAPI.Common;
 using MerhumAPI.Data;
+using MerhumAPI.DTOs.Condolence;
 using MerhumAPI.DTOs.Obituary;
 using MerhumAPI.Helpers;
 using MerhumAPI.Messages;
@@ -95,6 +96,9 @@ public class ObituaryService : IObituaryService
         _db.Obituaries.Add(obituary);
         await _db.SaveChangesAsync();
 
+        // attach the loaded deceased so MapToResponse can fill name/date fields
+        obituary.Deceased = deceased;
+
         await _publishEndpoint.Publish(new ObituaryCreatedMessage(
             obituary.Id,
             deceased.Id,
@@ -165,6 +169,7 @@ public class ObituaryService : IObituaryService
         Condolences = o.Condolences.Select(c => new CondolenceResponse
         {
             Id = c.Id,
+            ObituaryId = c.ObituaryId,
             AuthorName = c.AuthorName,
             Text = c.Text,
             IsApproved = c.IsApproved,

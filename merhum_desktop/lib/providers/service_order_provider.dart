@@ -24,6 +24,9 @@ class ServiceOrderProvider extends ChangeNotifier {
   DateTime? filterDateTo;
   int? deceasedIdContext;
 
+  List<ServiceOrderModel> pendingOrders = [];
+  int pendingCount = 0;
+
   int get totalPages => (totalCount / pageSize).ceil().clamp(1, 99999);
 
   double get totalValue => orders.fold(0.0, (sum, o) => sum + o.price);
@@ -53,6 +56,20 @@ class ServiceOrderProvider extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> loadPending() async {
+    try {
+      final results = await Future.wait([
+        _service.getAll(status: 'Ordered', pageSize: 10),
+        _service.getAll(status: 'InProgress', pageSize: 10),
+      ]);
+      final combined = [...results[0].$1, ...results[1].$1];
+      combined.sort((a, b) => a.orderedAt.compareTo(b.orderedAt));
+      pendingOrders = combined.take(5).toList();
+      pendingCount = results[0].$2 + results[1].$2;
+    } catch (_) {}
+    notifyListeners();
   }
 
   Future<void> loadDropdownData() async {

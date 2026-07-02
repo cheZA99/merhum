@@ -62,20 +62,37 @@ class SidebarWidget extends StatelessWidget {
               itemBuilder: (context, index) {
                 final item = _items[index];
                 final isActive = index == selectedIndex;
-                return ListTile(
-                  leading: Icon(item.icon, color: Colors.white, size: 20),
-                  title: Text(
-                    item.label,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
-                  ),
-                  selected: isActive,
-                  selectedTileColor: Colors.white.withOpacity(0.15),
-                  shape: RoundedRectangleBorder(
+                final contentColor =
+                    isActive ? Colors.white : Colors.white.withOpacity(0.65);
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? AppColors.secondary.withOpacity(0.35)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
+                    border: isActive
+                        ? const Border(
+                            left: BorderSide(color: Colors.white, width: 3))
+                        : null,
                   ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                  onTap: () => onItemSelected(index),
+                  child: ListTile(
+                    leading: Icon(item.icon, color: contentColor, size: 20),
+                    title: Text(
+                      item.label,
+                      style: TextStyle(
+                        color: contentColor,
+                        fontSize: 13,
+                        fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                    onTap: () => onItemSelected(index),
+                  ),
                 );
               },
             ),

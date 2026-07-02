@@ -87,7 +87,6 @@ class _MosqueFormScreenState extends State<MosqueFormScreen> {
     setState(() => _isSaving = false);
 
     if (success) {
-      // return result to the parent which shows the SnackBar
       Navigator.of(context).pop(_isEdit ? 'updated' : 'created');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(

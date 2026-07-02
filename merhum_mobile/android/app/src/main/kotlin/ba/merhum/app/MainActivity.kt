@@ -1,4 +1,4 @@
-package com.example.merhum_mobile
+package ba.merhum.app
 
 import io.flutter.embedding.android.FlutterActivity
 

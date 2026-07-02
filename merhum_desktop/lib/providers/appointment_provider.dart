@@ -19,6 +19,8 @@ class AppointmentProvider extends ChangeNotifier {
   int currentPage = 1;
   int totalCount = 0;
   static const int pageSize = 10;
+  int activeCount = 0;
+  List<AppointmentModel> upcomingAppointments = [];
 
   int? filterMosqueId;
   int? filterImamId;
@@ -55,6 +57,26 @@ class AppointmentProvider extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> loadActiveCount() async {
+    try {
+      activeCount = await _service.getActiveCount();
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  Future<void> loadUpcoming() async {
+    try {
+      final (list, _) = await _service.getAll(
+        status: 'Scheduled',
+        dateFrom: DateTime.now(),
+        pageSize: 20,
+      );
+      list.sort((a, b) => a.funeralDateTime.compareTo(b.funeralDateTime));
+      upcomingAppointments = list.take(5).toList();
+    } catch (_) {}
+    notifyListeners();
   }
 
   Future<void> loadDropdownData() async {

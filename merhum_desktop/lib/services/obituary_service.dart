@@ -31,6 +31,17 @@ class ObituaryService {
     return (items, total);
   }
 
+  Future<int> getTodayCount() async {
+    final (items, _) = await getAll(pageSize: 500);
+    final now = DateTime.now();
+    return items.where((o) {
+      final createdLocal = o.createdAt.toLocal();
+      return createdLocal.year == now.year &&
+          createdLocal.month == now.month &&
+          createdLocal.day == now.day;
+    }).length;
+  }
+
   Future<ObituaryModel?> getById(int id) async {
     final response = await _api.get('/api/obituary/$id');
     final data = response.data as Map<String, dynamic>;

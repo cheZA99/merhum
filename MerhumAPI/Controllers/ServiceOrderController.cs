@@ -16,7 +16,7 @@ public class ServiceOrderController : ControllerBase
     public ServiceOrderController(IServiceOrderService serviceOrderService) => _serviceOrderService = serviceOrderService;
 
     [HttpGet]
-    [Authorize(Policy = "DesktopAccess")]
+    [Authorize(Roles = "Porodica,JavniKorisnik,PogrebnoPreduzeće,Administrator")]
     public async Task<ActionResult<PagedResponse<ServiceOrderResponse>>> GetAll(
         [FromQuery] int? deceasedId,
         [FromQuery] string? status,
@@ -40,7 +40,7 @@ public class ServiceOrderController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "DesktopAccess")]
+    [Authorize(Policy = "MobileAccess")]
     public async Task<ActionResult<ApiResponse<ServiceOrderResponse>>> Create([FromBody] ServiceOrderRequest request)
     {
         var order = await _serviceOrderService.CreateAsync(request);
@@ -57,7 +57,7 @@ public class ServiceOrderController : ControllerBase
     }
 
     [HttpPatch("{id:int}/status")]
-    [Authorize(Policy = "DesktopAccess")]
+    [Authorize(Policy = "PogrebnoAccess")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] ServiceOrderStatusRequest request)
     {
         var updated = await _serviceOrderService.UpdateStatusAsync(id, request.Status, request.CompletedAt);

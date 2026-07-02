@@ -308,7 +308,7 @@ class _DeceasedScreenState extends State<DeceasedScreen> {
               provider.currentPage > 1 ? () => provider.previousPage() : null,
         ),
         Text(
-          'Stranica ${provider.currentPage} od ${provider.totalPages} — Ukupno: ${provider.totalCount} zapisa',
+          'Stranica ${provider.currentPage} od ${provider.totalPages} - Ukupno: ${provider.totalCount} zapisa',
           style: AppTextStyles.caption,
         ),
         IconButton(

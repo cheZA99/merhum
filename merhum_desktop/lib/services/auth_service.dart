@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Using shared_preferences instead of flutter_secure_storage — more reliable on Windows
+// shared_preferences, secure_storage is flaky on Windows
 class AuthService {
   static const _keyToken = 'token';
   static const _keyRole = 'role';

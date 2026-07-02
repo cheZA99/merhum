@@ -125,7 +125,7 @@ class ReportPdfGenerator {
     final total = byMonth.fold<int>(0, (s, m) => s + (m['count'] as int? ?? 0));
 
     return generateAndOpen(
-      'Izvještaj o ukopima — $year',
+      'Izvještaj o ukopima - $year',
       [
         pw.Row(children: [
           _summaryCard('Ukupno ukopa', total.toString()),
@@ -152,7 +152,7 @@ class ReportPdfGenerator {
           headers: ['Groblje', 'Broj ukopa'],
           rows: byCemetery
               .map((r) => [
-                    r['cemeteryName'] as String? ?? '—',
+                    r['cemeteryName'] as String? ?? '-',
                     (r['count'] as int? ?? 0).toString(),
                   ])
               .toList(),
@@ -174,8 +174,8 @@ class ReportPdfGenerator {
           rows: cemeteries.map((c) {
             final fill = (c['fillPercentage'] as num? ?? 0).toDouble();
             return [
-              c['name'] as String? ?? '—',
-              c['city'] as String? ?? '—',
+              c['name'] as String? ?? '-',
+              c['city'] as String? ?? '-',
               (c['totalSites'] as int? ?? 0).toString(),
               (c['occupiedSites'] as int? ?? 0).toString(),
               (c['freeSites'] as int? ?? 0).toString(),
@@ -199,7 +199,7 @@ class ReportPdfGenerator {
     final totalOrders = byType.fold<int>(0, (s, r) => s + (r['count'] as int? ?? 0));
 
     return generateAndOpen(
-      'Izvještaj o pogrebnim uslugama — $year',
+      'Izvještaj o pogrebnim uslugama - $year',
       [
         pw.Row(children: [
           _summaryCard('Ukupno naloga', totalOrders.toString()),
@@ -213,7 +213,7 @@ class ReportPdfGenerator {
         _table(
           headers: ['Vrsta usluge', 'Broj naloga', 'Prihod (KM)'],
           rows: byType.map((r) => [
-            r['serviceTypeName'] as String? ?? '—',
+            r['serviceTypeName'] as String? ?? '-',
             (r['count'] as int? ?? 0).toString(),
             ((r['totalRevenue'] as num?)?.toDouble() ?? 0).toStringAsFixed(2),
           ]).toList(),
@@ -226,7 +226,7 @@ class ReportPdfGenerator {
         _table(
           headers: ['Pogrebno preduzeće', 'Broj naloga', 'Prihod (KM)'],
           rows: byHome.map((r) => [
-            r['funeralHomeName'] as String? ?? '—',
+            r['funeralHomeName'] as String? ?? '-',
             (r['count'] as int? ?? 0).toString(),
             ((r['totalRevenue'] as num?)?.toDouble() ?? 0).toStringAsFixed(2),
           ]).toList(),
@@ -261,7 +261,7 @@ class ReportPdfGenerator {
             headers: ['#', 'Preminuli', 'Pregledi', 'Saučešća'],
             rows: topViewed.asMap().entries.map((e) => [
               (e.key + 1).toString(),
-              e.value['deceasedFullName'] as String? ?? '—',
+              e.value['deceasedFullName'] as String? ?? '-',
               (e.value['viewCount'] as int? ?? 0).toString(),
               (e.value['condolenceCount'] as int? ?? 0).toString(),
             ]).toList(),
@@ -280,7 +280,7 @@ class ReportPdfGenerator {
     final totalOrders = data['totalOrders'] as int? ?? 0;
 
     return generateAndOpen(
-      'Finansijski izvještaj — $year',
+      'Finansijski izvještaj - $year',
       [
         pw.Row(children: [
           _summaryCard('Ukupan prihod', '${totalRevenue.toStringAsFixed(2)} KM'),

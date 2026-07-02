@@ -55,7 +55,7 @@ class _GraveSiteFormScreenState extends State<GraveSiteFormScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<GraveSiteProvider>();
-      // In edit mode pass the current deceased so they appear in the dropdown even if already assigned
+      // in edit mode pass the current deceased so it shows in the dropdown
       provider.loadDeceased(currentDeceasedId: widget.site?.deceasedId);
       if (_selectedCemeteryId != null) {
         provider.loadSectors(_selectedCemeteryId!);
@@ -186,7 +186,7 @@ class _GraveSiteFormScreenState extends State<GraveSiteFormScreen> {
                       border: OutlineInputBorder()),
                   items: [
                     const DropdownMenuItem<int?>(
-                        value: null, child: Text('— Bez sektora —')),
+                        value: null, child: Text('Bez sektora')),
                     ...sectorList.map((s) => DropdownMenuItem<int?>(
                           value: s['id'] as int?,
                           child: Text(s['name'] as String? ?? ''),
@@ -238,7 +238,7 @@ class _GraveSiteFormScreenState extends State<GraveSiteFormScreen> {
                     items: [
                       const DropdownMenuItem<int?>(
                           value: null,
-                          child: Text('— Odaberite preminulog —')),
+                          child: Text('Odaberite preminulog')),
                       ...deceasedList.map((p) {
                         final id = p['id'] as int?;
                         final firstName = p['firstName'] as String? ?? '';

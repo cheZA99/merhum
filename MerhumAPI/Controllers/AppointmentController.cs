@@ -23,13 +23,24 @@ public class AppointmentController : ControllerBase
         [FromQuery] string? status,
         [FromQuery] int? mosqueId,
         [FromQuery] int? imamId,
+        [FromQuery] int? cityId,
         [FromQuery] DateTime? dateFrom,
         [FromQuery] DateTime? dateTo,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20)
     {
-        var result = await _appointmentService.GetAllAsync(deceasedId, status, mosqueId, imamId, dateFrom, dateTo, pageNumber, pageSize);
+        var result = await _appointmentService.GetAllAsync(deceasedId, status, mosqueId, imamId, cityId, dateFrom, dateTo, pageNumber, pageSize);
         return Ok(result);
+    }
+
+    // upcoming scheduled funerals, also used by the imam screen (no per-imam link yet)
+    [HttpGet("upcoming")]
+    [AllowAnonymous]
+    public async Task<ActionResult<List<AppointmentResponse>>> Upcoming([FromQuery] int? cityId)
+    {
+        var result = await _appointmentService.GetAllAsync(
+            null, "Scheduled", null, null, cityId, DateTime.UtcNow, null, 1, 200);
+        return Ok(result.Data);
     }
 
     [HttpGet("{id:int}")]

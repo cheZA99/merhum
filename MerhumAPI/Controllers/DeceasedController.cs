@@ -1,4 +1,5 @@
 using MassTransit;
+using MerhumAPI.Common;
 using MerhumAPI.Data;
 using MerhumAPI.DTOs.Deceased;
 using MerhumAPI.Messages;
@@ -76,6 +77,55 @@ public class DeceasedController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("my")]
+    [Authorize(Policy = "MobileAccess")]
+    public async Task<ActionResult<PagedResponse<DeceasedResponse>>> GetMy(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                  ?? User.FindFirstValue("sub")
+                  ?? throw new UnauthorizedAccessException();
+
+        var query = _db.Deceased
+            .Include(d => d.City).ThenInclude(c => c.Country)
+            .Include(d => d.ProcedureStatus)
+            .Include(d => d.Obituary)
+            .Include(d => d.User)
+            .Where(d => d.UserId == userId)
+            .OrderByDescending(d => d.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(d => new DeceasedResponse
+            {
+                Id = d.Id,
+                FirstName = d.FirstName,
+                LastName = d.LastName,
+                DateOfBirth = d.DateOfBirth,
+                DateOfDeath = d.DateOfDeath,
+                PlaceOfDeath = d.PlaceOfDeath,
+                PhotoUrl = d.PhotoUrl,
+                ContactPersonName = d.ContactPersonName,
+                ContactPersonPhone = d.ContactPersonPhone,
+                ContactPersonEmail = d.ContactPersonEmail,
+                CityName = d.City.Name,
+                CountryName = d.City.Country.Name,
+                ProcedureStatusId = d.ProcedureStatusId,
+                ProcedureStatusName = d.ProcedureStatus.Name,
+                CreatedAt = d.CreatedAt,
+                ObituarySlug = d.Obituary != null ? d.Obituary.UniqueSlug : null,
+                CityId = d.CityId,
+                CreatedByUsername = d.User.UserName ?? ""
+            })
+            .ToListAsync();
+
+        return Ok(PagedResponse<DeceasedResponse>.Create(items, totalCount, pageNumber, pageSize));
+    }
+
     [HttpGet("{id:int}")]
     [Authorize(Policy = "MobileAccess")]
     public async Task<ActionResult<DeceasedResponse>> GetById(int id)
@@ -113,7 +163,7 @@ public class DeceasedController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "DesktopAccess")]
+    [Authorize(Policy = "MobileAccess")]
     public async Task<ActionResult<DeceasedResponse>> Create([FromBody] DeceasedRequest request)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
@@ -258,7 +308,7 @@ public class DeceasedController : ControllerBase
     }
 
     [HttpGet("{id:int}/status-history")]
-    [Authorize(Policy = "DesktopAccess")]
+    [Authorize(Policy = "MobileAccess")]
     public async Task<IActionResult> GetStatusHistory(int id)
     {
         var history = await _db.StatusHistories

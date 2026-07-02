@@ -98,7 +98,7 @@ class BurialReportTab extends StatelessWidget {
               children: [
                 _tableHeader(['Groblje', 'Broj ukopa']),
                 ...rows.map((r) => TableRow(children: [
-                  _cell(r['cemeteryName'] as String? ?? '—'),
+                  _cell(r['cemeteryName'] as String? ?? '-'),
                   _cell((r['count'] as int? ?? 0).toString()),
                 ])),
               ],

@@ -120,7 +120,7 @@ void navigateByIndex(BuildContext context, int index) {
       return;
   }
 
-  // Keep _RootRouter (route 0) in the stack so it can react to auth changes.
+  // keep _RootRouter (route 0) so it can react to auth changes
   Navigator.pushAndRemoveUntil(
     context,
     PageRouteBuilder(

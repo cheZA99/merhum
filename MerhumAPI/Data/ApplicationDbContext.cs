@@ -32,8 +32,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(builder);
 
-        // SQL Server does not support multiple cascade paths.
-        // Set all convention-based cascades to Restrict, then selectively override below.
+        // SQL Server disallows multiple cascade paths; default all to Restrict, override below
         foreach (var fk in builder.Model.GetEntityTypes()
             .SelectMany(e => e.GetForeignKeys())
             .Where(fk => fk.DeleteBehavior == DeleteBehavior.Cascade && !fk.IsOwnership))

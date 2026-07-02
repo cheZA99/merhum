@@ -20,6 +20,7 @@ class GraveSiteProvider extends ChangeNotifier {
   int currentPage = 1;
   int totalPages = 1;
   static const int pageSize = 20;
+  int freeCount = 0;
 
   Future<void> loadAll({int page = 1}) async {
     isLoading = true;
@@ -45,6 +46,13 @@ class GraveSiteProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> loadFreeCount() async {
+    try {
+      freeCount = await _service.getFreeCount();
+    } catch (_) {}
+    notifyListeners();
+  }
+
   Future<void> loadMapData(int cemeteryId) async {
     isLoadingMap = true;
     notifyListeners();
@@ -62,8 +70,7 @@ class GraveSiteProvider extends ChangeNotifier {
     try {
       deceased = await _service.getDeceased(currentDeceasedId: currentDeceasedId);
     } catch (_) {}
-    // Clear stale error — prevents the list screen from showing an old error
-    // when the form opens and triggers a rebuild
+    // clear stale error before the form rebuilds
     errorMessage = null;
     notifyListeners();
   }
@@ -117,7 +124,7 @@ class GraveSiteProvider extends ChangeNotifier {
         if (oldStatus == 'Occupied' && newStatus != 'Occupied') {
           // Unassign deceased because the site is no longer occupied
           await _service.unassignDeceased(id);
-          // If the new status is Reserved, set it explicitly — unassign resets to Available
+          // unassign resets to Available, so set Reserved back explicitly
           if (newStatus == 'Reserved') {
             await _service.updateStatus(id, newStatus);
           }

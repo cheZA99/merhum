@@ -15,7 +15,7 @@ class MosqueProvider extends ChangeNotifier {
   String? searchName;
   int? filterCityId;
 
-  // Client-side city filter — the API does not support filtering by cityId
+  // filter by city locally, API has no cityId param
   List<MosqueModel> get mosques {
     if (filterCityId == null) return _all;
     return _all.where((m) => m.cityId == filterCityId).toList();

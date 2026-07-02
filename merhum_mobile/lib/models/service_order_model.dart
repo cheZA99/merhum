@@ -34,8 +34,8 @@ class ServiceOrderModel {
         serviceTypeId: j['serviceTypeId'] as int?,
         serviceTypeName: j['serviceTypeName'] as String?,
         price: (j['price'] as num?)?.toDouble() ?? 0.0,
-        status: j['status'] as String? ?? 'Naručeno',
-        notes: j['notes'] as String?,
+        status: j['status'] as String? ?? 'Ordered',
+        notes: j['note'] as String?,
         orderedAt: DateTime.parse(j['orderedAt'] as String),
       );
 }

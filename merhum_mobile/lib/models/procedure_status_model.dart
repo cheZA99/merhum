@@ -15,13 +15,35 @@ class ProcedureStatusModel {
         order: j['order'] as int? ?? 0,
       );
 
+  // backend keys are English enum names, UI translates them for display
   static const List<String> phases = [
-    'Prijavljen',
-    'Dokumentacija potvrđena',
-    'Termin zakazan',
-    'Usluge naručene',
-    'Dženaza klanjana',
-    'Ukop obavljen',
-    'Završeno',
+    'Registered',
+    'DocumentationConfirmed',
+    'AppointmentScheduled',
+    'ServicesOrdered',
+    'FuneralPrayerCompleted',
+    'BurialCompleted',
+    'Closed',
   ];
+
+  static String labelFor(String statusName) {
+    switch (statusName) {
+      case 'Registered':
+        return 'Registrovan';
+      case 'DocumentationConfirmed':
+        return 'Dokumentacija potvrđena';
+      case 'AppointmentScheduled':
+        return 'Termin zakazan';
+      case 'ServicesOrdered':
+        return 'Usluge naručene';
+      case 'FuneralPrayerCompleted':
+        return 'Dženaza obavljena';
+      case 'BurialCompleted':
+        return 'Ukop završen';
+      case 'Closed':
+        return 'Zatvoreno';
+      default:
+        return statusName;
+    }
+  }
 }

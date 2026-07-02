@@ -36,7 +36,7 @@ public class UserService : IUserService
 
         var allUsers = await query.OrderBy(u => u.UserName).ToListAsync();
 
-        // Filter by role (requires async role lookup — filter in memory after DB query)
+        // role filter runs in memory (async role lookup)
         List<ApplicationUser> filtered;
         if (!string.IsNullOrWhiteSpace(role))
         {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/obituary_provider.dart';
@@ -13,7 +14,9 @@ import 'screens/imam/imam_appointments_screen.dart';
 import 'screens/funeral_home/funeral_home_orders_screen.dart';
 import 'utils/constants.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('bs');
   runApp(const MerhumMobileApp());
 }
 

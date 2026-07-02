@@ -2,7 +2,7 @@ class CemeterySectorModel {
   final int id;
   final String name;
   final int cemeteryId;
-  // Not in backend response — enriched client-side by matching with cemeteries list
+  // not in backend, matched against cemeteries client-side
   final String cemeteryName;
 
   const CemeterySectorModel({

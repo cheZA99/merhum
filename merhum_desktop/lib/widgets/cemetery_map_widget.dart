@@ -125,7 +125,7 @@ class _CemeteryMapWidgetState extends State<CemeteryMapWidget> {
                         },
                         child: Tooltip(
                           message: m.deceasedName != null
-                              ? '${m.plotNumber} — ${m.deceasedName}'
+                              ? '${m.plotNumber} - ${m.deceasedName}'
                               : m.plotNumber,
                           child: Container(
                             decoration: BoxDecoration(

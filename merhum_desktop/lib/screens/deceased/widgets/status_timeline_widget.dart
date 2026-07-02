@@ -84,7 +84,7 @@ class StatusTimelineWidget extends StatelessWidget {
                     if (historyEntry != null) ...[
                       const SizedBox(height: 2),
                       Text(
-                        '${_formatDateTime(historyEntry.changedAt)} — ${historyEntry.changedByUsername}',
+                        '${_formatDateTime(historyEntry.changedAt)} - ${historyEntry.changedByUsername}',
                         style: AppTextStyles.caption,
                       ),
                       if (historyEntry.note != null &&

@@ -10,11 +10,11 @@ class FuneralCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = data['deceasedFullName'] as String? ?? '—';
+    final name = data['deceasedFullName'] as String? ?? '-';
     final dtRaw = data['funeralDateTime'] as String?;
     final dt = dtRaw != null ? DateTime.tryParse(dtRaw) : null;
-    final mosque = data['mosqueName'] as String? ?? '—';
-    final cemetery = data['cemeteryName'] as String? ?? '—';
+    final mosque = data['mosqueName'] as String? ?? '-';
+    final cemetery = data['cemeteryName'] as String? ?? '-';
     final city = data['cityName'] as String?;
 
     return Card(

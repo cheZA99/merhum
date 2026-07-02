@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/deceased_provider.dart';
+import '../../models/procedure_status_model.dart';
 import '../../utils/constants.dart';
 import '../../utils/date_formatter.dart';
 import 'procedure_status_screen.dart';
@@ -88,7 +89,10 @@ class _MyProceduresScreenState extends State<MyProceduresScreen> {
                         children: [
                           Text(d.fullName, style: AppTextStyles.heading3),
                           const SizedBox(height: 4),
-                          Text(d.procedureStatusName ?? 'Status nepoznat',
+                          Text(
+                              d.procedureStatusName != null
+                                  ? ProcedureStatusModel.labelFor(d.procedureStatusName!)
+                                  : 'Status nepoznat',
                               style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
                           const SizedBox(height: 2),
                           Text('${d.cityName ?? ''} • ${DateFormatter.date(d.dateOfDeath)}', style: AppTextStyles.caption),

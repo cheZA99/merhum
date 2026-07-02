@@ -40,7 +40,16 @@ class _OrdersTab extends StatefulWidget {
 
 class _OrdersTabState extends State<_OrdersTab> {
   String _filter = 'Sve';
-  static const _statuses = ['Sve', 'Naručeno', 'U toku', 'Završeno'];
+  static const _statuses = ['Sve', 'Ordered', 'InProgress', 'Completed'];
+
+  static const _statusLabels = {
+    'Ordered': 'Naručeno',
+    'InProgress': 'U toku',
+    'Completed': 'Završeno',
+    'Cancelled': 'Otkazano',
+  };
+
+  static String _labelFor(String s) => _statusLabels[s] ?? s;
 
   @override
   void initState() {
@@ -52,13 +61,13 @@ class _OrdersTabState extends State<_OrdersTab> {
 
   Color _statusColor(String s) {
     switch (s) {
-      case 'Naručeno':
+      case 'Ordered':
         return AppColors.warning;
-      case 'U toku':
+      case 'InProgress':
         return AppColors.primary;
-      case 'Završeno':
+      case 'Completed':
         return AppColors.success;
-      case 'Otkazano':
+      case 'Cancelled':
         return AppColors.error;
       default:
         return AppColors.textMedium;
@@ -67,7 +76,7 @@ class _OrdersTabState extends State<_OrdersTab> {
 
   Future<void> _showUpdateDialog(ServiceOrderModel o) async {
     String selected = o.status;
-    const opts = ['Naručeno', 'U toku', 'Završeno', 'Otkazano'];
+    const opts = ['Ordered', 'InProgress', 'Completed', 'Cancelled'];
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) => StatefulBuilder(builder: (_, setLocal) {
@@ -84,14 +93,14 @@ class _OrdersTabState extends State<_OrdersTab> {
               DropdownButton<String>(
                 isExpanded: true,
                 value: selected,
-                items: opts.map((s) => DropdownMenuItem<String>(value: s, child: Text(s))).toList(),
+                items: opts.map((s) => DropdownMenuItem<String>(value: s, child: Text(_labelFor(s)))).toList(),
                 onChanged: (v) => setLocal(() => selected = v ?? selected),
               ),
             ],
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Otkaži')),
-            ElevatedButton(onPressed: () => Navigator.pop(ctx, selected), child: const Text('Spremi')),
+            ElevatedButton(onPressed: () => Navigator.pop(ctx, selected), child: const Text('Sačuvaj')),
           ],
         );
       }),
@@ -126,7 +135,7 @@ class _OrdersTabState extends State<_OrdersTab> {
               children: _statuses.map((s) => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: FilterChip(
-                  label: Text(s),
+                  label: Text(s == 'Sve' ? s : _labelFor(s)),
                   selected: _filter == s,
                   selectedColor: AppColors.primary,
                   labelStyle: TextStyle(color: _filter == s ? Colors.white : AppColors.textDark),
@@ -166,14 +175,14 @@ class _OrdersTabState extends State<_OrdersTab> {
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Expanded(child: Text(o.deceasedFullName ?? '—', style: AppTextStyles.heading3)),
+                                            Expanded(child: Text(o.deceasedFullName ?? '-', style: AppTextStyles.heading3)),
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                               decoration: BoxDecoration(
                                                 color: _statusColor(o.status).withOpacity(0.15),
                                                 borderRadius: BorderRadius.circular(12),
                                               ),
-                                              child: Text(o.status, style: TextStyle(fontSize: 12, color: _statusColor(o.status), fontWeight: FontWeight.w600)),
+                                              child: Text(_labelFor(o.status), style: TextStyle(fontSize: 12, color: _statusColor(o.status), fontWeight: FontWeight.w600)),
                                             ),
                                           ],
                                         ),

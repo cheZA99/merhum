@@ -95,8 +95,8 @@ class ServicesReportTab extends StatelessWidget {
     final revenue = (r['totalRevenue'] as num?)?.toDouble() ?? 0.0;
     return TableRow(children: [
       _cell(r.containsKey('serviceTypeName')
-          ? r['serviceTypeName'] as String? ?? '—'
-          : r['funeralHomeName'] as String? ?? '—'),
+          ? r['serviceTypeName'] as String? ?? '-'
+          : r['funeralHomeName'] as String? ?? '-'),
       _cell((r['count'] as int? ?? 0).toString()),
       _cell(revenue.toStringAsFixed(2)),
     ]);

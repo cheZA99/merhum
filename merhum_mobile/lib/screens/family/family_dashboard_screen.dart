@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/deceased_provider.dart';
+import '../../models/procedure_status_model.dart';
 import '../../utils/constants.dart';
 import '../../utils/date_formatter.dart';
 import '../../widgets/bottom_nav_widget.dart';
@@ -183,7 +184,11 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(d.procedureStatusName ?? 'Status nepoznat', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                    Text(
+                        d.procedureStatusName != null
+                            ? ProcedureStatusModel.labelFor(d.procedureStatusName!)
+                            : 'Status nepoznat',
+                        style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
                     Text('${d.cityName ?? ''} • ${DateFormatter.date(d.dateOfDeath)}', style: AppTextStyles.caption),
                   ],
                 ),

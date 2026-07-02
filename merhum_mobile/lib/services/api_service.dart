@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/api_config.dart';
 
@@ -20,6 +21,12 @@ class ApiService {
           }
           handler.next(options);
         },
+      ))
+      ..interceptors.add(LogInterceptor(
+        requestBody: false,
+        responseBody: true,
+        error: true,
+        logPrint: (obj) => debugPrint('[DIO] $obj'),
       ));
     return _dio!;
   }

@@ -76,7 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 12),
-                  const Icon(Icons.cruelty_free, size: 64, color: AppColors.primary),
+                  const Icon(Icons.mosque, size: 64, color: AppColors.primary),
                   const SizedBox(height: 12),
                   const Text('Merhum', textAlign: TextAlign.center, style: AppTextStyles.heading1),
                   const SizedBox(height: 4),

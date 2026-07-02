@@ -43,11 +43,10 @@ void main() async {
       minimumSize: Size(1200, 700),
       size: Size(1400, 800),
       center: true,
-      title: 'Merhum — Admin panel',
+      title: 'Merhum - Admin panel',
     ),
   );
 
-  // Single instance shared across all providers so the token is read/written from one place
   final authService = AuthService();
   final apiService = ApiService(authService);
   final authProvider = AuthProvider(authService: authService, apiService: apiService)..checkAuthStatus();
@@ -133,7 +132,7 @@ class _RootRouter extends StatelessWidget {
     return Consumer<AuthProvider>(
       builder: (context, auth, _) {
         if (!auth.isLoggedIn) {
-          // Pop any screens pushed on top of this root route (e.g. after forceLogout on 401).
+          // pop anything above the root route (e.g. after a 401 logout)
           WidgetsBinding.instance.addPostFrameCallback((_) {
             final nav = Navigator.of(context);
             if (nav.canPop()) nav.popUntil((r) => r.isFirst);

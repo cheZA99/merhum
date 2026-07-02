@@ -18,6 +18,6 @@ class CondolenceModel {
         authorName: j['authorName'] as String? ?? '',
         text: j['text'] as String? ?? '',
         isApproved: j['isApproved'] as bool? ?? false,
-        submittedAt: DateTime.parse(j['submittedAt'] as String),
+        submittedAt: DateTime.parse((j['createdAt'] ?? j['submittedAt']) as String),
       );
 }

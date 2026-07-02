@@ -72,7 +72,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
 
   Widget _buildHeader() {
     final title = widget.deceasedName != null
-        ? 'Termini — ${widget.deceasedName}'
+        ? 'Termini - ${widget.deceasedName}'
         : 'Termini';
     return Row(
       children: [

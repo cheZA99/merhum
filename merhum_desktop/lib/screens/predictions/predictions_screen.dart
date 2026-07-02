@@ -102,7 +102,7 @@ class _PredictionsScreenState extends State<PredictionsScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Model strojnog učenja procjenjuje za koliko mjeseci će svako groblje '
+            'Model mašinskog učenja procjenjuje za koliko mjeseci će svako groblje '
             'biti popunjeno. Procjena se temelji na trenutnoj popunjenosti i '
             'prosječnom broju ukopa po mjesecu iz historijskih podataka.',
             style: AppTextStyles.caption,

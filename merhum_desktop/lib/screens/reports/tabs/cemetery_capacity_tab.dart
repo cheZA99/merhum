@@ -90,7 +90,7 @@ class CemeteryCapacityTab extends StatelessWidget {
 
     return TableRow(
       children: [
-        _cell(r['name'] as String? ?? '—'),
+        _cell(r['name'] as String? ?? '-'),
         _cell((r['totalSites'] as int? ?? 0).toString()),
         _cell((r['occupiedSites'] as int? ?? 0).toString()),
         _cell((r['freeSites'] as int? ?? 0).toString()),

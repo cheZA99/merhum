@@ -120,6 +120,18 @@ public static class SeedData
 				Status = i <= 4 ? "Occupied" : "Available"
 			});
 		}
+		// Bare gets bulk-occupied so it stands out from the other cemeteries for the ML prediction
+		for (int i = 1; i <= 4200; i++)
+		{
+			graveSites.Add(new GraveSite
+			{
+				CemeteryId = cem1.Id,
+				SectionId = sec1B.Id,
+				PlotNumber = $"A-BULK-{i:D4}",
+				Row = (i - 1) / 50 + 1,
+				Status = "Occupied"
+			});
+		}
 		db.GraveSites.AddRange(graveSites);
 		await db.SaveChangesAsync();
 
@@ -159,12 +171,14 @@ public static class SeedData
 		}
 
 		var adminUser = createdUsers["desktop"];
+		var mobileUser = createdUsers["mobile"];
 
+		// dec1/dec2 belong to admin (desktop), dec3-dec5 to the mobile user
 		var dec1 = new Deceased { FirstName = "Husein", LastName = "Mehmedović", DateOfBirth = new DateOnly(1940, 3, 15), DateOfDeath = new DateOnly(2024, 1, 10), PlaceOfDeath = "Sarajevo", ContactPersonName = "Adnan Mehmedović", ContactPersonPhone = "+38761200001", ContactPersonEmail = "adnan@example.com", CityId = sarajevo.Id, ProcedureStatusId = statuses[6].Id, UserId = adminUser.Id };
 		var dec2 = new Deceased { FirstName = "Fatima", LastName = "Hadžić", DateOfBirth = new DateOnly(1952, 7, 22), DateOfDeath = new DateOnly(2024, 2, 5), PlaceOfDeath = "Mostar", ContactPersonName = "Emir Hadžić", ContactPersonPhone = "+38761200002", ContactPersonEmail = "emir@example.com", CityId = mostar.Id, ProcedureStatusId = statuses[4].Id, UserId = adminUser.Id };
-		var dec3 = new Deceased { FirstName = "Mujo", LastName = "Begović", DateOfBirth = new DateOnly(1935, 11, 8), DateOfDeath = new DateOnly(2024, 3, 1), PlaceOfDeath = "Tuzla", ContactPersonName = "Senad Begović", ContactPersonPhone = "+38761200003", CityId = tuzla.Id, ProcedureStatusId = statuses[2].Id, UserId = adminUser.Id };
-		var dec4 = new Deceased { FirstName = "Amra", LastName = "Karić", DateOfBirth = new DateOnly(1965, 5, 30), DateOfDeath = new DateOnly(2024, 3, 20), PlaceOfDeath = "Zenica", ContactPersonName = "Nermin Karić", ContactPersonPhone = "+38761200004", CityId = zenica.Id, ProcedureStatusId = statuses[1].Id, UserId = adminUser.Id };
-		var dec5 = new Deceased { FirstName = "Salih", LastName = "Omerović", DateOfBirth = new DateOnly(1948, 9, 14), DateOfDeath = new DateOnly(2024, 3, 28), PlaceOfDeath = "Sarajevo", ContactPersonName = "Mirza Omerović", ContactPersonPhone = "+38761200005", CityId = sarajevo.Id, ProcedureStatusId = statuses[0].Id, UserId = adminUser.Id };
+		var dec3 = new Deceased { FirstName = "Mujo", LastName = "Begović", DateOfBirth = new DateOnly(1935, 11, 8), DateOfDeath = new DateOnly(2024, 3, 1), PlaceOfDeath = "Tuzla", ContactPersonName = "Senad Begović", ContactPersonPhone = "+38761200003", CityId = tuzla.Id, ProcedureStatusId = statuses[2].Id, UserId = mobileUser.Id };
+		var dec4 = new Deceased { FirstName = "Amra", LastName = "Karić", DateOfBirth = new DateOnly(1965, 5, 30), DateOfDeath = new DateOnly(2024, 3, 20), PlaceOfDeath = "Zenica", ContactPersonName = "Nermin Karić", ContactPersonPhone = "+38761200004", CityId = zenica.Id, ProcedureStatusId = statuses[1].Id, UserId = mobileUser.Id };
+		var dec5 = new Deceased { FirstName = "Salih", LastName = "Omerović", DateOfBirth = new DateOnly(1948, 9, 14), DateOfDeath = new DateOnly(2024, 3, 28), PlaceOfDeath = "Sarajevo", ContactPersonName = "Mirza Omerović", ContactPersonPhone = "+38761200005", CityId = sarajevo.Id, ProcedureStatusId = statuses[0].Id, UserId = mobileUser.Id };
 		db.Deceased.AddRange(dec1, dec2, dec3, dec4, dec5);
 		await db.SaveChangesAsync();
 
@@ -196,15 +210,31 @@ public static class SeedData
 		);
 		await db.SaveChangesAsync();
 
-		var availableGrave = graveSites.First(g => g.Status == "Available" && g.CemeteryId == cem1.Id);
+		// appt1/appt2 in the past (Held), appt3-appt5 scheduled in the future with imam
+		var funeralBase = DateTime.UtcNow.Date;
 
 		db.Appointments.AddRange(
 			new Appointment { DeceasedId = dec1.Id, MosqueId = mosque1.Id, CemeteryId = cem1.Id, ImamId = imam1.Id, GraveSiteId = graveSites[0].Id, FuneralDateTime = new DateTime(2024, 1, 11, 13, 0, 0), Status = "Held", CreatedByUserId = adminUser.Id },
 			new Appointment { DeceasedId = dec2.Id, MosqueId = mosque2.Id, CemeteryId = cem2.Id, ImamId = imam2.Id, GraveSiteId = graveSites[15].Id, FuneralDateTime = new DateTime(2024, 2, 6, 14, 0, 0), Status = "Held", CreatedByUserId = adminUser.Id },
-			new Appointment { DeceasedId = dec3.Id, MosqueId = mosque3.Id, CemeteryId = cem3.Id, ImamId = imam3.Id, FuneralDateTime = new DateTime(2024, 3, 2, 13, 30, 0), Status = "Scheduled", CreatedByUserId = adminUser.Id },
-			new Appointment { DeceasedId = dec4.Id, MosqueId = mosque4.Id, CemeteryId = cem4.Id, FuneralDateTime = new DateTime(2024, 3, 21, 15, 0, 0), Status = "Scheduled", CreatedByUserId = adminUser.Id },
-			new Appointment { DeceasedId = dec5.Id, MosqueId = mosque1.Id, CemeteryId = cem1.Id, FuneralDateTime = new DateTime(2024, 3, 29, 13, 0, 0), Status = "Scheduled", CreatedByUserId = adminUser.Id }
+			new Appointment { DeceasedId = dec3.Id, MosqueId = mosque3.Id, CemeteryId = cem3.Id, ImamId = imam1.Id, FuneralDateTime = funeralBase.AddDays(3).AddHours(13), Status = "Scheduled", CreatedByUserId = adminUser.Id },
+			new Appointment { DeceasedId = dec4.Id, MosqueId = mosque4.Id, CemeteryId = cem4.Id, ImamId = imam1.Id, FuneralDateTime = funeralBase.AddDays(7).AddHours(11), Status = "Scheduled", CreatedByUserId = adminUser.Id },
+			new Appointment { DeceasedId = dec5.Id, MosqueId = mosque1.Id, CemeteryId = cem1.Id, ImamId = imam2.Id, FuneralDateTime = funeralBase.AddDays(12).AddHours(14), Status = "Scheduled", CreatedByUserId = adminUser.Id }
 		);
+
+		// recent burial history for Bare so its predicted burial rate stands out too
+		for (int m = 1; m <= 8; m++)
+		{
+			db.Appointments.Add(new Appointment
+			{
+				DeceasedId = dec1.Id,
+				MosqueId = mosque1.Id,
+				CemeteryId = cem1.Id,
+				ImamId = imam1.Id,
+				FuneralDateTime = funeralBase.AddMonths(-m).AddHours(13),
+				Status = "Held",
+				CreatedByUserId = adminUser.Id
+			});
+		}
 		await db.SaveChangesAsync();
 
 		db.ServiceOrders.AddRange(

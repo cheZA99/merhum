@@ -36,6 +36,11 @@ class AppointmentService {
     );
   }
 
+  Future<int> getActiveCount() async {
+    final (_, total) = await getAll(status: 'Scheduled', pageSize: 1);
+    return total;
+  }
+
   Future<AppointmentModel> getById(int id) async {
     final response = await _api.get('/api/appointment/$id');
     final raw = response.data as Map<String, dynamic>;

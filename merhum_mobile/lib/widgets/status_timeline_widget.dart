@@ -91,7 +91,7 @@ class _TimelineItem extends StatelessWidget {
                 children: [
                   const SizedBox(height: 2),
                   Text(
-                    phase,
+                    ProcedureStatusModel.labelFor(phase),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,

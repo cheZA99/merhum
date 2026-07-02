@@ -37,6 +37,17 @@ public class ObituaryController : ControllerBase
         return Ok(ApiResponse<ObituaryResponse>.Ok(obituary));
     }
 
+    [HttpGet("public")]
+    [AllowAnonymous]
+    public async Task<ActionResult<PagedResponse<ObituaryResponse>>> GetPublic(
+        [FromQuery] string? search,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var result = await _obituaryService.GetAllAsync(true, true, search, pageNumber, pageSize);
+        return Ok(result);
+    }
+
     [HttpGet("slug/{slug}")]
     [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<ObituaryResponse>>> GetBySlug(string slug)
@@ -49,7 +60,7 @@ public class ObituaryController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "DesktopAccess")]
+    [Authorize(Policy = "MobileAccess")]
     public async Task<ActionResult<ApiResponse<ObituaryResponse>>> Create([FromBody] ObituaryRequest request)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)

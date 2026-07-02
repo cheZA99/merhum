@@ -72,7 +72,7 @@ class _GraveSitesScreenState extends State<GraveSitesScreen>
     return Consumer<GraveSiteProvider>(
       builder: (context, provider, _) {
         final title = widget.initialCemeteryName != null
-            ? 'Mezarska mjesta — ${widget.initialCemeteryName}'
+            ? 'Mezarska mjesta - ${widget.initialCemeteryName}'
             : 'Mezarska mjesta';
 
         return Padding(
@@ -130,7 +130,7 @@ class _GraveSitesScreenState extends State<GraveSitesScreen>
                 ),
                 items: [
                   const DropdownMenuItem<int?>(
-                      value: null, child: Text('— Odaberite groblje —')),
+                      value: null, child: Text('Odaberite groblje')),
                   ...cemeteries.map((g) => DropdownMenuItem<int?>(
                         value: g.id,
                         child: Text(g.name),
@@ -187,7 +187,7 @@ class _GraveSitesScreenState extends State<GraveSitesScreen>
       return const Center(child: CircularProgressIndicator());
     }
     if (provider.sites.isEmpty && provider.errorMessage != null && !_isNavigating) {
-      // Error is shown only when there are no items — does not block the list if data is present
+      // only show the error when the list is empty
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -210,7 +210,7 @@ class _GraveSitesScreenState extends State<GraveSitesScreen>
 
     return Column(
       children: [
-        // Inline error banner — does not block the list, suppressed during navigation
+        // inline error banner, hidden during navigation
         if (provider.errorMessage != null && !_isNavigating)
           Container(
             width: double.infinity,
@@ -351,7 +351,7 @@ class _GraveSitesScreenState extends State<GraveSitesScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('QR kod — Mezarsko mjesto ${m.plotNumber}'),
+        title: Text('QR kod - Mezarsko mjesto ${m.plotNumber}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -407,7 +407,7 @@ class _GraveSitesScreenState extends State<GraveSitesScreen>
 
   Future<void> _openForm(BuildContext context,
       GraveSiteModel? site) async {
-    // Suppress error display during navigation — avoids the list flashing red
+    // hide the error during navigation so the list doesn't flash red
     setState(() => _isNavigating = true);
     context.read<GraveSiteProvider>().clearError();
 

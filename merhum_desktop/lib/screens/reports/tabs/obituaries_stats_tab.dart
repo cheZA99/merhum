@@ -89,8 +89,8 @@ class ObituariesStatsTab extends StatelessWidget {
                           final r = entry.value;
                           return TableRow(children: [
                             _cell(i.toString()),
-                            _cell(r['deceasedFullName'] as String? ?? '—'),
-                            _cell(r['uniqueSlug'] as String? ?? '—'),
+                            _cell(r['deceasedFullName'] as String? ?? '-'),
+                            _cell(r['uniqueSlug'] as String? ?? '-'),
                             _cell((r['viewCount'] as int? ?? 0).toString()),
                             _cell((r['condolenceCount'] as int? ?? 0).toString()),
                           ]);

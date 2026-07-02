@@ -59,7 +59,7 @@ public static class PDFGenerator
 
                 page.Footer().AlignCenter().Text(x =>
                 {
-                    x.Span("Merhum System — Generated: ");
+                    x.Span("Merhum System - Generated: ");
                     x.Span(DateTime.Now.ToString("g"));
                 });
             });
@@ -80,7 +80,7 @@ public static class PDFGenerator
                 page.Margin(2, Unit.Centimetre);
                 page.DefaultTextStyle(x => x.FontSize(11));
 
-                page.Header().Text("Obituary — Merhum")
+                page.Header().Text("Obituary - Merhum")
                     .SemiBold().FontSize(20).FontColor(Colors.Grey.Darken3);
 
                 page.Content().Column(col =>
@@ -90,7 +90,7 @@ public static class PDFGenerator
                     col.Item().Text($"{deceased?.FirstName} {deceased?.LastName}")
                         .Bold().FontSize(18);
 
-                    col.Item().Text($"{deceased?.DateOfBirth:d} — {deceased?.DateOfDeath:d}");
+                    col.Item().Text($"{deceased?.DateOfBirth:d} - {deceased?.DateOfDeath:d}");
                     col.Item().Text($"City: {deceased?.City?.Name ?? "-"}");
 
                     if (obituary.Condolences.Any())
@@ -110,7 +110,7 @@ public static class PDFGenerator
 
                 page.Footer().AlignCenter().Text(x =>
                 {
-                    x.Span("merhum.ba — ");
+                    x.Span("merhum.ba - ");
                     x.Span(obituary.UniqueSlug);
                 });
             });

@@ -232,7 +232,7 @@ class _ObituariesScreenState extends State<ObituariesScreen> {
             4: FlexColumnWidth(1),
             5: FlexColumnWidth(1),
             6: FlexColumnWidth(1.5),
-            7: FixedColumnWidth(120),
+            7: FixedColumnWidth(140),
           },
           children: [
             _tableHeader(),
@@ -274,7 +274,7 @@ class _ObituariesScreenState extends State<ObituariesScreen> {
     return TableRow(
       children: [
         _cell(o.deceasedFullName),
-        _cell(o.deceasedDateOfDeath != null ? o.deceasedDateOfDeath! : '—'),
+        _cell(o.deceasedDateOfDeath != null ? o.deceasedDateOfDeath! : '-'),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: _boolChip(o.isPublic, trueLabel: 'Javna', falseLabel: 'Privatna'),
@@ -295,19 +295,31 @@ class _ObituariesScreenState extends State<ObituariesScreen> {
               IconButton(
                 icon: const Icon(Icons.visibility, size: 18),
                 tooltip: 'Detalji',
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
                 onPressed: () => _openDetails(o),
               ),
+              const SizedBox(width: 8),
               IconButton(
                 icon: const Icon(Icons.edit, size: 18),
                 tooltip: 'Uredi',
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
                 onPressed: () => _openEditDialog(o),
               ),
-              if (isAdmin)
+              if (isAdmin) ...[
+                const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.delete, size: 18, color: AppColors.error),
                   tooltip: 'Obriši',
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                   onPressed: () => _confirmDelete(o),
                 ),
+              ],
             ],
           ),
         ),
@@ -467,7 +479,7 @@ class _EditObituaryDialogState extends State<_EditObituaryDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Uredi smrtovnicu — ${widget.obituary.deceasedFullName}'),
+      title: Text('Uredi smrtovnicu - ${widget.obituary.deceasedFullName}'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

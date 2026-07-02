@@ -19,10 +19,10 @@ public class AppointmentService : IAppointmentService
         _publishEndpoint = publishEndpoint;
     }
 
-    public async Task<PagedResponse<AppointmentResponse>> GetAllAsync(int? deceasedId, string? status, int? mosqueId, int? imamId, DateTime? dateFrom, DateTime? dateTo, int pageNumber, int pageSize)
+    public async Task<PagedResponse<AppointmentResponse>> GetAllAsync(int? deceasedId, string? status, int? mosqueId, int? imamId, int? cityId, DateTime? dateFrom, DateTime? dateTo, int pageNumber, int pageSize)
     {
         var query = _db.Appointments
-            .Include(a => a.Deceased)
+            .Include(a => a.Deceased).ThenInclude(d => d.City)
             .Include(a => a.Mosque)
             .Include(a => a.Cemetery)
             .Include(a => a.Imam)
@@ -40,6 +40,9 @@ public class AppointmentService : IAppointmentService
 
         if (imamId.HasValue)
             query = query.Where(a => a.ImamId == imamId.Value);
+
+        if (cityId.HasValue)
+            query = query.Where(a => a.Deceased.CityId == cityId.Value);
 
         if (dateFrom.HasValue)
             query = query.Where(a => a.FuneralDateTime >= dateFrom.Value);
@@ -61,7 +64,7 @@ public class AppointmentService : IAppointmentService
     public async Task<AppointmentResponse?> GetByIdAsync(int id)
     {
         var a = await _db.Appointments
-            .Include(x => x.Deceased)
+            .Include(x => x.Deceased).ThenInclude(d => d.City)
             .Include(x => x.Mosque)
             .Include(x => x.Cemetery)
             .Include(x => x.Imam)
@@ -89,6 +92,7 @@ public class AppointmentService : IAppointmentService
         await _db.SaveChangesAsync();
 
         await _db.Entry(appointment).Reference(a => a.Deceased).LoadAsync();
+        await _db.Entry(appointment.Deceased).Reference(d => d.City).LoadAsync();
         await _db.Entry(appointment).Reference(a => a.Mosque).LoadAsync();
         await _db.Entry(appointment).Reference(a => a.Cemetery).LoadAsync();
 
@@ -144,6 +148,7 @@ public class AppointmentService : IAppointmentService
         await _db.SaveChangesAsync();
 
         await _db.Entry(appointment).Reference(a => a.Deceased).LoadAsync();
+        await _db.Entry(appointment.Deceased).Reference(d => d.City).LoadAsync();
         await _db.Entry(appointment).Reference(a => a.Mosque).LoadAsync();
         await _db.Entry(appointment).Reference(a => a.Cemetery).LoadAsync();
         if (appointment.ImamId.HasValue)
@@ -178,6 +183,8 @@ public class AppointmentService : IAppointmentService
         Id = a.Id,
         DeceasedId = a.DeceasedId,
         DeceasedFullName = a.Deceased != null ? $"{a.Deceased.FirstName} {a.Deceased.LastName}" : string.Empty,
+        CityId = a.Deceased?.CityId,
+        CityName = a.Deceased?.City?.Name,
         MosqueId = a.MosqueId,
         MosqueName = a.Mosque?.Name ?? string.Empty,
         CemeteryId = a.CemeteryId,

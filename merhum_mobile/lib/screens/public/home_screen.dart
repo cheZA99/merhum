@@ -84,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.cruelty_free, color: Colors.white, size: 28),
+              const Icon(Icons.mosque, color: Colors.white, size: 28),
               const SizedBox(width: 8),
               const Text('Merhum', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
             ],

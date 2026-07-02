@@ -73,6 +73,11 @@ class DeceasedService {
         .toList();
   }
 
+  Future<int> getTotalCount() async {
+    final list = await getAll();
+    return list.length;
+  }
+
   Future<List<Map<String, dynamic>>> getCities() async {
     final response = await _api.get('/api/referencedata/cities');
     final raw = response.data;

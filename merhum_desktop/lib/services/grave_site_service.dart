@@ -24,6 +24,15 @@ class GraveSiteService {
     return list.map((e) => GraveSiteModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  Future<int> getFreeCount() async {
+    final response = await _api.get('/api/gravesite', queryParams: {
+      'status': 'Available',
+      'pageSize': 1,
+    });
+    final raw = response.data as Map<String, dynamic>;
+    return raw['totalCount'] as int? ?? 0;
+  }
+
   Future<List<GraveSiteModel>> getMapData(int cemeteryId) async {
     final response = await _api.get('/api/gravesite', queryParams: {
       'cemeteryId': cemeteryId,
@@ -42,7 +51,7 @@ class GraveSiteService {
 
   Future<int> create(Map<String, dynamic> data) async {
     final response = await _api.post('/api/gravesite', data: data);
-    // return only the ID — 201 response, full model parsing is not critical here
+    // 201 returns just the id, no need to parse the whole model
     final raw = response.data;
     if (raw is Map) {
       final inner = raw['data'];
@@ -72,7 +81,7 @@ class GraveSiteService {
     await _api.delete('/api/gravesite/$id');
   }
 
-  // currentDeceasedId — in edit mode include the already-assigned deceased in the list even if they have a grave site
+  // in edit mode keep the already-assigned deceased in the list
   Future<List<Map<String, dynamic>>> getDeceased({int? currentDeceasedId}) async {
     final response = await _api.get('/api/deceased', queryParams: {
       'pageSize': 500,
@@ -84,7 +93,7 @@ class GraveSiteService {
         : (raw as List? ?? []);
     final result = list.cast<Map<String, dynamic>>();
 
-    // If editing and the deceased is already assigned to this site, inject them manually
+    // inject the assigned deceased manually when editing
     if (currentDeceasedId != null &&
         !result.any((p) => p['id'] == currentDeceasedId)) {
       try {
@@ -99,7 +108,7 @@ class GraveSiteService {
   }
 
   Future<List<Map<String, dynamic>>> getSectors(int cemeteryId) async {
-    // No dedicated endpoint — extract unique sectors from the gravesite list
+    // no endpoint for this, derive sectors from the gravesite list
     final sites = await getAll(cemeteryId: cemeteryId, pageSize: 500);
     final seen = <int>{};
     return sites

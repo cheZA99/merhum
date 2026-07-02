@@ -38,12 +38,12 @@ public class EmailService : IEmailService
             await client.ConnectAsync(smtpHost, smtpPort, secureOption);
             await client.AuthenticateAsync(smtpUser, smtpPass);
             await client.SendAsync(message);
-            _logger.LogInformation("Email sent to {Email} — Subject: {Subject}", toEmail, subject);
+            _logger.LogInformation("Email sent to {Email} - Subject: {Subject}", toEmail, subject);
         }
         catch (Exception ex)
         {
-            // Don't rethrow — avoid infinite requeue for SMTP/invalid-address failures.
-            _logger.LogError(ex, "Failed to send email to {Email} — Subject: {Subject}", toEmail, subject);
+            // don't rethrow, avoids endless requeue on bad SMTP/address
+            _logger.LogError(ex, "Failed to send email to {Email} - Subject: {Subject}", toEmail, subject);
         }
         finally
         {

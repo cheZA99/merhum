@@ -24,8 +24,8 @@ class _ObituarySearchScreenState extends State<ObituarySearchScreen> {
     super.initState();
     if (widget.initialQuery != null) {
       _searchCtrl.text = widget.initialQuery!;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _doSearch(widget.initialQuery!));
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _doSearch(_searchCtrl.text));
   }
 
   @override
@@ -68,27 +68,18 @@ class _ObituarySearchScreenState extends State<ObituarySearchScreen> {
         builder: (context, p, _) {
           if (p.isLoading) return const LoadingWidget();
 
-          if (_searchCtrl.text.trim().isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.search, size: 64, color: AppColors.textLight),
-                  const SizedBox(height: 12),
-                  const Text('Unesite ime za pretragu', style: AppTextStyles.bodyMedium),
-                ],
-              ),
-            );
-          }
-
           if (p.results.isEmpty) {
+            final query = _searchCtrl.text.trim();
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.search_off, size: 64, color: AppColors.textLight),
                   const SizedBox(height: 12),
-                  Text('Nema rezultata za "${_searchCtrl.text}"', style: AppTextStyles.bodyMedium),
+                  Text(
+                    query.isEmpty ? 'Trenutno nema smrtovnica.' : 'Nema rezultata za "$query"',
+                    style: AppTextStyles.bodyMedium,
+                  ),
                 ],
               ),
             );
