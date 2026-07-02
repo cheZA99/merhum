@@ -13,6 +13,17 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 
+// load secrets from the nearest .env for local runs; in Docker these come from compose env vars
+for (var envDir = new DirectoryInfo(Directory.GetCurrentDirectory()); envDir != null; envDir = envDir.Parent)
+{
+	var envFile = Path.Combine(envDir.FullName, ".env");
+	if (File.Exists(envFile))
+	{
+		DotNetEnv.Env.Load(envFile);
+		break;
+	}
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

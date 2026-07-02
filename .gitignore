@@ -38,13 +38,14 @@ coverage-reports/
 appsettings.Production.json
 appsettings.Staging.json
 secrets.json
+.env
 *.pfx
 *.p12
 *.pem
 *.key
 
 !appsettings.json
-!appsettings.Development.json
+!.env.example
 
 sqlserver_data/
 
