@@ -6,7 +6,7 @@ services:
       - "1433:1433"
     environment:
       - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:-Password1!}
     volumes:
       - ./containers/mssql/data:/var/opt/mssql/data
       - ./containers/mssql/log:/var/opt/mssql/log
@@ -18,8 +18,8 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
-      - RABBITMQ_DEFAULT_USER=${RabbitMQ__Username}
-      - RABBITMQ_DEFAULT_PASS=${RabbitMQ__Password}
+      - RABBITMQ_DEFAULT_USER=${RabbitMQ__Username:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RabbitMQ__Password:-guest}
     volumes:
       - ./containers/rabbitmq:/var/lib/rabbitmq
 
@@ -34,27 +34,27 @@ services:
       - merhum-sqlserver
       - merhum-rabbitmq
     environment:
-      - ConnectionStrings__DefaultConnection=Server=merhum-sqlserver,1433;Database=IB2500253;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True
+      - ConnectionStrings__DefaultConnection=Server=merhum-sqlserver,1433;Database=IB2500253;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Password1!};TrustServerCertificate=True
       - RabbitMQ__Host=merhum-rabbitmq
       - RabbitMQ__Port=5672
-      - RabbitMQ__Username=${RabbitMQ__Username}
-      - RabbitMQ__Password=${RabbitMQ__Password}
-      - JWT__Key=${JWT__Key}
+      - RabbitMQ__Username=${RabbitMQ__Username:-guest}
+      - RabbitMQ__Password=${RabbitMQ__Password:-guest}
+      - JWT__Key=${JWT__Key:-your-super-secret-jwt-key-minimum-32-characters-long}
       - JWT__Issuer=MerhumAPI
       - JWT__Audience=MerhumClients
       - JWT__ExpiresInMinutes=60
       - SMTP__Host=smtp.gmail.com
       - SMTP__Port=587
-      - SMTP__Username=${SMTP__Username}
-      - SMTP__Password=${SMTP__Password}
-      - SMTP__SenderEmail=${SMTP__SenderEmail}
+      - SMTP__Username=${SMTP__Username:-}
+      - SMTP__Password=${SMTP__Password:-}
+      - SMTP__SenderEmail=${SMTP__SenderEmail:-}
       - SMTP__UseSSL=true
       - SMTP__SenderName=Merhum Sistem
-      - Groq__ApiKey=${Groq__ApiKey}
+      - Groq__ApiKey=${Groq__ApiKey:-}
       - Groq__ApiUrl=https://api.groq.com/openai/v1/chat/completions
       - Groq__Model=llama-3.3-70b-versatile
-      - PayPal__ClientId=${PayPal__ClientId}
-      - PayPal__ClientSecret=${PayPal__ClientSecret}
+      - PayPal__ClientId=${PayPal__ClientId:-}
+      - PayPal__ClientSecret=${PayPal__ClientSecret:-}
       - PayPal__Mode=sandbox
       - AppSettings__BaseUrl=http://localhost:5000
       - AppSettings__SmrtovnicaBaseUrl=http://localhost:5000/smrtovnica
@@ -70,13 +70,13 @@ services:
       - DOTNET_ENVIRONMENT=Production
       - RabbitMQ__Host=merhum-rabbitmq
       - RabbitMQ__Port=5672
-      - RabbitMQ__Username=${RabbitMQ__Username}
-      - RabbitMQ__Password=${RabbitMQ__Password}
+      - RabbitMQ__Username=${RabbitMQ__Username:-guest}
+      - RabbitMQ__Password=${RabbitMQ__Password:-guest}
       - SMTP__Host=smtp.gmail.com
       - SMTP__Port=587
-      - SMTP__Username=${SMTP__Username}
-      - SMTP__Password=${SMTP__Password}
-      - SMTP__SenderEmail=${SMTP__SenderEmail}
+      - SMTP__Username=${SMTP__Username:-}
+      - SMTP__Password=${SMTP__Password:-}
+      - SMTP__SenderEmail=${SMTP__SenderEmail:-}
       - SMTP__UseSSL=true
       - SMTP__SenderName=Merhum Sistem
       - AppSettings__ObituaryBaseUrl=http://localhost:5000/smrtovnica
