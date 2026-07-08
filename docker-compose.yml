@@ -11,6 +11,12 @@ services:
       - ./containers/mssql/data:/var/opt/mssql/data
       - ./containers/mssql/log:/var/opt/mssql/log
       - ./containers/mssql/secrets:/var/opt/mssql/secrets
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" -b"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
 
   merhum-rabbitmq:
     image: rabbitmq:3-management
@@ -22,6 +28,12 @@ services:
       - RABBITMQ_DEFAULT_PASS=${RabbitMQ__Password:-guest}
     volumes:
       - ./containers/rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 20s
 
   merhum-api:
     image: ${DOCKER_REGISTRY-}merhumapi
@@ -31,8 +43,10 @@ services:
     ports:
       - "5000:8080"
     depends_on:
-      - merhum-sqlserver
-      - merhum-rabbitmq
+      merhum-sqlserver:
+        condition: service_healthy
+      merhum-rabbitmq:
+        condition: service_healthy
     environment:
       - ConnectionStrings__DefaultConnection=Server=merhum-sqlserver,1433;Database=IB2500253;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Password1!};TrustServerCertificate=True
       - RabbitMQ__Host=merhum-rabbitmq
@@ -65,7 +79,8 @@ services:
       context: ./MerhumWorker
       dockerfile: Dockerfile
     depends_on:
-      - merhum-rabbitmq
+      merhum-rabbitmq:
+        condition: service_healthy
     environment:
       - DOTNET_ENVIRONMENT=Production
       - RabbitMQ__Host=merhum-rabbitmq
