@@ -23,4 +23,8 @@ class PaymentService {
     final data = body['data'] as Map<String, dynamic>?;
     return data?['status'] as String? ?? 'None';
   }
+
+  static Future<void> refundPayment(int serviceOrderId) async {
+    await ApiService.post('/api/payments/refund/$serviceOrderId', null);
+  }
 }

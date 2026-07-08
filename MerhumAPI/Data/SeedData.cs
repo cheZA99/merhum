@@ -13,8 +13,6 @@ public static class SeedData
 		var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 		var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-		// Pri prvom pokretanju SQL Server kontejneru treba i preko minute da se
-		// inicijalizira, pa migraciju ponavljamo dok server ne postane dostupan.
 		for (var attempt = 1; ; attempt++)
 		{
 			try

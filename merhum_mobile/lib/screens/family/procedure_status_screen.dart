@@ -220,7 +220,9 @@ class _ProcedureStatusScreenState extends State<ProcedureStatusScreen> {
     }
     return Column(
       children: orders.map((o) {
-        final paid = pp.isPaid(o.id);
+        final status = pp.statusFor(o.id);
+        final paid = status == 'Completed';
+        final refunded = status == 'Refunded';
         return Card(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Padding(
@@ -243,10 +245,17 @@ class _ProcedureStatusScreenState extends State<ProcedureStatusScreen> {
                         ],
                       ),
                     ),
-                    _paymentBadge(paid),
+                    _paymentBadge(status),
                   ],
                 ),
-                if (!paid) ...[
+                if (paid) ...[
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: _paying ? null : () => _refund(o),
+                    icon: const Icon(Icons.undo, size: 18),
+                    label: const Text('Refundiraj'),
+                  ),
+                ] else if (!refunded) ...[
                   const SizedBox(height: 12),
                   ElevatedButton.icon(
                     onPressed: _paying ? null : () => _pay(o),
@@ -262,9 +271,22 @@ class _ProcedureStatusScreenState extends State<ProcedureStatusScreen> {
     );
   }
 
-  Widget _paymentBadge(bool paid) {
-    final color = paid ? AppColors.success : AppColors.warning;
-    final label = paid ? 'Plaćeno' : 'Nije plaćeno';
+  Widget _paymentBadge(String status) {
+    final Color color;
+    final String label;
+    switch (status) {
+      case 'Completed':
+        color = AppColors.success;
+        label = 'Plaćeno';
+        break;
+      case 'Refunded':
+        color = Colors.grey;
+        label = 'Refundirano';
+        break;
+      default:
+        color = AppColors.warning;
+        label = 'Nije plaćeno';
+    }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -273,6 +295,33 @@ class _ProcedureStatusScreenState extends State<ProcedureStatusScreen> {
       ),
       child: Text(label, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
     );
+  }
+
+  Future<void> _refund(ServiceOrderModel order) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Povrat sredstava'),
+        content: const Text('Da li ste sigurni da želite povrat za ovu uslugu?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Odustani')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Refundiraj')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final pp = context.read<PaymentProvider>();
+    setState(() => _paying = true);
+    final error = await pp.refund(order.id);
+    if (!mounted) return;
+    setState(() => _paying = false);
+
+    if (error == null) {
+      _showSnack('Povrat sredstava uspješno izvršen.', AppColors.success);
+    } else {
+      _showSnack(error, AppColors.error);
+    }
   }
 
   Future<void> _pay(ServiceOrderModel order) async {

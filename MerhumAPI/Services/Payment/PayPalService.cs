@@ -165,4 +165,47 @@ public class PayPalService : IPayPalService
 
         return (true, captureId);
     }
+
+    public async Task<(bool success, string refundId)> RefundCaptureAsync(string captureId, decimal amount, string currency)
+    {
+        var token = await GetAccessTokenAsync();
+
+        var payload = new
+        {
+            amount = new
+            {
+                value = amount.ToString("0.00", CultureInfo.InvariantCulture),
+                currency_code = currency
+            }
+        };
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"{BaseUrl}/v2/payments/captures/{captureId}/refund")
+        {
+            Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _httpClient.SendAsync(request);
+        var body = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError("PayPal refund failed for capture {CaptureId} with status {Status}. Body: {Body}", captureId, response.StatusCode, body);
+            return (false, string.Empty);
+        }
+
+        using var doc = JsonDocument.Parse(body);
+        var root = doc.RootElement;
+
+        var status = root.TryGetProperty("status", out var s) ? s.GetString() : null;
+        if (!string.Equals(status, "COMPLETED", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(status, "PENDING", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning("PayPal refund for capture {CaptureId} returned status {Status}.", captureId, status);
+            return (false, string.Empty);
+        }
+
+        var refundId = root.TryGetProperty("id", out var idProp) ? idProp.GetString() ?? string.Empty : string.Empty;
+        return (true, refundId);
+    }
 }

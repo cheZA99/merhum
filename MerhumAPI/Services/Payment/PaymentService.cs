@@ -112,11 +112,55 @@ public class PaymentService :IPaymentService
 			Status = payment.Status,
 			Amount = payment.Amount,
 			Currency = payment.Currency,
-			CompletedAt = payment.CompletedAt
+			CompletedAt = payment.CompletedAt,
+				RefundedAt = payment.RefundedAt
 		};
 	}
 
-	private async Task PublishConfirmationAsync(PaymentEntity payment)
+	public async Task<PaymentStatusDto> RefundPaymentAsync(int serviceOrderId)
+		{
+			var payment = await _db.Payments
+			    .Where(p => p.ServiceOrderId == serviceOrderId)
+			    .OrderByDescending(p => p.Id)
+			    .FirstOrDefaultAsync()
+			    ?? throw new KeyNotFoundException("Plaćanje za ovu narudžbu nije pronađeno.");
+
+			if (payment.Status == "Refunded")
+				throw new InvalidOperationException("Plaćanje je već refundirano.");
+
+			if (payment.Status != "Completed")
+				throw new InvalidOperationException("Povrat je moguć samo za završeno plaćanje.");
+
+			if (string.IsNullOrWhiteSpace(payment.PaypalCaptureId))
+				throw new InvalidOperationException("Nedostaje PayPal identifikator naplate za povrat.");
+
+			var (success, refundId) = await _payPalService.RefundCaptureAsync(
+			    payment.PaypalCaptureId, payment.Amount, payment.Currency);
+
+			if (!success)
+				throw new InvalidOperationException("Povrat sredstava nije uspio. Molimo pokušajte ponovo.");
+
+			payment.Status = "Refunded";
+			payment.PaypalRefundId = refundId;
+			payment.RefundedAt = DateTime.UtcNow;
+			await _db.SaveChangesAsync();
+
+			_logger.LogInformation("Payment {PaymentId} for order {OrderId} refunded (PayPal refund {RefundId}).",
+			    payment.Id, serviceOrderId, refundId);
+
+			return new PaymentStatusDto
+			{
+				ServiceOrderId = serviceOrderId,
+				IsPaid = false,
+				Status = payment.Status,
+				Amount = payment.Amount,
+				Currency = payment.Currency,
+				CompletedAt = payment.CompletedAt,
+				RefundedAt = payment.RefundedAt
+			};
+		}
+
+		private async Task PublishConfirmationAsync(PaymentEntity payment)
 	{
 		var order = await _db.ServiceOrders
 		    .Include(o => o.Deceased)

@@ -7,4 +7,5 @@ public interface IPaymentService
     Task<PaymentResponseDto> InitiatePaymentAsync(int serviceOrderId);
     Task<bool> CompletePaymentAsync(string paypalOrderId);
     Task<PaymentStatusDto> GetStatusAsync(int serviceOrderId);
+    Task<PaymentStatusDto> RefundPaymentAsync(int serviceOrderId);
 }

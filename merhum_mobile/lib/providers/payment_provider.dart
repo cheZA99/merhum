@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import '../services/payment_service.dart';
 
 class PaymentProvider extends ChangeNotifier {
@@ -38,6 +39,23 @@ class PaymentProvider extends ChangeNotifier {
       return ok;
     } catch (_) {
       return false;
+    }
+  }
+
+  Future<String?> refund(int serviceOrderId) async {
+    try {
+      await PaymentService.refundPayment(serviceOrderId);
+      _statusByOrder[serviceOrderId] = 'Refunded';
+      notifyListeners();
+      return null;
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      if (data is Map && data['message'] is String) {
+        return data['message'] as String;
+      }
+      return 'Greška pri povratu sredstava.';
+    } catch (_) {
+      return 'Greška pri povratu sredstava.';
     }
   }
 }

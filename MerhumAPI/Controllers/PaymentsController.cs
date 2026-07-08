@@ -44,4 +44,11 @@ public class PaymentsController : ControllerBase
         var status = await _paymentService.GetStatusAsync(serviceOrderId);
         return Ok(ApiResponse<PaymentStatusDto>.Ok(status));
     }
+
+    [HttpPost("refund/{serviceOrderId:int}")]
+    public async Task<ActionResult<ApiResponse<PaymentStatusDto>>> Refund(int serviceOrderId)
+    {
+        var result = await _paymentService.RefundPaymentAsync(serviceOrderId);
+        return Ok(ApiResponse<PaymentStatusDto>.Ok(result, "Povrat sredstava uspješno izvršen."));
+    }
 }
