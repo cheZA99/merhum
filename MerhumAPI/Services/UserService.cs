@@ -16,6 +16,8 @@ public class UserService : IUserService
         string? name, string? username, string? role, bool? isLocked,
         int pageNumber, int pageSize)
     {
+        (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
+
         var query = _userManager.Users
             .Include(u => u.City)
             .AsQueryable();

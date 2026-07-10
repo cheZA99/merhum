@@ -14,6 +14,8 @@ public class CondolenceService : ICondolenceService
 
     public async Task<PagedResponse<CondolenceResponse>> GetAllAsync(int? obituaryId, bool? isApproved, int pageNumber, int pageSize)
     {
+        (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
+
         var query = _db.Condolences.AsQueryable();
 
         if (obituaryId.HasValue)

@@ -21,6 +21,8 @@ public class ServiceOrderService : IServiceOrderService
 
     public async Task<PagedResponse<ServiceOrderResponse>> GetAllAsync(int? deceasedId, string? status, int? funeralHomeId, DateTime? dateFrom, DateTime? dateTo, int pageNumber, int pageSize)
     {
+        (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
+
         var query = _db.ServiceOrders
             .Include(s => s.Deceased)
             .Include(s => s.FuneralHome)

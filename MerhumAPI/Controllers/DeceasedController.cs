@@ -95,6 +95,8 @@ public class DeceasedController : ControllerBase
             .Where(d => d.UserId == userId)
             .OrderByDescending(d => d.CreatedAt);
 
+        (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
+
         var totalCount = await query.CountAsync();
 
         var items = await query

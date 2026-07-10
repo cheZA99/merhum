@@ -14,6 +14,8 @@ public class CemeteryService : ICemeteryService
 
     public async Task<PagedResponse<CemeteryResponse>> GetAllAsync(string? search, int pageNumber, int pageSize)
     {
+        (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
+
         var query = _db.Cemeteries.Include(c => c.City).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))

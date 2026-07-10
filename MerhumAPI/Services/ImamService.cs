@@ -14,6 +14,8 @@ public class ImamService : IImamService
 
     public async Task<PagedResponse<ImamResponse>> GetAllAsync(int? mosqueId, bool? isActive, string? name, int pageNumber, int pageSize)
     {
+        (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
+
         var query = _db.Imams.Include(i => i.Mosque).AsQueryable();
 
         if (mosqueId.HasValue)

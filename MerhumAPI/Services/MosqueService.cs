@@ -14,6 +14,8 @@ public class MosqueService : IMosqueService
 
     public async Task<PagedResponse<MosqueResponse>> GetAllAsync(string? search, int pageNumber, int pageSize)
     {
+        (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
+
         var query = _db.Mosques
             .Include(m => m.City)
             .AsQueryable();

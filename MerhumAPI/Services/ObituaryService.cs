@@ -25,6 +25,8 @@ public class ObituaryService : IObituaryService
 
     public async Task<PagedResponse<ObituaryResponse>> GetAllAsync(bool? isPublic, bool? isActive, string? deceasedName, int pageNumber, int pageSize)
     {
+        (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
+
         var query = _db.Obituaries
             .Include(o => o.Deceased)
             .Include(o => o.CreatedByUser)

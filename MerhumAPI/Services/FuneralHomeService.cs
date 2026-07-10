@@ -14,6 +14,8 @@ public class FuneralHomeService : IFuneralHomeService
 
     public async Task<PagedResponse<FuneralHomeResponse>> GetAllAsync(string? search, int pageNumber, int pageSize)
     {
+        (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
+
         var query = _db.FuneralHomes.Include(f => f.City).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))

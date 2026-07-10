@@ -15,6 +15,8 @@ public class GraveSiteService : IGraveSiteService
 
     public async Task<PagedResponse<GraveSiteResponse>> GetAllAsync(int? cemeteryId, string? status, int pageNumber, int pageSize)
     {
+        (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
+
         var query = _db.GraveSites
             .Include(g => g.Cemetery)
             .Include(g => g.Section)

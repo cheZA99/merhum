@@ -21,6 +21,8 @@ public class AppointmentService : IAppointmentService
 
     public async Task<PagedResponse<AppointmentResponse>> GetAllAsync(int? deceasedId, string? status, int? mosqueId, int? imamId, int? cityId, DateTime? dateFrom, DateTime? dateTo, int pageNumber, int pageSize)
     {
+        (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
+
         var query = _db.Appointments
             .Include(a => a.Deceased).ThenInclude(d => d.City)
             .Include(a => a.Mosque)
