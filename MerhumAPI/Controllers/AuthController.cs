@@ -133,6 +133,30 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<object>.Ok(new { user.Id }, "Korisnik uspješno kreiran."));
     }
 
+    [HttpPost("change-password")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<ActionResult<ApiResponse<object>>> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                  ?? User.FindFirst("sub")?.Value;
+        if (userId == null) return Unauthorized();
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null) return NotFound(ApiResponse<object>.Fail("Korisnik nije pronađen."));
+
+        var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        if (!result.Succeeded)
+        {
+            var wrongPassword = result.Errors.Any(e => e.Code == "PasswordMismatch");
+            var message = wrongPassword
+                ? "Stara lozinka nije ispravna."
+                : string.Join(", ", result.Errors.Select(e => e.Description));
+            return BadRequest(ApiResponse<object>.Fail(message));
+        }
+
+        return Ok(ApiResponse<object>.Ok(new { }, "Lozinka je uspješno promijenjena."));
+    }
+
     [HttpGet("me")]
     [Microsoft.AspNetCore.Authorization.Authorize]
     public async Task<IActionResult> Me()

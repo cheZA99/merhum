@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import '../services/auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -45,6 +46,21 @@ class AuthProvider extends ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<String?> changePassword(String currentPassword, String newPassword) async {
+    try {
+      await AuthService.changePassword(currentPassword, newPassword);
+      return null;
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      if (data is Map && data['message'] is String) {
+        return data['message'] as String;
+      }
+      return 'Greška pri promjeni lozinke.';
+    } catch (_) {
+      return 'Greška pri promjeni lozinke.';
     }
   }
 

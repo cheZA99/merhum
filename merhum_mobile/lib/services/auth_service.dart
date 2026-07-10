@@ -31,6 +31,13 @@ class AuthService {
     await _storage.deleteAll();
   }
 
+  static Future<void> changePassword(String currentPassword, String newPassword) async {
+    await ApiService.post('/api/auth/change-password', {
+      'currentPassword': currentPassword,
+      'newPassword': newPassword,
+    });
+  }
+
   static Future<String?> getToken() => _storage.read(key: _keyToken);
   static Future<String?> getRole() => _storage.read(key: _keyRole);
   static Future<String?> getUsername() => _storage.read(key: _keyUsername);

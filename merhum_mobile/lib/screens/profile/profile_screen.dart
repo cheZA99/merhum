@@ -8,6 +8,13 @@ import '../public/home_screen.dart';
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
+  void _openChangePassword(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => const _ChangePasswordDialog(),
+    );
+  }
+
   String _roleLabel(String role) {
     switch (role) {
       case 'Porodica':
@@ -116,6 +123,15 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _openChangePassword(context),
+                  icon: const Icon(Icons.lock_outline),
+                  label: const Text('Promijeni lozinku'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
                   onPressed: () async {
@@ -134,6 +150,112 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ChangePasswordDialog extends StatefulWidget {
+  const _ChangePasswordDialog();
+
+  @override
+  State<_ChangePasswordDialog> createState() => _ChangePasswordDialogState();
+}
+
+class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _currentCtrl = TextEditingController();
+  final _newCtrl = TextEditingController();
+  final _confirmCtrl = TextEditingController();
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _currentCtrl.dispose();
+    _newCtrl.dispose();
+    _confirmCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+
+    final error = await context.read<AuthProvider>().changePassword(
+          _currentCtrl.text,
+          _newCtrl.text,
+        );
+
+    if (!mounted) return;
+    setState(() => _saving = false);
+
+    if (error == null) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lozinka je uspješno promijenjena.'), backgroundColor: AppColors.success),
+      );
+    } else {
+      setState(() => _error = error);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Promijeni lozinku'),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: _currentCtrl,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Trenutna lozinka'),
+              validator: (v) => (v == null || v.isEmpty) ? 'Unesite trenutnu lozinku.' : null,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _newCtrl,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Nova lozinka'),
+              validator: (v) {
+                if (v == null || v.isEmpty) return 'Unesite novu lozinku.';
+                if (v.length < 4) return 'Lozinka mora imati minimalno 4 karaktera.';
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _confirmCtrl,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Potvrdi novu lozinku'),
+              validator: (v) => v != _newCtrl.text ? 'Lozinke se ne podudaraju.' : null,
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13)),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : () => Navigator.of(context).pop(),
+          child: const Text('Odustani'),
+        ),
+        ElevatedButton(
+          onPressed: _saving ? null : _submit,
+          child: _saving
+              ? const SizedBox(
+                  width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Text('Sačuvaj'),
+        ),
+      ],
     );
   }
 }
