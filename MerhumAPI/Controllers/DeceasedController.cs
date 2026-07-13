@@ -4,6 +4,7 @@ using MerhumAPI.Data;
 using MerhumAPI.DTOs.Deceased;
 using MerhumAPI.Messages;
 using MerhumAPI.Models;
+using MerhumAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,11 +19,13 @@ public class DeceasedController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly INotificationService _notificationService;
 
-    public DeceasedController(ApplicationDbContext db, IPublishEndpoint publishEndpoint)
+    public DeceasedController(ApplicationDbContext db, IPublishEndpoint publishEndpoint, INotificationService notificationService)
     {
         _db = db;
         _publishEndpoint = publishEndpoint;
+        _notificationService = notificationService;
     }
 
     [HttpGet]
@@ -265,6 +268,9 @@ public class DeceasedController : ControllerBase
         });
 
         await _db.SaveChangesAsync();
+
+        await _notificationService.CreateForDeceasedAsync(id, "Promjena statusa procedure", "Status procedure za preminulog je ažuriran.");
+
         return NoContent();
     }
 

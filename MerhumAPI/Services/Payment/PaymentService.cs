@@ -16,19 +16,22 @@ public class PaymentService :IPaymentService
 	private readonly IPublishEndpoint _publishEndpoint;
 	private readonly IConfiguration _configuration;
 	private readonly ILogger<PaymentService> _logger;
+		private readonly INotificationService _notificationService;
 
 	public PaymentService(
 	    ApplicationDbContext db,
 	    IPayPalService payPalService,
 	    IPublishEndpoint publishEndpoint,
 	    IConfiguration configuration,
-	    ILogger<PaymentService> logger)
+	    ILogger<PaymentService> logger,
+		    INotificationService notificationService)
 	{
 		_db = db;
 		_payPalService = payPalService;
 		_publishEndpoint = publishEndpoint;
 		_configuration = configuration;
 		_logger = logger;
+			_notificationService = notificationService;
 	}
 
 	public async Task<PaymentResponseDto> InitiatePaymentAsync(int serviceOrderId)
@@ -90,6 +93,7 @@ public class PaymentService :IPaymentService
 		await _db.SaveChangesAsync();
 
 		await PublishConfirmationAsync(payment);
+			await NotifyServiceOrderOwnerAsync(payment.ServiceOrderId, "Plaćanje uspješno", "Vaše plaćanje pogrebne usluge je uspješno izvršeno.");
 		return true;
 	}
 
@@ -148,6 +152,8 @@ public class PaymentService :IPaymentService
 			_logger.LogInformation("Payment {PaymentId} for order {OrderId} refunded (PayPal refund {RefundId}).",
 			    payment.Id, serviceOrderId, refundId);
 
+			await NotifyServiceOrderOwnerAsync(serviceOrderId, "Povrat izvršen", "Izvršen je povrat sredstava za vašu pogrebnu uslugu.");
+
 			return new PaymentStatusDto
 			{
 				ServiceOrderId = serviceOrderId,
@@ -195,7 +201,17 @@ public class PaymentService :IPaymentService
 		));
 	}
 
-	private decimal GetBamToEurRate()
+	private async Task NotifyServiceOrderOwnerAsync(int serviceOrderId, string title, string message)
+		{
+			var deceasedId = await _db.ServiceOrders
+			    .Where(o => o.Id == serviceOrderId)
+			    .Select(o => o.DeceasedId)
+			    .FirstOrDefaultAsync();
+			if (deceasedId > 0)
+				await _notificationService.CreateForDeceasedAsync(deceasedId, title, message);
+		}
+
+		private decimal GetBamToEurRate()
 	{
 		if (decimal.TryParse(_configuration["PayPal:BamToEurRate"],
 			   System.Globalization.NumberStyles.Any,

@@ -13,6 +13,8 @@ import 'create_obituary_screen.dart';
 import 'my_procedures_screen.dart';
 import 'procedure_status_screen.dart';
 import 'register_deceased_screen.dart';
+import 'notifications_screen.dart';
+import '../../providers/notification_provider.dart';
 
 class FamilyDashboardScreen extends StatefulWidget {
   const FamilyDashboardScreen({super.key});
@@ -23,13 +25,21 @@ class FamilyDashboardScreen extends StatefulWidget {
 
 class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
   int _navIndex = 0;
+  NotificationProvider? _notifications;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DeceasedProvider>().loadMyDeceased();
+      _notifications = context.read<NotificationProvider>()..startPolling();
     });
+  }
+
+  @override
+  void dispose() {
+    _notifications?.stopPolling();
+    super.dispose();
   }
 
   @override
@@ -72,14 +82,49 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
               width: double.infinity,
               color: AppColors.primary,
               padding: const EdgeInsets.fromLTRB(20, 48, 20, 24),
-              child: Column(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Dobrodošli,', style: TextStyle(color: Colors.white70, fontSize: 14)),
-                  const SizedBox(height: 4),
-                  Text(
-                    auth.fullName.isEmpty ? 'Korisniče' : auth.fullName,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Dobrodošli,', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                        const SizedBox(height: 4),
+                        Text(
+                          auth.fullName.isEmpty ? 'Korisniče' : auth.fullName,
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Consumer<NotificationProvider>(
+                    builder: (_, np, __) => Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 28),
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                          ),
+                        ),
+                        if (np.unreadCount > 0)
+                          Positioned(
+                            right: 4,
+                            top: 4,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                              decoration: const BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
+                              child: Text(
+                                np.unreadCount > 9 ? '9+' : '${np.unreadCount}',
+                                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ],
               ),

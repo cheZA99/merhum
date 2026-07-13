@@ -114,6 +114,7 @@ builder.Services.AddScoped<IGraveSiteService, GraveSiteService>();
 builder.Services.AddScoped<IFuneralHomeService, FuneralHomeService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IServiceOrderService, ServiceOrderService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 builder.Services.AddHttpClient<IGroqService, GroqService>();
 builder.Services.AddScoped<IContextBuilderService, ContextBuilderService>();

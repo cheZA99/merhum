@@ -12,11 +12,13 @@ public class ServiceOrderService : IServiceOrderService
 {
     private readonly ApplicationDbContext _db;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly INotificationService _notificationService;
 
-    public ServiceOrderService(ApplicationDbContext db, IPublishEndpoint publishEndpoint)
+    public ServiceOrderService(ApplicationDbContext db, IPublishEndpoint publishEndpoint, INotificationService notificationService)
     {
         _db = db;
         _publishEndpoint = publishEndpoint;
+        _notificationService = notificationService;
     }
 
     public async Task<PagedResponse<ServiceOrderResponse>> GetAllAsync(int? deceasedId, string? status, int? funeralHomeId, DateTime? dateFrom, DateTime? dateTo, int pageNumber, int pageSize)
@@ -134,6 +136,9 @@ public class ServiceOrderService : IServiceOrderService
             order.CompletedAt = completedAt ?? DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
+
+        await _notificationService.CreateForDeceasedAsync(order.DeceasedId, "Status usluge ažuriran", "Status vaše pogrebne usluge je promijenjen.");
+
         return true;
     }
 

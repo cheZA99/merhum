@@ -12,11 +12,13 @@ public class AppointmentService : IAppointmentService
 {
     private readonly ApplicationDbContext _db;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly INotificationService _notificationService;
 
-    public AppointmentService(ApplicationDbContext db, IPublishEndpoint publishEndpoint)
+    public AppointmentService(ApplicationDbContext db, IPublishEndpoint publishEndpoint, INotificationService notificationService)
     {
         _db = db;
         _publishEndpoint = publishEndpoint;
+        _notificationService = notificationService;
     }
 
     public async Task<PagedResponse<AppointmentResponse>> GetAllAsync(int? deceasedId, string? status, int? mosqueId, int? imamId, int? cityId, DateTime? dateFrom, DateTime? dateTo, int pageNumber, int pageSize)
@@ -131,6 +133,11 @@ public class AppointmentService : IAppointmentService
             ));
         }
 
+        await _notificationService.CreateForDeceasedAsync(
+            appointment.DeceasedId,
+            "Zakazana dženaza",
+            $"Dženaza za {appointment.Deceased.FirstName} {appointment.Deceased.LastName} je zakazana za {appointment.FuneralDateTime:dd.MM.yyyy. HH:mm}.");
+
         return ToResponse(appointment);
     }
 
@@ -168,6 +175,12 @@ public class AppointmentService : IAppointmentService
 
         appointment.Status = status;
         await _db.SaveChangesAsync();
+
+        if (status == "Cancelled")
+            await _notificationService.CreateForDeceasedAsync(appointment.DeceasedId, "Dženaza otkazana", "Zakazana dženaza je otkazana.");
+        else if (status == "Held")
+            await _notificationService.CreateForDeceasedAsync(appointment.DeceasedId, "Dženaza obavljena", "Dženaza je evidentirana kao obavljena.");
+
         return true;
     }
 
