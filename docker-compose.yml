@@ -66,7 +66,7 @@ services:
       - SMTP__SenderName=Merhum Sistem
       - Groq__ApiKey=${Groq__ApiKey:-}
       - Groq__ApiUrl=https://api.groq.com/openai/v1/chat/completions
-      - Groq__Model=llama-3.3-70b-versatile
+      - Groq__Model=openai/gpt-oss-120b
       - PayPal__ClientId=${PayPal__ClientId:-}
       - PayPal__ClientSecret=${PayPal__ClientSecret:-}
       - PayPal__Mode=sandbox

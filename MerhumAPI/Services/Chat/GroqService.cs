@@ -24,7 +24,7 @@ public class GroqService : IGroqService
     {
         var apiKey = _configuration["Groq:ApiKey"];
         var apiUrl = _configuration["Groq:ApiUrl"];
-        var model = _configuration["Groq:Model"] ?? "llama-3.3-70b-versatile";
+        var model = _configuration["Groq:Model"] ?? "openai/gpt-oss-120b";
         var temperature = double.TryParse(_configuration["Groq:Temperature"], out var t) ? t : 0.7;
         var maxTokens = int.TryParse(_configuration["Groq:MaxTokens"], out var mt) ? mt : 1024;
 
