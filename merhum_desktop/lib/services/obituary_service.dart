@@ -102,13 +102,9 @@ class ObituaryService {
   }
 
   Future<List<Map<String, dynamic>>> getDeceased() async {
-    final response = await _api.get('/api/deceased', queryParams: {
-      'pageNumber': 1,
-      'pageSize': 500,
-    });
-    final data = response.data as Map<String, dynamic>;
-    return (data['data'] as List<dynamic>)
-        .map((e) => e as Map<String, dynamic>)
-        .toList();
+    final response = await _api.get('/api/deceased');
+    final raw = response.data;
+    final list = raw is List ? raw : (raw['data'] as List? ?? []);
+    return list.cast<Map<String, dynamic>>();
   }
 }
