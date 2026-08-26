@@ -43,8 +43,8 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Pogrešno korisničko ime ili lozinka.'),
+        SnackBar(
+          content: Text(auth.loginError ?? 'Pogrešno korisničko ime ili lozinka.'),
           backgroundColor: AppColors.error,
         ),
       );

@@ -4,6 +4,10 @@ import '../services/auth_service.dart';
 import '../services/api_service.dart';
 
 class AuthProvider extends ChangeNotifier {
+  static const desktopRole = 'Administrator';
+  static const _wrongAppMessage =
+      'Ova aplikacija je namijenjena administratorima. Koristite mobilnu aplikaciju.';
+
   final AuthService _authService;
   final ApiService _apiService;
 
@@ -12,6 +16,7 @@ class AuthProvider extends ChangeNotifier {
   String? firstName;
   String? username;
   bool isLoading = false;
+  String? loginError;
 
   AuthProvider({required AuthService authService, required ApiService apiService})
       : _authService = authService,
@@ -19,6 +24,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> login(String username, String password) async {
     isLoading = true;
+    loginError = null;
     notifyListeners();
 
     try {
@@ -33,6 +39,11 @@ class AuthProvider extends ChangeNotifier {
       final first = data['data']?['firstName'] ?? data['data']?['ime'] ?? data['ime'] ?? username;
       final last = data['data']?['lastName'] ?? data['data']?['prezime'] ?? data['prezime'] ?? '';
       final uname = data['data']?['username'] ?? data['username'] ?? username;
+
+      if (userRole != desktopRole) {
+        loginError = _wrongAppMessage;
+        return false;
+      }
 
       await _authService.saveSession(
         token: token,
@@ -77,6 +88,13 @@ class AuthProvider extends ChangeNotifier {
     isLoggedIn = await _authService.isLoggedIn();
     if (isLoggedIn) {
       role = await _authService.getRole();
+      if (role != desktopRole) {
+        await _authService.logout();
+        isLoggedIn = false;
+        role = null;
+        notifyListeners();
+        return;
+      }
       firstName = await _authService.getFirstName();
       username = await _authService.getUsername();
     }
