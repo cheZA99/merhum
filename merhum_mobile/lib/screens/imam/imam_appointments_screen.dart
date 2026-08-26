@@ -53,6 +53,8 @@ class _AppointmentsTab extends StatelessWidget {
           title: const Text('Dženaze'),
           bottom: const TabBar(
             indicatorColor: Colors.white,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
             tabs: [
               Tab(text: 'Nadolazeće'),
               Tab(text: 'Prošle'),
