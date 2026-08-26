@@ -10,7 +10,7 @@ Chatbot koristi Groq, predikcija popunjenosti groblja ML.NET, placanje PayPal sa
 
 ## Tajne
 
-Tajne nisu u repou nego u `.env` fajlu u korijenu projekta. Raspakuj `.env-tajne.zip` (sifra je
+Tajne nisu u repou nego u `.env` fajlu u korijenu projekta. Raspakuj `.env-tajne.rar` (sifra je
 na DL sistemu) i dobijeni `.env` ostavi u root, pored `docker-compose.yml`. Primjer kljuceva je
 u `.env.example`.
 
@@ -54,3 +54,8 @@ Sve lozinke su `test`.
 | korisnik | JavniKorisnik |
 | imam | Imam |
 | pogrebnopreduzece | PogrebnoPreduzece |
+
+## Placanje
+
+Mobilna aplikacija, uloga Porodica: Procedure -> preminuli -> Narudzbe -> Plati.
+PayPal sandbox buyer nalog: `merhum@gmail.com` / `e,]1!BmV`
