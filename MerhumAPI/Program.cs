@@ -131,7 +131,10 @@ builder.Services.AddCors(options =>
 	options.AddPolicy("FlutterPolicy", policy =>
 	{
 		policy
-		   .AllowAnyOrigin()
+		   .WithOrigins(
+			  "http://localhost:5000",
+			  "http://localhost:5100",
+			  "http://10.0.2.2:5000")
 		   .AllowAnyHeader()
 		   .AllowAnyMethod();
 	});
@@ -190,18 +193,14 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-_ = Task.Run(async () =>
+try
 {
-	await Task.Delay(3000);
-	try
-	{
-		await SeedData.SeedAsync(app.Services);
-	}
-	catch (Exception ex)
-	{
-		var logger = app.Services.GetRequiredService<ILogger<Program>>();
-		logger.LogError(ex, "An error occurred during database seeding.");
-	}
-});
+	await SeedData.SeedAsync(app.Services);
+}
+catch (Exception ex)
+{
+	var logger = app.Services.GetRequiredService<ILogger<Program>>();
+	logger.LogError(ex, "An error occurred during database seeding.");
+}
 
 app.Run();

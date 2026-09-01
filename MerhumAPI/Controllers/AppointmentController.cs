@@ -52,7 +52,7 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "DesktopAccess")]
+    [Authorize(Policy = "MobileAccess")]
     public async Task<ActionResult<ApiResponse<AppointmentResponse>>> Create([FromBody] AppointmentRequest request)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
