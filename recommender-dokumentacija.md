@@ -1,54 +1,47 @@
-# Predikcija popunjenosti groblja
+# Chatbot kao alternativa recommenderu
 
-Umjesto klasicnog recommendera, sistem koristi model masinskog ucenja koji za svako groblje
-procjenjuje za koliko mjeseci ce biti popunjeno i koji je ocekivani datum popunjenja.
+Umjesto klasicnog recommendera, sistem nudi AI chatbot asistenta koji porodicama odgovara na
+pitanja o procedurama, terminima, grobljima, dzamijama i uslugama, koristeci Groq API i kontekst
+izvucen iz baze. Zasebna funkcionalnost projekta je ML predikcija popunjenosti groblja, opisana u
+`ml-dokumentacija.md`.
 
-## Algoritam
+Kod: `MerhumAPI/Services/Chat`.
 
-Koristi se regresija (FastTree iz ML.NET biblioteke). Model uci vezu izmedu stanja groblja i
-broja mjeseci do popunjenja, pa tu vrijednost predvidi za novo stanje.
+## Groq API
 
-Kod: `MerhumAPI/Services/MachineLearning`.
+`GroqService.GetChatResponseAsync()` poziva Groq chat completion API. Model, temperatura i broj
+tokena se citaju iz konfiguracije (`Groq:Model`, podrazumijevano `openai/gpt-oss-120b`), a poziv se
+salje sa sistemskim promptom, historijom razgovora i novom porukom korisnika. Ako API kljuc/URL
+nisu podeseni, poziv ne uspije ili odgovor ne stigne na vrijeme, korisniku se vraca fiksna poruka o
+privremenoj nedostupnosti umjesto greske.
 
-## Ulazni podaci (features)
+## Kontekst iz baze
 
-Model gleda cetiri podatka o groblju:
+`ContextBuilderService.BuildContextAsync()` prije svakog upita sastavlja tekstualni kontekst za
+prijavljenog korisnika: njegovi osnovni podaci (ime, grad, uloga), dostupna groblja u njegovom
+gradu sa brojem slobodnih mjesta i procentom popunjenosti, dzamije i imami, faze procedure,
+prosjecne cijene po tipu usluge, njegove aktivne procedure (`Deceased`) i predstojeci termini u
+sljedecih 7 dana. Taj kontekst se ubacuje u sistemski prompt, tako da chatbot odgovara samo na
+osnovu stvarnih podataka iz baze, a ne izmisljenih informacija.
 
-- ukupan kapacitet (broj mjesta)
-- trenutna popunjenost (zauzeta mjesta)
-- procenat popunjenosti
-- prosjecan broj ukopa mjesecno
+## Historija razgovora
 
-Sva cetiri se stvarno koriste u treniranju i predikciji.
+`ChatService.SendMessageAsync()` prije poziva Groq API-ja iz `ChatLog` tabele ucitava zadnjih 5
+parova poruka (korisnik/asistent) tog korisnika i salje ih kao dio konverzacije, tako model ima
+kontekst prethodnih poruka u razgovoru. Poslije odgovora se poruka, odgovor asistenta i (skraceni)
+kontekst iz baze cuvaju kao novi red u `ChatLog`, vezan za `UserId`.
 
-Prosjecan broj ukopa se racuna iz stvarnih termina koji su oznaceni kao odrzani (`Held`), i to za
-zadnjih 12 mjeseci. Ako u zadnjih godinu dana nema podataka, uzima se cijeli period da procjena ne
-bi bila prazna.
+## Veza sa prijavljenim korisnikom
 
-## Podaci za treniranje
+`ChatController` (`/api/chat/*`) je zasticen sa `[Authorize]`, a `UserId` se uzima iz JWT claimova
+(`ClaimTypes.NameIdentifier` / `sub`), ne iz parametra koji bi klijent mogao mijenjati. Slanje
+poruke, citanje historije (`GET /api/chat/history`) i njeno brisanje (`DELETE /api/chat/history`)
+rade uvijek nad zapisima tog korisnika.
 
-Trening skup se pravi iz dva izvora:
+## Mobilni ekran
 
-- stvarni podaci iz baze (samo groblja koja imaju iskoristiv broj ukopa)
-- sinteticki podaci (dodatni redovi generisani po logici kapacitet / stopa ukopa, sa malo suma)
-
-Sinteticki podaci se dodaju jer u bazi nema dovoljno stvarnih groblja da model sam nauci obrazac.
-Podaci se dijele na trening i test dio (80/20), a rezultat (R2 i RMSE) se loguje.
-
-Model se trenira dugmetom "Treniraj model" na Predictions ekranu, ili automatski pri prvom upitu
-ako jos nije treniran. Istrenirani model se cuva u `model.zip`.
-
-## Objasnjivost
-
-Korisniku se ne prikazuje samo broj mjeseci, nego i podaci na osnovu kojih je procjena napravljena:
-kapacitet, trenutna popunjenost, procenat popunjenosti i prosjecan broj ukopa mjesecno. Tako je
-jasno zasto je za jedno groblje procjena kratka (visoka popunjenost i vise ukopa), a za drugo duga.
-
-Uz procjenu se prikazuje i pouzdanost, koja zavisi od toga koliko stvarnih ukopa groblje ima u
-historiji:
-
-- Visoka: 10 ili vise
-- Srednja: 3 do 9
-- Niska: manje od 3
-
-Sto je vise stvarnih podataka, procjena je pouzdanija.
+Family korisnici imaju ekran za chat (`chat_screen.dart`) sa listom poruka, brzim akcijama
+(npr. "Koja groblja su dostupna?", "Kako zakazati termin?"), indikatorom da asistent kuca i
+mogucnoscu brisanja cijelog razgovora. Ekran koristi `ChatProvider` i `ChatService`
+(`chat_service.dart`), koji poziva `/api/chat/message` za slanje poruke i `/api/chat/history` za
+ucitavanje i brisanje historije.
