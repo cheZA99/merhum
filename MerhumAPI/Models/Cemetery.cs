@@ -19,6 +19,10 @@ public class Cemetery
     public int CityId { get; set; }
     public City City { get; set; } = null!;
 
+    [ForeignKey(nameof(Majlis))]
+    public int MajlisId { get; set; }
+    public Majlis Majlis { get; set; } = null!;
+
     public int TotalPlaces { get; set; }
 
     [Column(TypeName = "decimal(10,7)")]

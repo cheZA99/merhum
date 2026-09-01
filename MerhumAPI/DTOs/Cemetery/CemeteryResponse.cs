@@ -7,6 +7,10 @@ public class CemeteryResponse
     public string Address { get; set; } = string.Empty;
     public int CityId { get; set; }
     public string CityName { get; set; } = string.Empty;
+    public int MajlisId { get; set; }
+    public string MajlisName { get; set; } = string.Empty;
+    public int MuftiateId { get; set; }
+    public string MuftiateName { get; set; } = string.Empty;
     public int TotalPlaces { get; set; }
     public int OccupiedPlaces { get; set; }
     public int AvailablePlaces { get; set; }

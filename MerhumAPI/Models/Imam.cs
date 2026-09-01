@@ -26,6 +26,10 @@ public class Imam
     [MaxLength(150)]
     public string? Email { get; set; }
 
+    [ForeignKey(nameof(User))]
+    public string? UserId { get; set; }
+    public ApplicationUser? User { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();

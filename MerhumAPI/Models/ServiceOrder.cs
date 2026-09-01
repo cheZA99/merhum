@@ -19,6 +19,11 @@ public class ServiceOrder
     public int ServiceTypeId { get; set; }
     public ServiceType ServiceType { get; set; } = null!;
 
+    [ForeignKey(nameof(ServiceOffering))]
+    public int? ServiceOfferingId { get; set; }
+    public ServiceOffering? ServiceOffering { get; set; }
+
+    // price charged, copied from the offering when the order is placed
     [Required]
     [Column(TypeName = "decimal(10,2)")]
     public decimal Price { get; set; }

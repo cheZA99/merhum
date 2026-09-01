@@ -29,7 +29,12 @@ public class FuneralHome
     [MaxLength(100)]
     public string? LicenseNumber { get; set; }
 
+    [ForeignKey(nameof(User))]
+    public string? UserId { get; set; }
+    public ApplicationUser? User { get; set; }
+
     public bool IsActive { get; set; } = true;
 
+    public ICollection<ServiceOffering> Offerings { get; set; } = new List<ServiceOffering>();
     public ICollection<ServiceOrder> ServiceOrders { get; set; } = new List<ServiceOrder>();
 }

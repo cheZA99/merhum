@@ -94,10 +94,25 @@ public static class SeedData
 		db.Imams.AddRange(imam1, imam2, imam3, imam4, imam5);
 		await db.SaveChangesAsync();
 
-		var cem1 = new Cemetery { Name = "Groblje Bare", Address = "Bare bb, Sarajevo", CityId = sarajevo.Id, TotalPlaces = 5000, Latitude = 43.8452600m, Longitude = 18.3769400m };
-		var cem2 = new Cemetery { Name = "Groblje Sutina", Address = "Sutina bb, Mostar", CityId = mostar.Id, TotalPlaces = 3000, Latitude = 43.3465200m, Longitude = 17.8033900m };
-		var cem3 = new Cemetery { Name = "Groblje Krušćica", Address = "Krušćica bb, Tuzla", CityId = tuzla.Id, TotalPlaces = 2500, Latitude = 44.5312400m, Longitude = 18.6901200m };
-		var cem4 = new Cemetery { Name = "Groblje Svrakino", Address = "Svrakino Selo bb, Zenica", CityId = zenica.Id, TotalPlaces = 2000, Latitude = 44.2037700m, Longitude = 17.9077500m };
+		var muftSa = new Muftiate { Name = "Muftijstvo sarajevsko" };
+		var muftMo = new Muftiate { Name = "Muftijstvo mostarsko" };
+		var muftTz = new Muftiate { Name = "Muftijstvo tuzlansko" };
+		var muftZe = new Muftiate { Name = "Muftijstvo zeničko" };
+		db.Muftiates.AddRange(muftSa, muftMo, muftTz, muftZe);
+		await db.SaveChangesAsync();
+
+		var mjSarajevo = new Majlis { Name = "Medžlis Sarajevo", MuftiateId = muftSa.Id };
+		var mjIlidza = new Majlis { Name = "Medžlis Ilidža", MuftiateId = muftSa.Id };
+		var mjMostar = new Majlis { Name = "Medžlis Mostar", MuftiateId = muftMo.Id };
+		var mjTuzla = new Majlis { Name = "Medžlis Tuzla", MuftiateId = muftTz.Id };
+		var mjZenica = new Majlis { Name = "Medžlis Zenica", MuftiateId = muftZe.Id };
+		db.Majlises.AddRange(mjSarajevo, mjIlidza, mjMostar, mjTuzla, mjZenica);
+		await db.SaveChangesAsync();
+
+		var cem1 = new Cemetery { Name = "Groblje Bare", Address = "Bare bb, Sarajevo", CityId = sarajevo.Id, MajlisId = mjSarajevo.Id, TotalPlaces = 5000, Latitude = 43.8452600m, Longitude = 18.3769400m };
+		var cem2 = new Cemetery { Name = "Groblje Sutina", Address = "Sutina bb, Mostar", CityId = mostar.Id, MajlisId = mjMostar.Id, TotalPlaces = 3000, Latitude = 43.3465200m, Longitude = 17.8033900m };
+		var cem3 = new Cemetery { Name = "Groblje Krušćica", Address = "Krušćica bb, Tuzla", CityId = tuzla.Id, MajlisId = mjTuzla.Id, TotalPlaces = 2500, Latitude = 44.5312400m, Longitude = 18.6901200m };
+		var cem4 = new Cemetery { Name = "Groblje Svrakino", Address = "Svrakino Selo bb, Zenica", CityId = zenica.Id, MajlisId = mjZenica.Id, TotalPlaces = 2000, Latitude = 44.2037700m, Longitude = 17.9077500m };
 		db.Cemeteries.AddRange(cem1, cem2, cem3, cem4);
 		await db.SaveChangesAsync();
 
@@ -153,6 +168,25 @@ public static class SeedData
 		db.FuneralHomes.AddRange(fh1, fh2, fh3, fh4);
 		await db.SaveChangesAsync();
 
+		// every home offers the same service types, each at its own price
+		var funeralHomes = new[] { fh1, fh2, fh3, fh4 };
+		var basePrices = new[] { 150.00m, 80.00m, 300.00m, 200.00m, 400.00m, 60.00m };
+		var offerings = new List<ServiceOffering>();
+		for (int h = 0; h < funeralHomes.Length; h++)
+		{
+			for (int t = 0; t < serviceTypes.Length; t++)
+			{
+				offerings.Add(new ServiceOffering
+				{
+					FuneralHomeId = funeralHomes[h].Id,
+					ServiceTypeId = serviceTypes[t].Id,
+					Price = basePrices[t] + h * 10.00m
+				});
+			}
+		}
+		db.ServiceOfferings.AddRange(offerings);
+		await db.SaveChangesAsync();
+
 		var userDefs = new[]
 		{
 			(Username: "desktop", FirstName: "Admin", LastName: "Korisnik", Email: "desktop@merhum.ba", Password: "test", Role: "Administrator"),
@@ -183,6 +217,12 @@ public static class SeedData
 
 		var adminUser = createdUsers["desktop"];
 		var mobileUser = createdUsers["mobile"];
+
+		if (createdUsers.TryGetValue("imam", out var imamUser))
+			imam1.UserId = imamUser.Id;
+		if (createdUsers.TryGetValue("pogrebnopreduzece", out var funeralHomeUser))
+			fh1.UserId = funeralHomeUser.Id;
+		await db.SaveChangesAsync();
 
 		// dec1/dec2 belong to admin (desktop), dec3-dec5 to the mobile user
 		var dec1 = new Deceased { FirstName = "Husein", LastName = "Mehmedović", DateOfBirth = new DateOnly(1940, 3, 15), DateOfDeath = new DateOnly(2024, 1, 10), PlaceOfDeath = "Sarajevo", ContactPersonName = "Adnan Mehmedović", ContactPersonPhone = "+38761200001", ContactPersonEmail = "adnan@example.com", CityId = sarajevo.Id, ProcedureStatusId = statuses[6].Id, UserId = adminUser.Id };
@@ -248,15 +288,30 @@ public static class SeedData
 		}
 		await db.SaveChangesAsync();
 
+		ServiceOrder Order(Deceased deceased, FuneralHome home, ServiceType type, string status, DateTime? completedAt = null)
+		{
+			var offering = offerings.First(o => o.FuneralHomeId == home.Id && o.ServiceTypeId == type.Id);
+			return new ServiceOrder
+			{
+				DeceasedId = deceased.Id,
+				FuneralHomeId = home.Id,
+				ServiceTypeId = type.Id,
+				ServiceOfferingId = offering.Id,
+				Price = offering.Price,
+				Status = status,
+				CompletedAt = completedAt
+			};
+		}
+
 		db.ServiceOrders.AddRange(
-			new ServiceOrder { DeceasedId = dec1.Id, FuneralHomeId = fh1.Id, ServiceTypeId = serviceTypes[0].Id, Price = 150.00m, Status = "Completed", CompletedAt = new DateTime(2024, 1, 11, 10, 0, 0) },
-			new ServiceOrder { DeceasedId = dec1.Id, FuneralHomeId = fh1.Id, ServiceTypeId = serviceTypes[2].Id, Price = 300.00m, Status = "Completed", CompletedAt = new DateTime(2024, 1, 11, 11, 0, 0) },
-			new ServiceOrder { DeceasedId = dec2.Id, FuneralHomeId = fh2.Id, ServiceTypeId = serviceTypes[0].Id, Price = 150.00m, Status = "Completed" },
-			new ServiceOrder { DeceasedId = dec2.Id, FuneralHomeId = fh2.Id, ServiceTypeId = serviceTypes[3].Id, Price = 200.00m, Status = "Completed" },
-			new ServiceOrder { DeceasedId = dec3.Id, FuneralHomeId = fh3.Id, ServiceTypeId = serviceTypes[0].Id, Price = 150.00m, Status = "InProgress" },
-			new ServiceOrder { DeceasedId = dec3.Id, FuneralHomeId = fh3.Id, ServiceTypeId = serviceTypes[1].Id, Price = 80.00m, Status = "Ordered" },
-			new ServiceOrder { DeceasedId = dec4.Id, FuneralHomeId = fh4.Id, ServiceTypeId = serviceTypes[0].Id, Price = 150.00m, Status = "Ordered" },
-			new ServiceOrder { DeceasedId = dec5.Id, FuneralHomeId = fh1.Id, ServiceTypeId = serviceTypes[0].Id, Price = 150.00m, Status = "Ordered" }
+			Order(dec1, fh1, serviceTypes[0], "Completed", new DateTime(2024, 1, 11, 10, 0, 0)),
+			Order(dec1, fh1, serviceTypes[2], "Completed", new DateTime(2024, 1, 11, 11, 0, 0)),
+			Order(dec2, fh2, serviceTypes[0], "Completed"),
+			Order(dec2, fh2, serviceTypes[3], "Completed"),
+			Order(dec3, fh3, serviceTypes[0], "InProgress"),
+			Order(dec3, fh3, serviceTypes[1], "Ordered"),
+			Order(dec4, fh4, serviceTypes[0], "Ordered"),
+			Order(dec5, fh1, serviceTypes[0], "Ordered")
 		);
 		await db.SaveChangesAsync();
 	}

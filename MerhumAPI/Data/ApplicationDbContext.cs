@@ -12,6 +12,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<City> Cities => Set<City>();
     public DbSet<ServiceType> ServiceTypes => Set<ServiceType>();
     public DbSet<CemeterySection> CemeterySections => Set<CemeterySection>();
+    public DbSet<Muftiate> Muftiates => Set<Muftiate>();
+    public DbSet<Majlis> Majlises => Set<Majlis>();
 
     public DbSet<ProcedureStatus> ProcedureStatuses => Set<ProcedureStatus>();
     public DbSet<Deceased> Deceased => Set<Deceased>();
@@ -23,6 +25,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Cemetery> Cemeteries => Set<Cemetery>();
     public DbSet<GraveSite> GraveSites => Set<GraveSite>();
     public DbSet<FuneralHome> FuneralHomes => Set<FuneralHome>();
+    public DbSet<ServiceOffering> ServiceOfferings => Set<ServiceOffering>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<ServiceOrder> ServiceOrders => Set<ServiceOrder>();
     public DbSet<ChatLog> ChatLogs => Set<ChatLog>();
@@ -70,6 +73,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<GraveSite>(e =>
         {
             e.Property(x => x.Status).HasDefaultValue("Available");
+            e.HasIndex(x => new { x.CemeteryId, x.PlotNumber }).IsUnique();
             // Avoid multiple cascade paths from Deceased
             e.HasOne(x => x.Deceased)
              .WithOne(x => x.GraveSite)
@@ -126,6 +130,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             e.HasOne(x => x.ServiceType)
              .WithMany(x => x.ServiceOrders)
              .HasForeignKey(x => x.ServiceTypeId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(x => x.ServiceOffering)
+             .WithMany(x => x.ServiceOrders)
+             .HasForeignKey(x => x.ServiceOfferingId)
              .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -187,6 +196,71 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
             e.HasIndex(x => x.ServiceOrderId);
             e.HasIndex(x => x.PaypalOrderId);
+
+            // a failed or cancelled attempt may be retried, a live one may not be duplicated
+            e.HasIndex(x => x.ServiceOrderId, "IX_Payments_ServiceOrderId_Active")
+             .IsUnique()
+             .HasFilter("[Status] IN ('Pending', 'Completed')");
+        });
+
+        builder.Entity<Muftiate>(e =>
+        {
+            e.HasIndex(x => x.Name).IsUnique();
+        });
+
+        builder.Entity<Majlis>(e =>
+        {
+            e.HasIndex(x => new { x.MuftiateId, x.Name }).IsUnique();
+
+            e.HasOne(x => x.Muftiate)
+             .WithMany(x => x.Majlises)
+             .HasForeignKey(x => x.MuftiateId)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Cemetery>(e =>
+        {
+            e.HasOne(x => x.Majlis)
+             .WithMany(x => x.Cemeteries)
+             .HasForeignKey(x => x.MajlisId)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Imam>(e =>
+        {
+            // at most one imam record per account, but most accounts are not imams
+            e.HasIndex(x => x.UserId).IsUnique().HasFilter("[UserId] IS NOT NULL");
+
+            e.HasOne(x => x.User)
+             .WithMany()
+             .HasForeignKey(x => x.UserId)
+             .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<FuneralHome>(e =>
+        {
+            e.HasIndex(x => x.UserId).IsUnique().HasFilter("[UserId] IS NOT NULL");
+
+            e.HasOne(x => x.User)
+             .WithMany()
+             .HasForeignKey(x => x.UserId)
+             .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<ServiceOffering>(e =>
+        {
+            e.Property(x => x.IsActive).HasDefaultValue(true);
+            e.HasIndex(x => new { x.FuneralHomeId, x.ServiceTypeId }).IsUnique();
+
+            e.HasOne(x => x.FuneralHome)
+             .WithMany(x => x.Offerings)
+             .HasForeignKey(x => x.FuneralHomeId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(x => x.ServiceType)
+             .WithMany()
+             .HasForeignKey(x => x.ServiceTypeId)
+             .OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<ChatLog>(e =>

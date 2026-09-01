@@ -16,7 +16,7 @@ public class CemeteryService : ICemeteryService
     {
         (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
 
-        var query = _db.Cemeteries.Include(c => c.City).AsQueryable();
+        var query = _db.Cemeteries.Include(c => c.City).Include(c => c.Majlis).ThenInclude(m => m.Muftiate).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(c => c.Name.Contains(search) || c.Address.Contains(search));
@@ -33,6 +33,10 @@ public class CemeteryService : ICemeteryService
                 Address = c.Address,
                 CityId = c.CityId,
                 CityName = c.City != null ? c.City.Name : string.Empty,
+                MajlisId = c.MajlisId,
+                MajlisName = c.Majlis != null ? c.Majlis.Name : string.Empty,
+                MuftiateId = c.Majlis != null ? c.Majlis.MuftiateId : 0,
+                MuftiateName = c.Majlis != null && c.Majlis.Muftiate != null ? c.Majlis.Muftiate.Name : string.Empty,
                 TotalPlaces = c.TotalPlaces,
                 OccupiedPlaces = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == "Occupied"),
                 AvailablePlaces = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == "Available"),
@@ -51,7 +55,7 @@ public class CemeteryService : ICemeteryService
 
     public async Task<CemeteryResponse?> GetByIdAsync(int id)
     {
-        var c = await _db.Cemeteries.Include(x => x.City).FirstOrDefaultAsync(x => x.Id == id);
+        var c = await _db.Cemeteries.Include(x => x.City).Include(x => x.Majlis).ThenInclude(m => m.Muftiate).FirstOrDefaultAsync(x => x.Id == id);
         if (c == null) return null;
 
         var occupied = await _db.GraveSites.CountAsync(g => g.CemeteryId == id && g.Status == "Occupied");
@@ -65,6 +69,10 @@ public class CemeteryService : ICemeteryService
             Address = c.Address,
             CityId = c.CityId,
             CityName = c.City?.Name ?? string.Empty,
+            MajlisId = c.MajlisId,
+            MajlisName = c.Majlis?.Name ?? string.Empty,
+            MuftiateId = c.Majlis?.MuftiateId ?? 0,
+            MuftiateName = c.Majlis?.Muftiate?.Name ?? string.Empty,
             TotalPlaces = c.TotalPlaces,
             OccupiedPlaces = occupied,
             AvailablePlaces = available,
@@ -83,6 +91,7 @@ public class CemeteryService : ICemeteryService
             Name = request.Name,
             Address = request.Address,
             CityId = request.CityId,
+            MajlisId = request.MajlisId,
             TotalPlaces = request.TotalPlaces,
             Latitude = request.Latitude,
             Longitude = request.Longitude,
@@ -91,6 +100,7 @@ public class CemeteryService : ICemeteryService
         _db.Cemeteries.Add(cemetery);
         await _db.SaveChangesAsync();
         await _db.Entry(cemetery).Reference(c => c.City).LoadAsync();
+        await _db.Entry(cemetery).Reference(c => c.Majlis).Query().Include(m => m.Muftiate).LoadAsync();
         return ToResponse(cemetery);
     }
 
@@ -102,6 +112,7 @@ public class CemeteryService : ICemeteryService
         cemetery.Name = request.Name;
         cemetery.Address = request.Address;
         cemetery.CityId = request.CityId;
+        cemetery.MajlisId = request.MajlisId;
         cemetery.TotalPlaces = request.TotalPlaces;
         cemetery.Latitude = request.Latitude;
         cemetery.Longitude = request.Longitude;
@@ -127,6 +138,10 @@ public class CemeteryService : ICemeteryService
         Address = c.Address,
         CityId = c.CityId,
         CityName = c.City?.Name ?? string.Empty,
+        MajlisId = c.MajlisId,
+        MajlisName = c.Majlis?.Name ?? string.Empty,
+        MuftiateId = c.Majlis?.MuftiateId ?? 0,
+        MuftiateName = c.Majlis?.Muftiate?.Name ?? string.Empty,
         TotalPlaces = c.TotalPlaces,
         Latitude = c.Latitude,
         Longitude = c.Longitude,
