@@ -63,9 +63,13 @@ class UserService {
   }
 
   Future<List<Map<String, dynamic>>> getCities() async {
-    final response = await _api.get('/api/referencedata/cities');
+    final response = await _api
+        .get('/api/referencedata/cities', queryParams: {'pageSize': 100});
     final data = response.data;
     if (data is List) return data.cast<Map<String, dynamic>>();
+    if (data is Map<String, dynamic>) {
+      return (data['data'] as List? ?? []).cast<Map<String, dynamic>>();
+    }
     return [];
   }
 }

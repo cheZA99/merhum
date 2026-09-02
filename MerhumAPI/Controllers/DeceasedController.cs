@@ -1,13 +1,8 @@
-using MassTransit;
 using MerhumAPI.Common;
-using MerhumAPI.Data;
 using MerhumAPI.DTOs.Deceased;
-using MerhumAPI.Messages;
-using MerhumAPI.Models;
 using MerhumAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace MerhumAPI.Controllers;
@@ -17,66 +12,21 @@ namespace MerhumAPI.Controllers;
 [Authorize]
 public class DeceasedController : ControllerBase
 {
-    private readonly ApplicationDbContext _db;
-    private readonly IPublishEndpoint _publishEndpoint;
-    private readonly INotificationService _notificationService;
+    private readonly IDeceasedService _deceasedService;
 
-    public DeceasedController(ApplicationDbContext db, IPublishEndpoint publishEndpoint, INotificationService notificationService)
-    {
-        _db = db;
-        _publishEndpoint = publishEndpoint;
-        _notificationService = notificationService;
-    }
+    public DeceasedController(IDeceasedService deceasedService) => _deceasedService = deceasedService;
 
     [HttpGet]
     [Authorize(Policy = "DesktopAccess")]
-    public async Task<ActionResult<IEnumerable<DeceasedResponse>>> GetAll(
+    public async Task<ActionResult<PagedResponse<DeceasedResponse>>> GetAll(
         [FromQuery] string? search,
         [FromQuery] int? statusId,
         [FromQuery] int? cityId,
-        [FromQuery] bool withoutGraveSite = false)
+        [FromQuery] bool withoutGraveSite = false,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20)
     {
-        var query = _db.Deceased
-            .Include(d => d.City).ThenInclude(c => c.Country)
-            .Include(d => d.ProcedureStatus)
-            .Include(d => d.Obituary)
-            .Include(d => d.User)
-            .AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(d => (d.FirstName + " " + d.LastName).Contains(search));
-
-        if (statusId.HasValue)
-            query = query.Where(d => d.ProcedureStatusId == statusId.Value);
-
-        if (cityId.HasValue)
-            query = query.Where(d => d.CityId == cityId.Value);
-
-        if (withoutGraveSite)
-            query = query.Where(d => !_db.GraveSites.Any(g => g.DeceasedId == d.Id));
-
-        var result = await query.OrderByDescending(d => d.CreatedAt).Select(d => new DeceasedResponse
-        {
-            Id = d.Id,
-            FirstName = d.FirstName,
-            LastName = d.LastName,
-            DateOfBirth = d.DateOfBirth,
-            DateOfDeath = d.DateOfDeath,
-            PlaceOfDeath = d.PlaceOfDeath,
-            PhotoUrl = d.PhotoUrl,
-            ContactPersonName = d.ContactPersonName,
-            ContactPersonPhone = d.ContactPersonPhone,
-            ContactPersonEmail = d.ContactPersonEmail,
-            CityName = d.City.Name,
-            CountryName = d.City.Country.Name,
-            ProcedureStatusId = d.ProcedureStatusId,
-            ProcedureStatusName = d.ProcedureStatus.Name,
-            CreatedAt = d.CreatedAt,
-            ObituarySlug = d.Obituary != null ? d.Obituary.UniqueSlug : null,
-            CityId = d.CityId,
-            CreatedByUsername = d.User.UserName ?? ""
-        }).ToListAsync();
-
+        var result = await _deceasedService.GetAllAsync(search, statusId, cityId, withoutGraveSite, pageNumber, pageSize);
         return Ok(result);
     }
 
@@ -90,81 +40,17 @@ public class DeceasedController : ControllerBase
                   ?? User.FindFirstValue("sub")
                   ?? throw new UnauthorizedAccessException();
 
-        var query = _db.Deceased
-            .Include(d => d.City).ThenInclude(c => c.Country)
-            .Include(d => d.ProcedureStatus)
-            .Include(d => d.Obituary)
-            .Include(d => d.User)
-            .Where(d => d.UserId == userId)
-            .OrderByDescending(d => d.CreatedAt);
-
-        (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
-
-        var totalCount = await query.CountAsync();
-
-        var items = await query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .Select(d => new DeceasedResponse
-            {
-                Id = d.Id,
-                FirstName = d.FirstName,
-                LastName = d.LastName,
-                DateOfBirth = d.DateOfBirth,
-                DateOfDeath = d.DateOfDeath,
-                PlaceOfDeath = d.PlaceOfDeath,
-                PhotoUrl = d.PhotoUrl,
-                ContactPersonName = d.ContactPersonName,
-                ContactPersonPhone = d.ContactPersonPhone,
-                ContactPersonEmail = d.ContactPersonEmail,
-                CityName = d.City.Name,
-                CountryName = d.City.Country.Name,
-                ProcedureStatusId = d.ProcedureStatusId,
-                ProcedureStatusName = d.ProcedureStatus.Name,
-                CreatedAt = d.CreatedAt,
-                ObituarySlug = d.Obituary != null ? d.Obituary.UniqueSlug : null,
-                CityId = d.CityId,
-                CreatedByUsername = d.User.UserName ?? ""
-            })
-            .ToListAsync();
-
-        return Ok(PagedResponse<DeceasedResponse>.Create(items, totalCount, pageNumber, pageSize));
+        var result = await _deceasedService.GetMyAsync(userId, pageNumber, pageSize);
+        return Ok(result);
     }
 
     [HttpGet("{id:int}")]
     [Authorize(Policy = "MobileAccess")]
     public async Task<ActionResult<DeceasedResponse>> GetById(int id)
     {
-        var d = await _db.Deceased
-            .Include(x => x.City).ThenInclude(c => c.Country)
-            .Include(x => x.ProcedureStatus)
-            .Include(x => x.Obituary)
-            .Include(x => x.User)
-            .FirstOrDefaultAsync(x => x.Id == id);
-
-        if (d == null) return NotFound();
-
-        return Ok(new DeceasedResponse
-        {
-            Id = d.Id,
-            FirstName = d.FirstName,
-            LastName = d.LastName,
-            DateOfBirth = d.DateOfBirth,
-            DateOfDeath = d.DateOfDeath,
-            PlaceOfDeath = d.PlaceOfDeath,
-            PhotoUrl = d.PhotoUrl,
-            ContactPersonName = d.ContactPersonName,
-            ContactPersonPhone = d.ContactPersonPhone,
-            ContactPersonEmail = d.ContactPersonEmail,
-            CityName = d.City.Name,
-            CountryName = d.City.Country.Name,
-            ProcedureStatusId = d.ProcedureStatusId,
-            ProcedureStatusName = d.ProcedureStatus.Name,
-            CreatedAt = d.CreatedAt,
-            ObituarySlug = d.Obituary?.UniqueSlug,
-            CityId = d.CityId,
-            CreatedByUsername = d.User.UserName ?? ""
-        });
+        var deceased = await _deceasedService.GetByIdAsync(id);
+        if (deceased == null) return NotFound();
+        return Ok(deceased);
     }
 
     [HttpPost]
@@ -175,74 +61,16 @@ public class DeceasedController : ControllerBase
                   ?? User.FindFirstValue("sub")
                   ?? throw new UnauthorizedAccessException();
 
-        var deceased = new Deceased
-        {
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            DateOfBirth = request.DateOfBirth,
-            DateOfDeath = request.DateOfDeath,
-            PlaceOfDeath = request.PlaceOfDeath,
-            PhotoUrl = request.PhotoUrl,
-            ContactPersonName = request.ContactPersonName,
-            ContactPersonPhone = request.ContactPersonPhone,
-            ContactPersonEmail = request.ContactPersonEmail,
-            CityId = request.CityId,
-            ProcedureStatusId = request.ProcedureStatusId,
-            UserId = userId
-        };
-
-        _db.Deceased.Add(deceased);
-        await _db.SaveChangesAsync();
-
-        await _publishEndpoint.Publish(new FuneralRegisteredMessage(
-            deceased.Id,
-            $"{deceased.FirstName} {deceased.LastName}",
-            deceased.ContactPersonEmail ?? string.Empty,
-            deceased.ContactPersonName,
-            deceased.ContactPersonPhone,
-            deceased.CreatedAt
-        ));
-
-        return CreatedAtAction(nameof(GetById), new { id = deceased.Id }, new DeceasedResponse
-        {
-            Id = deceased.Id,
-            FirstName = deceased.FirstName,
-            LastName = deceased.LastName,
-            DateOfBirth = deceased.DateOfBirth,
-            DateOfDeath = deceased.DateOfDeath,
-            PlaceOfDeath = deceased.PlaceOfDeath,
-            PhotoUrl = deceased.PhotoUrl,
-            ContactPersonName = deceased.ContactPersonName,
-            ContactPersonPhone = deceased.ContactPersonPhone,
-            ContactPersonEmail = deceased.ContactPersonEmail,
-            CityName = string.Empty,
-            CountryName = string.Empty,
-            ProcedureStatusId = deceased.ProcedureStatusId,
-            ProcedureStatusName = string.Empty,
-            CreatedAt = deceased.CreatedAt
-        });
+        var deceased = await _deceasedService.CreateAsync(request, userId);
+        return CreatedAtAction(nameof(GetById), new { id = deceased.Id }, deceased);
     }
 
     [HttpPut("{id:int}")]
     [Authorize(Policy = "DesktopAccess")]
     public async Task<IActionResult> Update(int id, [FromBody] DeceasedRequest request)
     {
-        var deceased = await _db.Deceased.FindAsync(id);
-        if (deceased == null) return NotFound();
-
-        deceased.FirstName = request.FirstName;
-        deceased.LastName = request.LastName;
-        deceased.DateOfBirth = request.DateOfBirth;
-        deceased.DateOfDeath = request.DateOfDeath;
-        deceased.PlaceOfDeath = request.PlaceOfDeath;
-        deceased.PhotoUrl = request.PhotoUrl;
-        deceased.ContactPersonName = request.ContactPersonName;
-        deceased.ContactPersonPhone = request.ContactPersonPhone;
-        deceased.ContactPersonEmail = request.ContactPersonEmail;
-        deceased.CityId = request.CityId;
-        deceased.ProcedureStatusId = request.ProcedureStatusId;
-
-        await _db.SaveChangesAsync();
+        var updated = await _deceasedService.UpdateAsync(id, request);
+        if (!updated) return NotFound();
         return NoContent();
     }
 
@@ -250,27 +78,12 @@ public class DeceasedController : ControllerBase
     [Authorize(Policy = "DesktopAccess")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
     {
-        var deceased = await _db.Deceased.FindAsync(id);
-        if (deceased == null) return NotFound();
-
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
                   ?? User.FindFirstValue("sub")
                   ?? throw new UnauthorizedAccessException();
 
-        deceased.ProcedureStatusId = request.StatusId;
-
-        _db.StatusHistories.Add(new StatusHistory
-        {
-            DeceasedId = id,
-            StatusId = request.StatusId,
-            Note = request.Note,
-            ChangedByUserId = userId
-        });
-
-        await _db.SaveChangesAsync();
-
-        await _notificationService.CreateForDeceasedAsync(id, "Promjena statusa procedure", "Status procedure za preminulog je ažuriran.");
-
+        var updated = await _deceasedService.UpdateStatusAsync(id, request.StatusId, request.Note, userId);
+        if (!updated) return NotFound(ApiResponse<object>.Fail("Deceased not found."));
         return NoContent();
     }
 
@@ -278,9 +91,6 @@ public class DeceasedController : ControllerBase
     [Authorize(Policy = "DesktopAccess")]
     public async Task<IActionResult> UploadPhoto(int id, IFormFile file)
     {
-        var deceased = await _db.Deceased.FindAsync(id);
-        if (deceased == null) return NotFound();
-
         if (file == null || file.Length == 0)
             return BadRequest(new { message = "No file provided." });
 
@@ -288,30 +98,18 @@ public class DeceasedController : ControllerBase
         if (ext is not (".jpg" or ".jpeg" or ".png" or ".webp"))
             return BadRequest(new { message = "Unsupported file type." });
 
-        var folder = Path.Combine("wwwroot", "uploads", "photos");
-        Directory.CreateDirectory(folder);
+        var photoUrl = await _deceasedService.UploadPhotoAsync(id, file);
+        if (photoUrl == null) return NotFound();
 
-        var fileName = $"deceased-{id}-{Guid.NewGuid():N}{ext}";
-        var filePath = Path.Combine(folder, fileName);
-
-        using (var stream = new FileStream(filePath, FileMode.Create))
-            await file.CopyToAsync(stream);
-
-        deceased.PhotoUrl = $"/uploads/photos/{fileName}";
-        await _db.SaveChangesAsync();
-
-        return Ok(new { photoUrl = deceased.PhotoUrl });
+        return Ok(new { photoUrl });
     }
 
     [HttpDelete("{id:int}")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete(int id)
     {
-        var deceased = await _db.Deceased.FindAsync(id);
-        if (deceased == null) return NotFound();
-
-        _db.Deceased.Remove(deceased);
-        await _db.SaveChangesAsync();
+        var deleted = await _deceasedService.DeleteAsync(id);
+        if (!deleted) return NotFound();
         return NoContent();
     }
 
@@ -319,21 +117,7 @@ public class DeceasedController : ControllerBase
     [Authorize(Policy = "MobileAccess")]
     public async Task<IActionResult> GetStatusHistory(int id)
     {
-        var history = await _db.StatusHistories
-            .Include(h => h.ProcedureStatus)
-            .Include(h => h.ChangedByUser)
-            .Where(h => h.DeceasedId == id)
-            .OrderBy(h => h.ChangedAt)
-            .Select(h => new {
-                h.Id,
-                h.DeceasedId,
-                h.StatusId,
-                StatusName = h.ProcedureStatus.Name,
-                h.Note,
-                h.ChangedAt,
-                ChangedByUsername = h.ChangedByUser.UserName ?? ""
-            })
-            .ToListAsync();
+        var history = await _deceasedService.GetStatusHistoryAsync(id);
         return Ok(history);
     }
 }

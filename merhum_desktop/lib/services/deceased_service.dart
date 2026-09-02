@@ -7,21 +7,28 @@ class DeceasedService {
   final ApiService _api;
   DeceasedService(this._api);
 
-  Future<List<DeceasedModel>> getAll({
+  Future<(List<DeceasedModel>, int)> getAll({
     String? search,
     int? statusId,
     int? cityId,
+    int pageNumber = 1,
+    int pageSize = 10,
   }) async {
-    final params = <String, dynamic>{};
+    final params = <String, dynamic>{
+      'pageNumber': pageNumber,
+      'pageSize': pageSize,
+    };
     if (search != null && search.isNotEmpty) params['search'] = search;
     if (statusId != null) params['statusId'] = statusId;
     if (cityId != null) params['cityId'] = cityId;
     final response = await _api.get('/api/deceased', queryParams: params);
-    final raw = response.data;
-    final list = raw is List ? raw : (raw['data'] as List? ?? []);
-    return list
-        .map((e) => DeceasedModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final raw = response.data as Map<String, dynamic>;
+    final list = raw['data'] as List? ?? [];
+    final total = raw['totalCount'] as int? ?? 0;
+    return (
+      list.map((e) => DeceasedModel.fromJson(e as Map<String, dynamic>)).toList(),
+      total,
+    );
   }
 
   Future<DeceasedModel> getById(int id) async {
@@ -65,7 +72,8 @@ class DeceasedService {
   }
 
   Future<List<ProcedureStatusModel>> getStatuses() async {
-    final response = await _api.get('/api/referencedata/procedure-statuses');
+    final response = await _api.get('/api/referencedata/procedure-statuses',
+        queryParams: {'pageSize': 100});
     final raw = response.data;
     final list = raw is List ? raw : (raw['data'] as List? ?? []);
     return list
@@ -73,13 +81,9 @@ class DeceasedService {
         .toList();
   }
 
-  Future<int> getTotalCount() async {
-    final list = await getAll();
-    return list.length;
-  }
-
   Future<List<Map<String, dynamic>>> getCities() async {
-    final response = await _api.get('/api/referencedata/cities');
+    final response = await _api
+        .get('/api/referencedata/cities', queryParams: {'pageSize': 100});
     final raw = response.data;
     final list = raw is List ? raw : (raw['data'] as List? ?? []);
     return list.cast<Map<String, dynamic>>();

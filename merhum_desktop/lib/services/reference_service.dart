@@ -9,7 +9,8 @@ class ReferenceService {
   ReferenceService(this._api);
 
   Future<List<CountryModel>> getCountries() async {
-    final response = await _api.get('/api/referencedata/countries');
+    final response = await _api
+        .get('/api/referencedata/countries', queryParams: {'pageSize': 100});
     final raw = response.data;
     final list = raw is List ? raw : (raw['data'] as List? ?? []);
     return list
@@ -30,7 +31,7 @@ class ReferenceService {
   }
 
   Future<List<CityModel>> getCities({int? countryId}) async {
-    final params = <String, dynamic>{};
+    final params = <String, dynamic>{'pageSize': 100};
     if (countryId != null) params['countryId'] = countryId;
 
     final response =
@@ -55,7 +56,8 @@ class ReferenceService {
   }
 
   Future<List<ServiceTypeModel>> getServiceTypes() async {
-    final response = await _api.get('/api/referencedata/service-types');
+    final response = await _api
+        .get('/api/referencedata/service-types', queryParams: {'pageSize': 100});
     final raw = response.data;
     final list = raw is List ? raw : (raw['data'] as List? ?? []);
     return list
@@ -76,7 +78,7 @@ class ReferenceService {
   }
 
   Future<List<CemeterySectorModel>> getSectors({int? cemeteryId}) async {
-    final params = <String, dynamic>{};
+    final params = <String, dynamic>{'pageSize': 100};
     if (cemeteryId != null) params['cemeteryId'] = cemeteryId;
 
     final response = await _api.get('/api/referencedata/cemetery-sections',

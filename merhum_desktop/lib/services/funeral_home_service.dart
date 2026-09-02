@@ -48,7 +48,8 @@ class FuneralHomeService {
   }
 
   Future<List<Map<String, dynamic>>> getCities() async {
-    final response = await _api.get('/api/referencedata/cities');
+    final response = await _api
+        .get('/api/referencedata/cities', queryParams: {'pageSize': 100});
     final raw = response.data;
     final list = raw is List ? raw : (raw['data'] as List? ?? []);
     return list.cast<Map<String, dynamic>>();

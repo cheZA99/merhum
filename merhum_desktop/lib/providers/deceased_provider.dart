@@ -9,7 +9,7 @@ class DeceasedProvider extends ChangeNotifier {
   final DeceasedService _service;
   DeceasedProvider(this._service);
 
-  List<DeceasedModel> _all = [];
+  List<DeceasedModel> deceasedList = [];
   List<ProcedureStatusModel> statuses = [];
   List<Map<String, dynamic>> cities = [];
   bool isLoading = false;
@@ -19,30 +19,27 @@ class DeceasedProvider extends ChangeNotifier {
   String? filterSearch;
   int? filterCityId;
   int? filterStatusId;
+  int totalCount = 0;
   int totalDeceasedCount = 0;
   List<DeceasedModel> recentDeceased = [];
 
-  List<DeceasedModel> get deceasedList {
-    final start = (currentPage - 1) * pageSize;
-    final end = (start + pageSize).clamp(0, _all.length);
-    return _all.sublist(start, end);
-  }
-
-  int get totalPages => (_all.length / pageSize).ceil().clamp(1, 99999);
-  int get totalCount => _all.length;
+  int get totalPages => (totalCount / pageSize).ceil().clamp(1, 99999);
 
   Future<void> loadAll() async {
     isLoading = true;
     errorMessage = null;
-    currentPage = 1;
     notifyListeners();
 
     try {
-      _all = await _service.getAll(
+      final (list, total) = await _service.getAll(
         search: filterSearch,
         statusId: filterStatusId,
         cityId: filterCityId,
+        pageNumber: currentPage,
+        pageSize: pageSize,
       );
+      deceasedList = list;
+      totalCount = total;
     } on DioException catch (e) {
       errorMessage = _parseError(e);
     } catch (e) {
@@ -55,15 +52,16 @@ class DeceasedProvider extends ChangeNotifier {
 
   Future<void> loadTotalDeceasedCount() async {
     try {
-      totalDeceasedCount = await _service.getTotalCount();
+      final (_, total) = await _service.getAll(pageNumber: 1, pageSize: 1);
+      totalDeceasedCount = total;
     } catch (_) {}
     notifyListeners();
   }
 
   Future<void> loadRecentDeceased() async {
     try {
-      final list = await _service.getAll();
-      recentDeceased = list.take(5).toList();
+      final (list, _) = await _service.getAll(pageNumber: 1, pageSize: 5);
+      recentDeceased = list;
     } catch (_) {}
     notifyListeners();
   }
@@ -105,6 +103,7 @@ class DeceasedProvider extends ChangeNotifier {
   Future<bool> create(Map<String, dynamic> data) async {
     try {
       await _service.create(data);
+      currentPage = 1;
       await loadAll();
       return true;
     } on DioException catch (e) {
@@ -141,8 +140,8 @@ class DeceasedProvider extends ChangeNotifier {
   Future<bool> delete(int id) async {
     try {
       await _service.delete(id);
-      _all.removeWhere((d) => d.id == id);
-      notifyListeners();
+      if (currentPage > 1 && deceasedList.length == 1) currentPage--;
+      await loadAll();
       return true;
     } on DioException catch (e) {
       errorMessage = _parseError(e);
@@ -154,29 +153,32 @@ class DeceasedProvider extends ChangeNotifier {
   void nextPage() {
     if (currentPage < totalPages) {
       currentPage++;
-      notifyListeners();
+      loadAll();
     }
   }
 
   void previousPage() {
     if (currentPage > 1) {
       currentPage--;
-      notifyListeners();
+      loadAll();
     }
   }
 
   void setSearch(String v) {
     filterSearch = v.isEmpty ? null : v;
+    currentPage = 1;
     loadAll();
   }
 
   void setFilterCity(int? v) {
     filterCityId = v;
+    currentPage = 1;
     loadAll();
   }
 
   void setFilterStatus(int? v) {
     filterStatusId = v;
+    currentPage = 1;
     loadAll();
   }
 
@@ -184,6 +186,7 @@ class DeceasedProvider extends ChangeNotifier {
     filterSearch = null;
     filterCityId = null;
     filterStatusId = null;
+    currentPage = 1;
     loadAll();
   }
 

@@ -64,14 +64,15 @@ class ServiceOrderService {
   }
 
   Future<List<Map<String, dynamic>>> getServiceTypes() async {
-    final response = await _api.get('/api/referencedata/service-types');
+    final response = await _api
+        .get('/api/referencedata/service-types', queryParams: {'pageSize': 100});
     final raw = response.data;
     final list = raw is List ? raw : (raw['data'] as List? ?? []);
     return list.cast<Map<String, dynamic>>();
   }
 
   Future<List<Map<String, dynamic>>> getDeceased() async {
-    final response = await _api.get('/api/deceased');
+    final response = await _api.get('/api/deceased', queryParams: {'pageSize': 100});
     final raw = response.data;
     final list = raw is List ? raw : (raw['data'] as List? ?? []);
     return list.cast<Map<String, dynamic>>();

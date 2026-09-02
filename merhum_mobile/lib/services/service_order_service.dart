@@ -36,7 +36,9 @@ class ServiceOrderService {
   }
 
   static Future<List<Map<String, dynamic>>> getServiceTypes() async {
-    final res = await ApiService.get('/api/ReferenceData/service-types');
-    return (res.data as List? ?? []).cast<Map<String, dynamic>>();
+    final res = await ApiService.get('/api/ReferenceData/service-types', queryParams: {'pageSize': 100});
+    final raw = res.data;
+    final list = raw is List ? raw : (raw as Map<String, dynamic>)['data'] as List? ?? [];
+    return list.cast<Map<String, dynamic>>();
   }
 }
