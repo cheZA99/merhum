@@ -78,7 +78,7 @@ public class DeceasedService : IDeceasedService
         return PagedResponse<DeceasedResponse>.Create(items, total, pageNumber, pageSize);
     }
 
-    public async Task<DeceasedResponse?> GetByIdAsync(int id)
+    public async Task<DeceasedResponse?> GetByIdAsync(int id, string? scopeToUserId)
     {
         var d = await _db.Deceased
             .Include(x => x.City).ThenInclude(c => c.Country)
@@ -87,7 +87,10 @@ public class DeceasedService : IDeceasedService
             .Include(x => x.User)
             .FirstOrDefaultAsync(x => x.Id == id);
 
-        return d == null ? null : ToResponse(d);
+        if (d == null) return null;
+        if (scopeToUserId != null && d.UserId != scopeToUserId) return null;
+
+        return ToResponse(d);
     }
 
     public async Task<DeceasedResponse> CreateAsync(DeceasedRequest request, string userId)
@@ -155,16 +158,25 @@ public class DeceasedService : IDeceasedService
         deceased.ContactPersonPhone = request.ContactPersonPhone;
         deceased.ContactPersonEmail = request.ContactPersonEmail;
         deceased.CityId = request.CityId;
-        deceased.ProcedureStatusId = request.ProcedureStatusId;
 
         await _db.SaveChangesAsync();
         return true;
     }
 
-    public async Task<bool> UpdateStatusAsync(int id, int statusId, string? note, string changedByUserId)
+    public async Task<StatusChangeResult> UpdateStatusAsync(int id, int statusId, string? note, string changedByUserId)
     {
+        // every phase change has to carry a note
+        if (string.IsNullOrWhiteSpace(note)) return StatusChangeResult.NotAllowed;
+
         var deceased = await _db.Deceased.FindAsync(id);
-        if (deceased == null) return false;
+        if (deceased == null) return StatusChangeResult.NotFound;
+
+        var current = await _db.ProcedureStatuses.FindAsync(deceased.ProcedureStatusId);
+        var target = await _db.ProcedureStatuses.FindAsync(statusId);
+        if (current == null || target == null) return StatusChangeResult.NotFound;
+
+        if (!StatusTransitions.ProcedureAllows(current.SortOrder, target.SortOrder))
+            return StatusChangeResult.NotAllowed;
 
         deceased.ProcedureStatusId = statusId;
 
@@ -180,7 +192,7 @@ public class DeceasedService : IDeceasedService
 
         await _notificationService.CreateForDeceasedAsync(id, "Promjena statusa procedure", "Status procedure za preminulog je ažuriran.");
 
-        return true;
+        return StatusChangeResult.Ok;
     }
 
     public async Task<string?> UploadPhotoAsync(int id, IFormFile file)
@@ -214,8 +226,12 @@ public class DeceasedService : IDeceasedService
         return true;
     }
 
-    public async Task<List<StatusHistoryResponse>> GetStatusHistoryAsync(int id)
+    public async Task<List<StatusHistoryResponse>?> GetStatusHistoryAsync(int id, string? scopeToUserId)
     {
+        var owner = await _db.Deceased.Where(d => d.Id == id).Select(d => d.UserId).FirstOrDefaultAsync();
+        if (owner == null) return null;
+        if (scopeToUserId != null && owner != scopeToUserId) return null;
+
         return await _db.StatusHistories
             .Include(h => h.ProcedureStatus)
             .Include(h => h.ChangedByUser)

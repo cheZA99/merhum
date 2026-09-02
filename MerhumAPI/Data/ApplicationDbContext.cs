@@ -83,7 +83,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<Appointment>(e =>
         {
-            e.Property(x => x.Status).HasDefaultValue("Scheduled");
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(30).HasDefaultValue(AppointmentStatus.Scheduled);
             e.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
 
             e.HasOne(x => x.Deceased)
@@ -110,11 +110,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .WithMany()
              .HasForeignKey(x => x.CreatedByUserId)
              .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(x => x.CancelledByUser)
+             .WithMany()
+             .HasForeignKey(x => x.CancelledByUserId)
+             .OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<ServiceOrder>(e =>
         {
-            e.Property(x => x.Status).HasDefaultValue("Ordered");
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).HasDefaultValue(ServiceOrderStatus.Ordered);
             e.Property(x => x.OrderedAt).HasDefaultValueSql("GETDATE()");
 
             e.HasOne(x => x.Deceased)
@@ -135,6 +140,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             e.HasOne(x => x.ServiceOffering)
              .WithMany(x => x.ServiceOrders)
              .HasForeignKey(x => x.ServiceOfferingId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(x => x.CancelledByUser)
+             .WithMany()
+             .HasForeignKey(x => x.CancelledByUserId)
              .OnDelete(DeleteBehavior.Restrict);
         });
 

@@ -1,4 +1,5 @@
 using MerhumAPI.Data;
+using MerhumAPI.Models;
 using MerhumAPI.Services.MachineLearning.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -84,7 +85,7 @@ public class TrainingDataService :ITrainingDataService
 		var twelveMonthsAgo = now.AddMonths(-12);
 
 		var held = await _db.Appointments
-		    .Where(a => a.CemeteryId == cemeteryId && a.Status == "Held")
+		    .Where(a => a.CemeteryId == cemeteryId && a.Status == AppointmentStatus.Held)
 		    .Select(a => a.FuneralDateTime)
 		    .ToListAsync();
 

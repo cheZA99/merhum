@@ -9,6 +9,9 @@ public class AppointmentResponse
     public string? CityName { get; set; }
     public int MosqueId { get; set; }
     public string MosqueName { get; set; } = string.Empty;
+    public string? MosqueAddress { get; set; }
+    public decimal? MosqueLatitude { get; set; }
+    public decimal? MosqueLongitude { get; set; }
     public int CemeteryId { get; set; }
     public string CemeteryName { get; set; } = string.Empty;
     public int? ImamId { get; set; }
@@ -18,5 +21,7 @@ public class AppointmentResponse
     public DateTime FuneralDateTime { get; set; }
     public string Status { get; set; } = string.Empty;
     public string? Note { get; set; }
+    public string? ContactPersonName { get; set; }
+    public string? ContactPersonPhone { get; set; }
     public DateTime CreatedAt { get; set; }
 }

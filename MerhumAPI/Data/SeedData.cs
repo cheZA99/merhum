@@ -265,11 +265,11 @@ public static class SeedData
 		var funeralBase = DateTime.UtcNow.Date;
 
 		db.Appointments.AddRange(
-			new Appointment { DeceasedId = dec1.Id, MosqueId = mosque1.Id, CemeteryId = cem1.Id, ImamId = imam1.Id, GraveSiteId = graveSites[0].Id, FuneralDateTime = new DateTime(2024, 1, 11, 13, 0, 0), Status = "Held", CreatedByUserId = adminUser.Id },
-			new Appointment { DeceasedId = dec2.Id, MosqueId = mosque2.Id, CemeteryId = cem2.Id, ImamId = imam2.Id, GraveSiteId = graveSites[15].Id, FuneralDateTime = new DateTime(2024, 2, 6, 14, 0, 0), Status = "Held", CreatedByUserId = adminUser.Id },
-			new Appointment { DeceasedId = dec3.Id, MosqueId = mosque3.Id, CemeteryId = cem3.Id, ImamId = imam1.Id, FuneralDateTime = funeralBase.AddDays(3).AddHours(13), Status = "Scheduled", CreatedByUserId = adminUser.Id },
-			new Appointment { DeceasedId = dec4.Id, MosqueId = mosque4.Id, CemeteryId = cem4.Id, ImamId = imam1.Id, FuneralDateTime = funeralBase.AddDays(7).AddHours(11), Status = "Scheduled", CreatedByUserId = adminUser.Id },
-			new Appointment { DeceasedId = dec5.Id, MosqueId = mosque1.Id, CemeteryId = cem1.Id, ImamId = imam2.Id, FuneralDateTime = funeralBase.AddDays(12).AddHours(14), Status = "Scheduled", CreatedByUserId = adminUser.Id }
+			new Appointment { DeceasedId = dec1.Id, MosqueId = mosque1.Id, CemeteryId = cem1.Id, ImamId = imam1.Id, GraveSiteId = graveSites[0].Id, FuneralDateTime = new DateTime(2024, 1, 11, 13, 0, 0), Status = AppointmentStatus.Held, CreatedByUserId = adminUser.Id },
+			new Appointment { DeceasedId = dec2.Id, MosqueId = mosque2.Id, CemeteryId = cem2.Id, ImamId = imam2.Id, GraveSiteId = graveSites[15].Id, FuneralDateTime = new DateTime(2024, 2, 6, 14, 0, 0), Status = AppointmentStatus.Held, CreatedByUserId = adminUser.Id },
+			new Appointment { DeceasedId = dec3.Id, MosqueId = mosque3.Id, CemeteryId = cem3.Id, ImamId = imam1.Id, FuneralDateTime = funeralBase.AddDays(3).AddHours(13), Status = AppointmentStatus.Scheduled, CreatedByUserId = adminUser.Id },
+			new Appointment { DeceasedId = dec4.Id, MosqueId = mosque4.Id, CemeteryId = cem4.Id, ImamId = imam1.Id, FuneralDateTime = funeralBase.AddDays(7).AddHours(11), Status = AppointmentStatus.Scheduled, CreatedByUserId = adminUser.Id },
+			new Appointment { DeceasedId = dec5.Id, MosqueId = mosque1.Id, CemeteryId = cem1.Id, ImamId = imam2.Id, FuneralDateTime = funeralBase.AddDays(12).AddHours(14), Status = AppointmentStatus.Scheduled, CreatedByUserId = adminUser.Id }
 		);
 
 		// recent burial history for Bare so its predicted burial rate stands out too
@@ -282,13 +282,13 @@ public static class SeedData
 				CemeteryId = cem1.Id,
 				ImamId = imam1.Id,
 				FuneralDateTime = funeralBase.AddMonths(-m).AddHours(13),
-				Status = "Held",
+				Status = AppointmentStatus.Held,
 				CreatedByUserId = adminUser.Id
 			});
 		}
 		await db.SaveChangesAsync();
 
-		ServiceOrder Order(Deceased deceased, FuneralHome home, ServiceType type, string status, DateTime? completedAt = null)
+		ServiceOrder Order(Deceased deceased, FuneralHome home, ServiceType type, ServiceOrderStatus status, DateTime? completedAt = null)
 		{
 			var offering = offerings.First(o => o.FuneralHomeId == home.Id && o.ServiceTypeId == type.Id);
 			return new ServiceOrder
@@ -304,14 +304,14 @@ public static class SeedData
 		}
 
 		db.ServiceOrders.AddRange(
-			Order(dec1, fh1, serviceTypes[0], "Completed", new DateTime(2024, 1, 11, 10, 0, 0)),
-			Order(dec1, fh1, serviceTypes[2], "Completed", new DateTime(2024, 1, 11, 11, 0, 0)),
-			Order(dec2, fh2, serviceTypes[0], "Completed"),
-			Order(dec2, fh2, serviceTypes[3], "Completed"),
-			Order(dec3, fh3, serviceTypes[0], "InProgress"),
-			Order(dec3, fh3, serviceTypes[1], "Ordered"),
-			Order(dec4, fh4, serviceTypes[0], "Ordered"),
-			Order(dec5, fh1, serviceTypes[0], "Ordered")
+			Order(dec1, fh1, serviceTypes[0], ServiceOrderStatus.Completed, new DateTime(2024, 1, 11, 10, 0, 0)),
+			Order(dec1, fh1, serviceTypes[2], ServiceOrderStatus.Completed, new DateTime(2024, 1, 11, 11, 0, 0)),
+			Order(dec2, fh2, serviceTypes[0], ServiceOrderStatus.Completed),
+			Order(dec2, fh2, serviceTypes[3], ServiceOrderStatus.Completed),
+			Order(dec3, fh3, serviceTypes[0], ServiceOrderStatus.InProgress),
+			Order(dec3, fh3, serviceTypes[1], ServiceOrderStatus.Ordered),
+			Order(dec4, fh4, serviceTypes[0], ServiceOrderStatus.Ordered),
+			Order(dec5, fh1, serviceTypes[0], ServiceOrderStatus.Ordered)
 		);
 		await db.SaveChangesAsync();
 	}

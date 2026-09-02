@@ -167,7 +167,7 @@ public class ContextBuilderService : IContextBuilderService
             .Include(a => a.Deceased)
             .Include(a => a.Mosque).ThenInclude(m => m.City)
             .Include(a => a.Cemetery)
-            .Where(a => a.FuneralDateTime >= now && a.FuneralDateTime <= sevenDays && a.Status == "Scheduled");
+            .Where(a => a.FuneralDateTime >= now && a.FuneralDateTime <= sevenDays && a.Status == AppointmentStatus.Scheduled);
 
         if (user.CityId.HasValue)
             apptQuery = apptQuery.Where(a => a.Mosque.CityId == user.CityId.Value);

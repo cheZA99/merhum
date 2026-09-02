@@ -21,7 +21,7 @@ public class ServiceOrderService : IServiceOrderService
         _notificationService = notificationService;
     }
 
-    public async Task<PagedResponse<ServiceOrderResponse>> GetAllAsync(int? deceasedId, string? status, int? funeralHomeId, DateTime? dateFrom, DateTime? dateTo, int pageNumber, int pageSize)
+    public async Task<PagedResponse<ServiceOrderResponse>> GetAllAsync(int? deceasedId, ServiceOrderStatus? status, int? funeralHomeId, DateTime? dateFrom, DateTime? dateTo, int pageNumber, int pageSize)
     {
         (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
 
@@ -34,8 +34,8 @@ public class ServiceOrderService : IServiceOrderService
         if (deceasedId.HasValue)
             query = query.Where(s => s.DeceasedId == deceasedId.Value);
 
-        if (!string.IsNullOrWhiteSpace(status))
-            query = query.Where(s => s.Status == status);
+        if (status.HasValue)
+            query = query.Where(s => s.Status == status.Value);
 
         if (funeralHomeId.HasValue)
             query = query.Where(s => s.FuneralHomeId == funeralHomeId.Value);
@@ -76,7 +76,7 @@ public class ServiceOrderService : IServiceOrderService
             ServiceTypeId = request.ServiceTypeId,
             Price = request.Price,
             Note = request.Note,
-            Status = "Ordered"
+            Status = ServiceOrderStatus.Ordered
         };
 
         _db.ServiceOrders.Add(order);
@@ -111,11 +111,13 @@ public class ServiceOrderService : IServiceOrderService
         order.Price = request.Price;
         order.Note = request.Note;
 
-        if (!string.IsNullOrWhiteSpace(request.Status))
-            order.Status = request.Status;
+        if (Enum.TryParse<ServiceOrderStatus>(request.Status, ignoreCase: true, out var requestedStatus))
+        {
+            order.Status = requestedStatus;
 
-        if (request.Status == "Completed")
-            order.CompletedAt = request.CompletedAt ?? DateTime.UtcNow;
+            if (requestedStatus == ServiceOrderStatus.Completed)
+                order.CompletedAt = request.CompletedAt ?? DateTime.UtcNow;
+        }
 
         await _db.SaveChangesAsync();
 
@@ -126,13 +128,13 @@ public class ServiceOrderService : IServiceOrderService
         return ToResponse(order);
     }
 
-    public async Task<bool> UpdateStatusAsync(int id, string status, DateTime? completedAt)
+    public async Task<bool> UpdateStatusAsync(int id, ServiceOrderStatus status, DateTime? completedAt)
     {
         var order = await _db.ServiceOrders.FindAsync(id);
         if (order == null) return false;
 
         order.Status = status;
-        if (status == "Completed")
+        if (status == ServiceOrderStatus.Completed)
             order.CompletedAt = completedAt ?? DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
@@ -161,7 +163,7 @@ public class ServiceOrderService : IServiceOrderService
         ServiceTypeId = s.ServiceTypeId,
         ServiceTypeName = s.ServiceType?.Name ?? string.Empty,
         Price = s.Price,
-        Status = s.Status,
+        Status = s.Status.ToString(),
         Note = s.Note,
         OrderedAt = s.OrderedAt,
         CompletedAt = s.CompletedAt

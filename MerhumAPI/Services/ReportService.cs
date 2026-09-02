@@ -1,4 +1,5 @@
 using MerhumAPI.Data;
+using MerhumAPI.Models;
 using MerhumAPI.Helpers;
 using Microsoft.EntityFrameworkCore;
 
@@ -205,7 +206,7 @@ public class ReportService : IReportService
         var totalOrders = byMonth.Sum(x => x.OrderCount);
 
         var completedRevenue = await _db.ServiceOrders
-            .Where(s => s.OrderedAt.Year == targetYear && s.Status == "Completed")
+            .Where(s => s.OrderedAt.Year == targetYear && s.Status == ServiceOrderStatus.Completed)
             .SumAsync(s => s.Price);
 
         return new

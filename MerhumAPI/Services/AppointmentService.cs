@@ -21,7 +21,7 @@ public class AppointmentService : IAppointmentService
         _notificationService = notificationService;
     }
 
-    public async Task<PagedResponse<AppointmentResponse>> GetAllAsync(int? deceasedId, string? status, int? mosqueId, int? imamId, int? cityId, DateTime? dateFrom, DateTime? dateTo, int pageNumber, int pageSize)
+    public async Task<PagedResponse<AppointmentResponse>> GetAllAsync(int? deceasedId, AppointmentStatus? status, int? mosqueId, int? imamId, int? cityId, DateTime? dateFrom, DateTime? dateTo, int pageNumber, int pageSize, string? scopeToUserId)
     {
         (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
 
@@ -33,11 +33,15 @@ public class AppointmentService : IAppointmentService
             .Include(a => a.GraveSite)
             .AsQueryable();
 
+        // null means an unscoped read, otherwise a family sees its own funerals and an imam the ones assigned to him
+        if (scopeToUserId != null)
+            query = query.Where(a => a.Deceased.UserId == scopeToUserId || (a.Imam != null && a.Imam.UserId == scopeToUserId));
+
         if (deceasedId.HasValue)
             query = query.Where(a => a.DeceasedId == deceasedId.Value);
 
-        if (!string.IsNullOrWhiteSpace(status))
-            query = query.Where(a => a.Status == status);
+        if (status.HasValue)
+            query = query.Where(a => a.Status == status.Value);
 
         if (mosqueId.HasValue)
             query = query.Where(a => a.MosqueId == mosqueId.Value);
@@ -65,7 +69,7 @@ public class AppointmentService : IAppointmentService
         return PagedResponse<AppointmentResponse>.Create(items, total, pageNumber, pageSize);
     }
 
-    public async Task<AppointmentResponse?> GetByIdAsync(int id)
+    public async Task<AppointmentResponse?> GetByIdAsync(int id, string? scopeToUserId)
     {
         var a = await _db.Appointments
             .Include(x => x.Deceased).ThenInclude(d => d.City)
@@ -74,7 +78,11 @@ public class AppointmentService : IAppointmentService
             .Include(x => x.Imam)
             .Include(x => x.GraveSite)
             .FirstOrDefaultAsync(x => x.Id == id);
-        return a == null ? null : ToResponse(a);
+
+        if (a == null) return null;
+        if (scopeToUserId != null && a.Deceased.UserId != scopeToUserId && a.Imam?.UserId != scopeToUserId) return null;
+
+        return ToResponse(a);
     }
 
     public async Task<AppointmentResponse> CreateAsync(AppointmentRequest request, string userId)
@@ -88,7 +96,7 @@ public class AppointmentService : IAppointmentService
             GraveSiteId = request.GraveSiteId,
             FuneralDateTime = request.FuneralDateTime,
             Note = request.Note,
-            Status = "Scheduled",
+            Status = AppointmentStatus.Scheduled,
             CreatedByUserId = userId
         };
 
@@ -168,29 +176,31 @@ public class AppointmentService : IAppointmentService
         return ToResponse(appointment);
     }
 
-    public async Task<bool> UpdateStatusAsync(int id, string status)
+    public async Task<StatusChangeResult> UpdateStatusAsync(int id, AppointmentStatus status, string changedByUserId, string? reason)
     {
         var appointment = await _db.Appointments.FindAsync(id);
-        if (appointment == null) return false;
+        if (appointment == null) return StatusChangeResult.NotFound;
+
+        if (!StatusTransitions.AppointmentAllows(appointment.Status, status))
+            return StatusChangeResult.NotAllowed;
 
         appointment.Status = status;
+
+        if (status == AppointmentStatus.Cancelled)
+        {
+            appointment.CancelledAt = DateTime.UtcNow;
+            appointment.CancelledByUserId = changedByUserId;
+            appointment.CancellationReason = reason;
+        }
+
         await _db.SaveChangesAsync();
 
-        if (status == "Cancelled")
+        if (status == AppointmentStatus.Cancelled)
             await _notificationService.CreateForDeceasedAsync(appointment.DeceasedId, "Dženaza otkazana", "Zakazana dženaza je otkazana.");
-        else if (status == "Held")
+        else if (status == AppointmentStatus.Held)
             await _notificationService.CreateForDeceasedAsync(appointment.DeceasedId, "Dženaza obavljena", "Dženaza je evidentirana kao obavljena.");
 
-        return true;
-    }
-
-    public async Task<bool> DeleteAsync(int id)
-    {
-        var appointment = await _db.Appointments.FindAsync(id);
-        if (appointment == null) return false;
-        _db.Appointments.Remove(appointment);
-        await _db.SaveChangesAsync();
-        return true;
+        return StatusChangeResult.Ok;
     }
 
     private static AppointmentResponse ToResponse(Appointment a) => new()
@@ -206,10 +216,15 @@ public class AppointmentService : IAppointmentService
         CemeteryName = a.Cemetery?.Name ?? string.Empty,
         ImamId = a.ImamId,
         ImamFullName = a.Imam != null ? $"{a.Imam.FirstName} {a.Imam.LastName}" : null,
+        MosqueAddress = a.Mosque?.Address,
+        MosqueLatitude = a.Mosque?.Latitude,
+        MosqueLongitude = a.Mosque?.Longitude,
+        ContactPersonName = a.Deceased?.ContactPersonName,
+        ContactPersonPhone = a.Deceased?.ContactPersonPhone,
         GraveSiteId = a.GraveSiteId,
         GravePlotNumber = a.GraveSite?.PlotNumber,
         FuneralDateTime = a.FuneralDateTime,
-        Status = a.Status,
+        Status = a.Status.ToString(),
         Note = a.Note,
         CreatedAt = a.CreatedAt
     };

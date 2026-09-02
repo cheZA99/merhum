@@ -28,9 +28,7 @@ public class ServiceOrder
     [Column(TypeName = "decimal(10,2)")]
     public decimal Price { get; set; }
 
-    [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Ordered"; // Ordered / InProgress / Completed
+    public ServiceOrderStatus Status { get; set; } = ServiceOrderStatus.Ordered;
 
     [MaxLength(500)]
     public string? Note { get; set; }
@@ -38,4 +36,13 @@ public class ServiceOrder
     public DateTime OrderedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? CompletedAt { get; set; }
+
+    public DateTime? CancelledAt { get; set; }
+
+    [ForeignKey(nameof(CancelledByUser))]
+    public string? CancelledByUserId { get; set; }
+    public ApplicationUser? CancelledByUser { get; set; }
+
+    [MaxLength(500)]
+    public string? CancellationReason { get; set; }
 }

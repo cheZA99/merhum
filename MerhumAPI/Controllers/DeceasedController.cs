@@ -3,7 +3,6 @@ using MerhumAPI.DTOs.Deceased;
 using MerhumAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace MerhumAPI.Controllers;
 
@@ -36,11 +35,7 @@ public class DeceasedController : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
-                  ?? User.FindFirstValue("sub")
-                  ?? throw new UnauthorizedAccessException();
-
-        var result = await _deceasedService.GetMyAsync(userId, pageNumber, pageSize);
+        var result = await _deceasedService.GetMyAsync(User.GetUserId(), pageNumber, pageSize);
         return Ok(result);
     }
 
@@ -48,7 +43,7 @@ public class DeceasedController : ControllerBase
     [Authorize(Policy = "MobileAccess")]
     public async Task<ActionResult<DeceasedResponse>> GetById(int id)
     {
-        var deceased = await _deceasedService.GetByIdAsync(id);
+        var deceased = await _deceasedService.GetByIdAsync(id, User.IsAdministrator() ? null : User.GetUserId());
         if (deceased == null) return NotFound();
         return Ok(deceased);
     }
@@ -57,11 +52,7 @@ public class DeceasedController : ControllerBase
     [Authorize(Policy = "MobileAccess")]
     public async Task<ActionResult<DeceasedResponse>> Create([FromBody] DeceasedRequest request)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
-                  ?? User.FindFirstValue("sub")
-                  ?? throw new UnauthorizedAccessException();
-
-        var deceased = await _deceasedService.CreateAsync(request, userId);
+        var deceased = await _deceasedService.CreateAsync(request, User.GetUserId());
         return CreatedAtAction(nameof(GetById), new { id = deceased.Id }, deceased);
     }
 
@@ -78,13 +69,13 @@ public class DeceasedController : ControllerBase
     [Authorize(Policy = "DesktopAccess")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
-                  ?? User.FindFirstValue("sub")
-                  ?? throw new UnauthorizedAccessException();
-
-        var updated = await _deceasedService.UpdateStatusAsync(id, request.StatusId, request.Note, userId);
-        if (!updated) return NotFound(ApiResponse<object>.Fail("Deceased not found."));
-        return NoContent();
+        var result = await _deceasedService.UpdateStatusAsync(id, request.StatusId, request.Note, User.GetUserId());
+        return result switch
+        {
+            StatusChangeResult.NotFound => NotFound(ApiResponse<object>.Fail("Deceased not found.")),
+            StatusChangeResult.NotAllowed => BadRequest(ApiResponse<object>.Fail("Faza se mijenja redom i uz obaveznu napomenu.")),
+            _ => NoContent()
+        };
     }
 
     [HttpPost("{id:int}/photo")]
@@ -117,7 +108,8 @@ public class DeceasedController : ControllerBase
     [Authorize(Policy = "MobileAccess")]
     public async Task<IActionResult> GetStatusHistory(int id)
     {
-        var history = await _deceasedService.GetStatusHistoryAsync(id);
+        var history = await _deceasedService.GetStatusHistoryAsync(id, User.IsAdministrator() ? null : User.GetUserId());
+        if (history == null) return NotFound();
         return Ok(history);
     }
 }

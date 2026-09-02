@@ -1,9 +1,9 @@
 using MerhumAPI.Common;
 using MerhumAPI.DTOs.Appointment;
+using MerhumAPI.Models;
 using MerhumAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace MerhumAPI.Controllers;
 
@@ -17,10 +17,9 @@ public class AppointmentController : ControllerBase
     public AppointmentController(IAppointmentService appointmentService) => _appointmentService = appointmentService;
 
     [HttpGet]
-    [Authorize(Policy = "DesktopAccess")]
     public async Task<ActionResult<PagedResponse<AppointmentResponse>>> GetAll(
         [FromQuery] int? deceasedId,
-        [FromQuery] string? status,
+        [FromQuery] AppointmentStatus? status,
         [FromQuery] int? mosqueId,
         [FromQuery] int? imamId,
         [FromQuery] int? cityId,
@@ -29,7 +28,8 @@ public class AppointmentController : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20)
     {
-        var result = await _appointmentService.GetAllAsync(deceasedId, status, mosqueId, imamId, cityId, dateFrom, dateTo, pageNumber, pageSize);
+        var scope = User.IsAdministrator() ? null : User.GetUserId();
+        var result = await _appointmentService.GetAllAsync(deceasedId, status, mosqueId, imamId, cityId, dateFrom, dateTo, pageNumber, pageSize, scope);
         return Ok(result);
     }
 
@@ -39,14 +39,14 @@ public class AppointmentController : ControllerBase
     public async Task<ActionResult<List<AppointmentResponse>>> Upcoming([FromQuery] int? cityId)
     {
         var result = await _appointmentService.GetAllAsync(
-            null, "Scheduled", null, null, cityId, DateTime.UtcNow, null, 1, 200);
+            null, AppointmentStatus.Scheduled, null, null, cityId, DateTime.UtcNow, null, 1, 200, null);
         return Ok(result.Data);
     }
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ApiResponse<AppointmentResponse>>> GetById(int id)
     {
-        var appointment = await _appointmentService.GetByIdAsync(id);
+        var appointment = await _appointmentService.GetByIdAsync(id, User.IsAdministrator() ? null : User.GetUserId());
         if (appointment == null) return NotFound(ApiResponse<AppointmentResponse>.Fail("Appointment not found."));
         return Ok(ApiResponse<AppointmentResponse>.Ok(appointment));
     }
@@ -55,11 +55,7 @@ public class AppointmentController : ControllerBase
     [Authorize(Policy = "MobileAccess")]
     public async Task<ActionResult<ApiResponse<AppointmentResponse>>> Create([FromBody] AppointmentRequest request)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
-                  ?? User.FindFirstValue("sub")
-                  ?? throw new UnauthorizedAccessException();
-
-        var appointment = await _appointmentService.CreateAsync(request, userId);
+        var appointment = await _appointmentService.CreateAsync(request, User.GetUserId());
         return CreatedAtAction(nameof(GetById), new { id = appointment.Id }, ApiResponse<AppointmentResponse>.Ok(appointment));
     }
 
@@ -76,22 +72,33 @@ public class AppointmentController : ControllerBase
     [Authorize(Policy = "DesktopAccess")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] AppointmentStatusRequest request)
     {
-        var updated = await _appointmentService.UpdateStatusAsync(id, request.Status);
-        if (!updated) return NotFound(ApiResponse<object>.Fail("Appointment not found."));
-        return NoContent();
+        if (!Enum.TryParse<AppointmentStatus>(request.Status, ignoreCase: true, out var target))
+            return BadRequest(ApiResponse<object>.Fail("Nepoznat status termina."));
+
+        var result = await _appointmentService.UpdateStatusAsync(id, target, User.GetUserId(), request.Reason);
+        return StatusResult(result);
     }
 
+    // cancels the appointment instead of removing it, so the audit trail survives
     [HttpDelete("{id:int}")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Cancel(int id, [FromQuery] string? reason)
     {
-        var deleted = await _appointmentService.DeleteAsync(id);
-        if (!deleted) return NotFound(ApiResponse<object>.Fail("Appointment not found."));
-        return NoContent();
+        var result = await _appointmentService.UpdateStatusAsync(id, AppointmentStatus.Cancelled, User.GetUserId(), reason);
+        return StatusResult(result);
     }
+
+    private IActionResult StatusResult(StatusChangeResult result) => result switch
+    {
+        StatusChangeResult.NotFound => NotFound(ApiResponse<object>.Fail("Appointment not found.")),
+        StatusChangeResult.NotAllowed => BadRequest(ApiResponse<object>.Fail("Tražena promjena statusa nije dozvoljena.")),
+        StatusChangeResult.Forbidden => Forbid(),
+        _ => NoContent()
+    };
 }
 
 public class AppointmentStatusRequest
 {
     public string Status { get; set; } = string.Empty;
+    public string? Reason { get; set; }
 }

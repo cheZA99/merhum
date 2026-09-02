@@ -1,5 +1,6 @@
 using MerhumAPI.Common;
 using MerhumAPI.DTOs.ServiceOrder;
+using MerhumAPI.Models;
 using MerhumAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,7 @@ public class ServiceOrderController : ControllerBase
     [Authorize(Roles = "Porodica,JavniKorisnik,PogrebnoPreduzeće,Administrator")]
     public async Task<ActionResult<PagedResponse<ServiceOrderResponse>>> GetAll(
         [FromQuery] int? deceasedId,
-        [FromQuery] string? status,
+        [FromQuery] ServiceOrderStatus? status,
         [FromQuery] int? funeralHomeId,
         [FromQuery] DateTime? dateFrom,
         [FromQuery] DateTime? dateTo,
@@ -60,7 +61,10 @@ public class ServiceOrderController : ControllerBase
     [Authorize(Policy = "PogrebnoAccess")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] ServiceOrderStatusRequest request)
     {
-        var updated = await _serviceOrderService.UpdateStatusAsync(id, request.Status, request.CompletedAt);
+        if (!Enum.TryParse<ServiceOrderStatus>(request.Status, ignoreCase: true, out var target))
+            return BadRequest(ApiResponse<object>.Fail("Nepoznat status narudžbe."));
+
+        var updated = await _serviceOrderService.UpdateStatusAsync(id, target, request.CompletedAt);
         if (!updated) return NotFound(ApiResponse<object>.Fail("Service order not found."));
         return NoContent();
     }

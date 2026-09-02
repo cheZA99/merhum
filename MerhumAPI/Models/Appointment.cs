@@ -29,9 +29,7 @@ public class Appointment
 
     public DateTime FuneralDateTime { get; set; }
 
-    [Required]
-    [MaxLength(30)]
-    public string Status { get; set; } = "Scheduled"; // Scheduled / Held / Cancelled
+    public AppointmentStatus Status { get; set; } = AppointmentStatus.Scheduled;
 
     [MaxLength(500)]
     public string? Note { get; set; }
@@ -41,4 +39,13 @@ public class Appointment
     public ApplicationUser CreatedByUser { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public DateTime? CancelledAt { get; set; }
+
+    [ForeignKey(nameof(CancelledByUser))]
+    public string? CancelledByUserId { get; set; }
+    public ApplicationUser? CancelledByUser { get; set; }
+
+    [MaxLength(500)]
+    public string? CancellationReason { get; set; }
 }
