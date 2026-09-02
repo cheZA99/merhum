@@ -27,15 +27,15 @@ public class ServiceOrderController : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20)
     {
-        var result = await _serviceOrderService.GetAllAsync(deceasedId, status, funeralHomeId, dateFrom, dateTo, pageNumber, pageSize);
+        var scope = User.IsAdministrator() ? null : User.GetUserId();
+        var result = await _serviceOrderService.GetAllAsync(deceasedId, status, funeralHomeId, dateFrom, dateTo, pageNumber, pageSize, scope);
         return Ok(result);
     }
 
     [HttpGet("{id:int}")]
-    [Authorize(Policy = "DesktopAccess")]
     public async Task<ActionResult<ApiResponse<ServiceOrderResponse>>> GetById(int id)
     {
-        var order = await _serviceOrderService.GetByIdAsync(id);
+        var order = await _serviceOrderService.GetByIdAsync(id, User.IsAdministrator() ? null : User.GetUserId());
         if (order == null) return NotFound(ApiResponse<ServiceOrderResponse>.Fail("Service order not found."));
         return Ok(ApiResponse<ServiceOrderResponse>.Ok(order));
     }
@@ -44,7 +44,8 @@ public class ServiceOrderController : ControllerBase
     [Authorize(Policy = "MobileAccess")]
     public async Task<ActionResult<ApiResponse<ServiceOrderResponse>>> Create([FromBody] ServiceOrderRequest request)
     {
-        var order = await _serviceOrderService.CreateAsync(request);
+        var order = await _serviceOrderService.CreateAsync(request, User.IsAdministrator() ? null : User.GetUserId());
+        if (order == null) return NotFound(ApiResponse<ServiceOrderResponse>.Fail("Deceased not found."));
         return CreatedAtAction(nameof(GetById), new { id = order.Id }, ApiResponse<ServiceOrderResponse>.Ok(order));
     }
 
@@ -64,17 +65,25 @@ public class ServiceOrderController : ControllerBase
         if (!Enum.TryParse<ServiceOrderStatus>(request.Status, ignoreCase: true, out var target))
             return BadRequest(ApiResponse<object>.Fail("Nepoznat status narudžbe."));
 
-        var updated = await _serviceOrderService.UpdateStatusAsync(id, target, request.CompletedAt);
-        if (!updated) return NotFound(ApiResponse<object>.Fail("Service order not found."));
-        return NoContent();
+        var scope = User.IsAdministrator() ? null : User.GetUserId();
+        var result = await _serviceOrderService.UpdateStatusAsync(id, target, User.GetUserId(), request.Reason, scope);
+        return StatusResult(result);
     }
 
+    // cancels the order instead of removing it, so the audit trail survives
     [HttpDelete("{id:int}")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Cancel(int id, [FromQuery] string? reason)
     {
-        var deleted = await _serviceOrderService.DeleteAsync(id);
-        if (!deleted) return NotFound(ApiResponse<object>.Fail("Service order not found."));
-        return NoContent();
+        var result = await _serviceOrderService.UpdateStatusAsync(id, ServiceOrderStatus.Cancelled, User.GetUserId(), reason, null);
+        return StatusResult(result);
     }
+
+    private IActionResult StatusResult(StatusChangeResult result) => result switch
+    {
+        StatusChangeResult.NotFound => NotFound(ApiResponse<object>.Fail("Service order not found.")),
+        StatusChangeResult.NotAllowed => BadRequest(ApiResponse<object>.Fail("Tražena promjena statusa nije dozvoljena.")),
+        StatusChangeResult.Forbidden => Forbid(),
+        _ => NoContent()
+    };
 }

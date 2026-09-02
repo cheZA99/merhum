@@ -48,11 +48,14 @@ public class ObituaryController : ControllerBase
         return Ok(result);
     }
 
+    private string? CurrentViewerId() =>
+        User.Identity?.IsAuthenticated == true ? User.GetUserId() : null;
+
     [HttpGet("slug/{slug}")]
     [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<ObituaryResponse>>> GetBySlug(string slug)
     {
-        var obituary = await _obituaryService.GetBySlugAsync(slug);
+        var obituary = await _obituaryService.GetBySlugAsync(slug, CurrentViewerId());
         if (obituary == null) return NotFound(ApiResponse<ObituaryResponse>.Fail("Obituary not found."));
 
         await _obituaryService.IncrementViewCountAsync(obituary.Id);

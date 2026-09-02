@@ -26,12 +26,18 @@ public class ReportService : IReportService
         return PDFGenerator.GenerateDeceasedReport(deceased);
     }
 
-    public async Task<byte[]> GenerateObituaryPdfAsync(string slug)
+    public async Task<byte[]> GenerateObituaryPdfAsync(string slug, string? viewerUserId)
     {
-        var obituary = await _db.Obituaries
+        var query = _db.Obituaries
             .Include(o => o.Deceased).ThenInclude(d => d.City).ThenInclude(c => c.Country)
             .Include(o => o.Condolences.Where(c => c.IsApproved))
-            .FirstOrDefaultAsync(o => o.UniqueSlug == slug)
+            .Where(o => o.UniqueSlug == slug && o.IsActive);
+
+        query = viewerUserId == null
+            ? query.Where(o => o.IsPublic)
+            : query.Where(o => o.IsPublic || o.Deceased.UserId == viewerUserId);
+
+        var obituary = await query.FirstOrDefaultAsync()
             ?? throw new KeyNotFoundException($"Obituary with slug '{slug}' not found.");
 
         return PDFGenerator.GenerateObituaryDocument(obituary);

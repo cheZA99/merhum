@@ -195,7 +195,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<Payment>(e =>
         {
-            e.Property(x => x.Status).HasDefaultValue("Pending");
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).HasDefaultValue(PaymentStatus.Pending);
             e.Property(x => x.Currency).HasDefaultValue("EUR");
             e.Property(x => x.CreatedAt).HasDefaultValueSql("GETDATE()");
 

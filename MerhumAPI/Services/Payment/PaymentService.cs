@@ -1,5 +1,6 @@
 using MassTransit;
 using MerhumAPI.Data;
+using MerhumAPI.Models;
 using MerhumAPI.DTOs.Payment;
 using MerhumAPI.Messages;
 using Microsoft.EntityFrameworkCore;
@@ -34,13 +35,19 @@ public class PaymentService :IPaymentService
 			_notificationService = notificationService;
 	}
 
-	public async Task<PaymentResponseDto> InitiatePaymentAsync(int serviceOrderId)
+	public async Task<PaymentResponseDto> InitiatePaymentAsync(int serviceOrderId, string? scopeToUserId)
 	{
-		var order = await _db.ServiceOrders.FirstOrDefaultAsync(o => o.Id == serviceOrderId)
+		var order = await _db.ServiceOrders
+		    .Include(o => o.Deceased)
+		    .FirstOrDefaultAsync(o => o.Id == serviceOrderId)
 		    ?? throw new KeyNotFoundException("Narudžba nije pronađena.");
 
+		// only the family that owns the deceased pays for the order
+		if (scopeToUserId != null && order.Deceased.UserId != scopeToUserId)
+			throw new UnauthorizedAccessException("Nemate pristup ovoj narudžbi.");
+
 		var alreadyPaid = await _db.Payments
-		    .AnyAsync(p => p.ServiceOrderId == serviceOrderId && p.Status == "Completed");
+		    .AnyAsync(p => p.ServiceOrderId == serviceOrderId && p.Status == PaymentStatus.Completed);
 		if (alreadyPaid)
 			throw new InvalidOperationException("Ova narudžba je već plaćena.");
 
@@ -51,7 +58,7 @@ public class PaymentService :IPaymentService
 			ServiceOrderId = order.Id,
 			Amount = eurAmount,
 			Currency = "EUR",
-			Status = "Pending"
+			Status = PaymentStatus.Pending
 		};
 		_db.Payments.Add(payment);
 		await _db.SaveChangesAsync();
@@ -66,28 +73,33 @@ public class PaymentService :IPaymentService
 			PaymentId = payment.Id,
 			PaypalOrderId = paypalOrderId,
 			ApprovalUrl = approvalUrl,
-			Status = payment.Status
+			Status = payment.Status.ToString()
 		};
 	}
 
-	public async Task<bool> CompletePaymentAsync(string paypalOrderId)
+	public async Task<bool> CompletePaymentAsync(string paypalOrderId, string? scopeToUserId)
 	{
-		var payment = await _db.Payments.FirstOrDefaultAsync(p => p.PaypalOrderId == paypalOrderId)
+		var payment = await _db.Payments
+		    .Include(p => p.ServiceOrder).ThenInclude(o => o.Deceased)
+		    .FirstOrDefaultAsync(p => p.PaypalOrderId == paypalOrderId)
 		    ?? throw new KeyNotFoundException("Plaćanje nije pronađeno.");
 
-		if (payment.Status == "Completed")
+		if (scopeToUserId != null && payment.ServiceOrder.Deceased.UserId != scopeToUserId)
+			throw new UnauthorizedAccessException("Nemate pristup ovom plaćanju.");
+
+		if (payment.Status == PaymentStatus.Completed)
 			return true;
 
 		var (success, captureId) = await _payPalService.CaptureOrderAsync(paypalOrderId);
 
 		if (!success)
 		{
-			payment.Status = "Failed";
+			payment.Status = PaymentStatus.Failed;
 			await _db.SaveChangesAsync();
 			return false;
 		}
 
-		payment.Status = "Completed";
+		payment.Status = PaymentStatus.Completed;
 		payment.PaypalCaptureId = captureId;
 		payment.CompletedAt = DateTime.UtcNow;
 		await _db.SaveChangesAsync();
@@ -97,8 +109,16 @@ public class PaymentService :IPaymentService
 		return true;
 	}
 
-	public async Task<PaymentStatusDto> GetStatusAsync(int serviceOrderId)
+	public async Task<PaymentStatusDto> GetStatusAsync(int serviceOrderId, string? scopeToUserId)
 	{
+		if (scopeToUserId != null)
+		{
+			var visible = await _db.ServiceOrders.AnyAsync(o => o.Id == serviceOrderId
+			    && (o.Deceased.UserId == scopeToUserId || o.FuneralHome.UserId == scopeToUserId));
+			if (!visible)
+				throw new UnauthorizedAccessException("Nemate pristup ovoj narudžbi.");
+		}
+
 		var payment = await _db.Payments
 		    .Where(p => p.ServiceOrderId == serviceOrderId)
 		    .OrderByDescending(p => p.Id)
@@ -112,8 +132,8 @@ public class PaymentService :IPaymentService
 		return new PaymentStatusDto
 		{
 			ServiceOrderId = serviceOrderId,
-			IsPaid = payment.Status == "Completed",
-			Status = payment.Status,
+			IsPaid = payment.Status == PaymentStatus.Completed,
+			Status = payment.Status.ToString(),
 			Amount = payment.Amount,
 			Currency = payment.Currency,
 			CompletedAt = payment.CompletedAt,
@@ -129,10 +149,10 @@ public class PaymentService :IPaymentService
 			    .FirstOrDefaultAsync()
 			    ?? throw new KeyNotFoundException("Plaćanje za ovu narudžbu nije pronađeno.");
 
-			if (payment.Status == "Refunded")
+			if (payment.Status == PaymentStatus.Refunded)
 				throw new InvalidOperationException("Plaćanje je već refundirano.");
 
-			if (payment.Status != "Completed")
+			if (payment.Status != PaymentStatus.Completed)
 				throw new InvalidOperationException("Povrat je moguć samo za završeno plaćanje.");
 
 			if (string.IsNullOrWhiteSpace(payment.PaypalCaptureId))
@@ -144,7 +164,7 @@ public class PaymentService :IPaymentService
 			if (!success)
 				throw new InvalidOperationException("Povrat sredstava nije uspio. Molimo pokušajte ponovo.");
 
-			payment.Status = "Refunded";
+			payment.Status = PaymentStatus.Refunded;
 			payment.PaypalRefundId = refundId;
 			payment.RefundedAt = DateTime.UtcNow;
 			await _db.SaveChangesAsync();
@@ -158,7 +178,7 @@ public class PaymentService :IPaymentService
 			{
 				ServiceOrderId = serviceOrderId,
 				IsPaid = false,
-				Status = payment.Status,
+				Status = payment.Status.ToString(),
 				Amount = payment.Amount,
 				Currency = payment.Currency,
 				CompletedAt = payment.CompletedAt,

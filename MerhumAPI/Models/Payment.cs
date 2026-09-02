@@ -28,9 +28,7 @@ public class Payment
     [MaxLength(100)]
     public string? PaypalRefundId { get; set; }
 
-    [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Pending"; // Pending / Completed / Failed / Cancelled / Refunded
+    public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

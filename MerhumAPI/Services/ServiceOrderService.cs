@@ -21,7 +21,7 @@ public class ServiceOrderService : IServiceOrderService
         _notificationService = notificationService;
     }
 
-    public async Task<PagedResponse<ServiceOrderResponse>> GetAllAsync(int? deceasedId, ServiceOrderStatus? status, int? funeralHomeId, DateTime? dateFrom, DateTime? dateTo, int pageNumber, int pageSize)
+    public async Task<PagedResponse<ServiceOrderResponse>> GetAllAsync(int? deceasedId, ServiceOrderStatus? status, int? funeralHomeId, DateTime? dateFrom, DateTime? dateTo, int pageNumber, int pageSize, string? scopeToUserId)
     {
         (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
 
@@ -30,6 +30,10 @@ public class ServiceOrderService : IServiceOrderService
             .Include(s => s.FuneralHome)
             .Include(s => s.ServiceType)
             .AsQueryable();
+
+        // a family sees the orders for its own deceased, a funeral home the ones placed with it
+        if (scopeToUserId != null)
+            query = query.Where(s => s.Deceased.UserId == scopeToUserId || s.FuneralHome.UserId == scopeToUserId);
 
         if (deceasedId.HasValue)
             query = query.Where(s => s.DeceasedId == deceasedId.Value);
@@ -57,18 +61,28 @@ public class ServiceOrderService : IServiceOrderService
         return PagedResponse<ServiceOrderResponse>.Create(items, total, pageNumber, pageSize);
     }
 
-    public async Task<ServiceOrderResponse?> GetByIdAsync(int id)
+    public async Task<ServiceOrderResponse?> GetByIdAsync(int id, string? scopeToUserId)
     {
         var s = await _db.ServiceOrders
             .Include(x => x.Deceased)
             .Include(x => x.FuneralHome)
             .Include(x => x.ServiceType)
             .FirstOrDefaultAsync(x => x.Id == id);
-        return s == null ? null : ToResponse(s);
+
+        if (s == null) return null;
+        if (scopeToUserId != null && s.Deceased.UserId != scopeToUserId && s.FuneralHome.UserId != scopeToUserId) return null;
+
+        return ToResponse(s);
     }
 
-    public async Task<ServiceOrderResponse> CreateAsync(ServiceOrderRequest request)
+    public async Task<ServiceOrderResponse?> CreateAsync(ServiceOrderRequest request, string? scopeToUserId)
     {
+        if (scopeToUserId != null)
+        {
+            var owner = await _db.Deceased.Where(d => d.Id == request.DeceasedId).Select(d => d.UserId).FirstOrDefaultAsync();
+            if (owner != scopeToUserId) return null;
+        }
+
         var order = new ServiceOrder
         {
             DeceasedId = request.DeceasedId,
@@ -111,14 +125,6 @@ public class ServiceOrderService : IServiceOrderService
         order.Price = request.Price;
         order.Note = request.Note;
 
-        if (Enum.TryParse<ServiceOrderStatus>(request.Status, ignoreCase: true, out var requestedStatus))
-        {
-            order.Status = requestedStatus;
-
-            if (requestedStatus == ServiceOrderStatus.Completed)
-                order.CompletedAt = request.CompletedAt ?? DateTime.UtcNow;
-        }
-
         await _db.SaveChangesAsync();
 
         await _db.Entry(order).Reference(s => s.Deceased).LoadAsync();
@@ -128,29 +134,38 @@ public class ServiceOrderService : IServiceOrderService
         return ToResponse(order);
     }
 
-    public async Task<bool> UpdateStatusAsync(int id, ServiceOrderStatus status, DateTime? completedAt)
+    public async Task<StatusChangeResult> UpdateStatusAsync(int id, ServiceOrderStatus status, string changedByUserId, string? reason, string? scopeToUserId)
     {
-        var order = await _db.ServiceOrders.FindAsync(id);
-        if (order == null) return false;
+        var order = await _db.ServiceOrders
+            .Include(o => o.Deceased)
+            .Include(o => o.FuneralHome)
+            .FirstOrDefaultAsync(o => o.Id == id);
+
+        if (order == null) return StatusChangeResult.NotFound;
+
+        if (scopeToUserId != null && order.Deceased.UserId != scopeToUserId && order.FuneralHome.UserId != scopeToUserId)
+            return StatusChangeResult.Forbidden;
+
+        if (!StatusTransitions.ServiceOrderAllows(order.Status, status))
+            return StatusChangeResult.NotAllowed;
 
         order.Status = status;
-        if (status == ServiceOrderStatus.Completed)
-            order.CompletedAt = completedAt ?? DateTime.UtcNow;
+
+        // the completion timestamp belongs to the completed state and to nothing else
+        order.CompletedAt = status == ServiceOrderStatus.Completed ? DateTime.UtcNow : null;
+
+        if (status == ServiceOrderStatus.Cancelled)
+        {
+            order.CancelledAt = DateTime.UtcNow;
+            order.CancelledByUserId = changedByUserId;
+            order.CancellationReason = reason;
+        }
 
         await _db.SaveChangesAsync();
 
         await _notificationService.CreateForDeceasedAsync(order.DeceasedId, "Status usluge ažuriran", "Status vaše pogrebne usluge je promijenjen.");
 
-        return true;
-    }
-
-    public async Task<bool> DeleteAsync(int id)
-    {
-        var order = await _db.ServiceOrders.FindAsync(id);
-        if (order == null) return false;
-        _db.ServiceOrders.Remove(order);
-        await _db.SaveChangesAsync();
-        return true;
+        return StatusChangeResult.Ok;
     }
 
     private static ServiceOrderResponse ToResponse(ServiceOrder s) => new()

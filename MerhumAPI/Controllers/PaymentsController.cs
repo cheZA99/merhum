@@ -21,7 +21,7 @@ public class PaymentsController : ControllerBase
         if (request == null || request.ServiceOrderId <= 0)
             return BadRequest(ApiResponse<PaymentResponseDto>.Fail("Neispravan zahtjev za plaćanje."));
 
-        var result = await _paymentService.InitiatePaymentAsync(request.ServiceOrderId);
+        var result = await _paymentService.InitiatePaymentAsync(request.ServiceOrderId, User.IsAdministrator() ? null : User.GetUserId());
         return Ok(ApiResponse<PaymentResponseDto>.Ok(result));
     }
 
@@ -31,7 +31,7 @@ public class PaymentsController : ControllerBase
         if (request == null || string.IsNullOrWhiteSpace(request.PaypalOrderId))
             return BadRequest(ApiResponse<string>.Fail("Nedostaje identifikator plaćanja."));
 
-        var success = await _paymentService.CompletePaymentAsync(request.PaypalOrderId);
+        var success = await _paymentService.CompletePaymentAsync(request.PaypalOrderId, User.IsAdministrator() ? null : User.GetUserId());
         if (!success)
             return BadRequest(ApiResponse<string>.Fail("Plaćanje nije uspjelo. Molimo pokušajte ponovo."));
 
@@ -41,11 +41,12 @@ public class PaymentsController : ControllerBase
     [HttpGet("order/{serviceOrderId:int}")]
     public async Task<ActionResult<ApiResponse<PaymentStatusDto>>> GetStatus(int serviceOrderId)
     {
-        var status = await _paymentService.GetStatusAsync(serviceOrderId);
+        var status = await _paymentService.GetStatusAsync(serviceOrderId, User.IsAdministrator() ? null : User.GetUserId());
         return Ok(ApiResponse<PaymentStatusDto>.Ok(status));
     }
 
     [HttpPost("refund/{serviceOrderId:int}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<ApiResponse<PaymentStatusDto>>> Refund(int serviceOrderId)
     {
         var result = await _paymentService.RefundPaymentAsync(serviceOrderId);

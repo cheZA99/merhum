@@ -62,12 +62,19 @@ public class ObituaryService : IObituaryService
         return o == null ? null : MapToResponse(o);
     }
 
-    public async Task<ObituaryResponse?> GetBySlugAsync(string slug)
+    public async Task<ObituaryResponse?> GetBySlugAsync(string slug, string? viewerUserId)
     {
-        var obituary = await _db.Obituaries
+        // anonymous visitors only reach public ones, the family also reaches its own
+        var query = _db.Obituaries
             .Include(o => o.Deceased).ThenInclude(d => d.City)
             .Include(o => o.Condolences.Where(c => c.IsApproved))
-            .FirstOrDefaultAsync(o => o.UniqueSlug == slug && o.IsActive);
+            .Where(o => o.UniqueSlug == slug && o.IsActive);
+
+        query = viewerUserId == null
+            ? query.Where(o => o.IsPublic)
+            : query.Where(o => o.IsPublic || o.Deceased.UserId == viewerUserId);
+
+        var obituary = await query.FirstOrDefaultAsync();
 
         if (obituary == null) return null;
 
@@ -80,6 +87,9 @@ public class ObituaryService : IObituaryService
             .Include(d => d.City)
             .FirstOrDefaultAsync(d => d.Id == deceasedId)
             ?? throw new KeyNotFoundException($"Deceased with id {deceasedId} not found.");
+
+        if (deceased.UserId != userId)
+            throw new UnauthorizedAccessException("Smrtovnica se može kreirati samo za vlastitog preminulog.");
 
         var slug = GenerateSlug(deceased.FirstName, deceased.LastName, deceased.DateOfDeath);
         var baseUrl = _configuration["AppSettings:SmrtovnicaBaseUrl"] ?? "http://localhost:5000/smrtovnica";

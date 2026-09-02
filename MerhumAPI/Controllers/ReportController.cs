@@ -1,3 +1,4 @@
+using MerhumAPI.Common;
 using MerhumAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,7 @@ public class ReportController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> ObituaryPdf(string slug)
     {
-        var bytes = await _reportService.GenerateObituaryPdfAsync(slug);
+        var bytes = await _reportService.GenerateObituaryPdfAsync(slug, User.Identity?.IsAuthenticated == true ? User.GetUserId() : null);
         return File(bytes, "application/pdf", $"obituary-{slug}.pdf");
     }
 
