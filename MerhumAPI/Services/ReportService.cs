@@ -72,7 +72,7 @@ public class ReportService : IReportService
         var targetYear = year ?? DateTime.UtcNow.Year;
 
         var byMonth = await _db.Appointments
-            .Where(a => a.FuneralDateTime.Year == targetYear)
+            .Where(a => a.FuneralDateTime.Year == targetYear && a.Status == AppointmentStatus.Held)
             .GroupBy(a => new { a.FuneralDateTime.Month })
             .Select(g => new { Month = g.Key.Month, Count = g.Count() })
             .OrderBy(x => x.Month)
@@ -80,7 +80,7 @@ public class ReportService : IReportService
 
         var byCemetery = await _db.Appointments
             .Include(a => a.Cemetery)
-            .Where(a => a.FuneralDateTime.Year == targetYear)
+            .Where(a => a.FuneralDateTime.Year == targetYear && a.Status == AppointmentStatus.Held)
             .GroupBy(a => new { a.CemeteryId, CemeteryName = a.Cemetery.Name })
             .Select(g => new { g.Key.CemeteryName, Count = g.Count() })
             .OrderByDescending(x => x.Count)
@@ -132,7 +132,7 @@ public class ReportService : IReportService
             {
                 g.Key.ServiceTypeName,
                 Count = g.Count(),
-                TotalRevenue = g.Sum(s => s.Price)
+                TotalRevenue = g.Sum(s => _db.Payments.Any(p => p.ServiceOrderId == s.Id && p.Status == PaymentStatus.Completed) ? s.Price : 0m)
             })
             .OrderByDescending(x => x.TotalRevenue)
             .ToListAsync();
@@ -145,7 +145,7 @@ public class ReportService : IReportService
             {
                 g.Key.FuneralHomeName,
                 Count = g.Count(),
-                TotalRevenue = g.Sum(s => s.Price)
+                TotalRevenue = g.Sum(s => _db.Payments.Any(p => p.ServiceOrderId == s.Id && p.Status == PaymentStatus.Completed) ? s.Price : 0m)
             })
             .OrderByDescending(x => x.TotalRevenue)
             .ToListAsync();
@@ -196,8 +196,12 @@ public class ReportService : IReportService
     {
         var targetYear = year ?? DateTime.UtcNow.Year;
 
-        var byMonth = await _db.ServiceOrders
-            .Where(s => s.OrderedAt.Year == targetYear)
+        // an order only turns into revenue once its payment is confirmed
+        var paidOrders = _db.ServiceOrders
+            .Where(s => s.OrderedAt.Year == targetYear
+                && _db.Payments.Any(p => p.ServiceOrderId == s.Id && p.Status == PaymentStatus.Completed));
+
+        var byMonth = await paidOrders
             .GroupBy(s => s.OrderedAt.Month)
             .Select(g => new
             {
@@ -211,8 +215,8 @@ public class ReportService : IReportService
         var totalRevenue = byMonth.Sum(x => x.TotalRevenue);
         var totalOrders = byMonth.Sum(x => x.OrderCount);
 
-        var completedRevenue = await _db.ServiceOrders
-            .Where(s => s.OrderedAt.Year == targetYear && s.Status == ServiceOrderStatus.Completed)
+        var completedRevenue = await paidOrders
+            .Where(s => s.Status == ServiceOrderStatus.Completed)
             .SumAsync(s => s.Price);
 
         return new

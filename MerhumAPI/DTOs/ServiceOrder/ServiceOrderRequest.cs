@@ -8,14 +8,7 @@ public class ServiceOrderRequest
     public int DeceasedId { get; set; }
 
     [Required]
-    public int FuneralHomeId { get; set; }
-
-    [Required]
-    public int ServiceTypeId { get; set; }
-
-    [Required]
-    [Range(0.01, double.MaxValue)]
-    public decimal Price { get; set; }
+    public int ServiceOfferingId { get; set; }
 
     [MaxLength(500)]
     public string? Note { get; set; }

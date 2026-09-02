@@ -112,6 +112,7 @@ builder.Services.AddScoped<IImamService, ImamService>();
 builder.Services.AddScoped<ICemeteryService, CemeteryService>();
 builder.Services.AddScoped<IGraveSiteService, GraveSiteService>();
 builder.Services.AddScoped<IFuneralHomeService, FuneralHomeService>();
+builder.Services.AddScoped<IServiceOfferingService, ServiceOfferingService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IServiceOrderService, ServiceOrderService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();

@@ -38,6 +38,15 @@ public class PaymentsController : ControllerBase
         return Ok(ApiResponse<string>.Ok("Plaćanje uspješno izvršeno."));
     }
 
+    [HttpPost("cancel/{serviceOrderId:int}")]
+    public async Task<ActionResult<ApiResponse<string>>> Cancel(int serviceOrderId)
+    {
+        var cancelled = await _paymentService.CancelPendingPaymentAsync(serviceOrderId, User.IsAdministrator() ? null : User.GetUserId());
+        if (!cancelled) return NotFound(ApiResponse<string>.Fail("Nema pokrenutog plaćanja za ovu narudžbu."));
+
+        return Ok(ApiResponse<string>.Ok("Plaćanje je otkazano."));
+    }
+
     [HttpGet("order/{serviceOrderId:int}")]
     public async Task<ActionResult<ApiResponse<PaymentStatusDto>>> GetStatus(int serviceOrderId)
     {

@@ -83,12 +83,15 @@ public class ServiceOrderService : IServiceOrderService
             if (owner != scopeToUserId) return null;
         }
 
+        var offering = await LoadActiveOfferingAsync(request.ServiceOfferingId);
+
         var order = new ServiceOrder
         {
             DeceasedId = request.DeceasedId,
-            FuneralHomeId = request.FuneralHomeId,
-            ServiceTypeId = request.ServiceTypeId,
-            Price = request.Price,
+            FuneralHomeId = offering.FuneralHomeId,
+            ServiceTypeId = offering.ServiceTypeId,
+            ServiceOfferingId = offering.Id,
+            Price = offering.Price,
             Note = request.Note,
             Status = ServiceOrderStatus.Ordered
         };
@@ -119,10 +122,13 @@ public class ServiceOrderService : IServiceOrderService
         var order = await _db.ServiceOrders.FindAsync(id);
         if (order == null) return null;
 
+        var offering = await LoadActiveOfferingAsync(request.ServiceOfferingId);
+
         order.DeceasedId = request.DeceasedId;
-        order.FuneralHomeId = request.FuneralHomeId;
-        order.ServiceTypeId = request.ServiceTypeId;
-        order.Price = request.Price;
+        order.FuneralHomeId = offering.FuneralHomeId;
+        order.ServiceTypeId = offering.ServiceTypeId;
+        order.ServiceOfferingId = offering.Id;
+        order.Price = offering.Price;
         order.Note = request.Note;
 
         await _db.SaveChangesAsync();
@@ -166,6 +172,18 @@ public class ServiceOrderService : IServiceOrderService
         await _notificationService.CreateForDeceasedAsync(order.DeceasedId, "Status usluge ažuriran", "Status vaše pogrebne usluge je promijenjen.");
 
         return StatusChangeResult.Ok;
+    }
+
+    // the charged amount always comes from the catalogue, never from the caller
+    private async Task<ServiceOffering> LoadActiveOfferingAsync(int serviceOfferingId)
+    {
+        var offering = await _db.ServiceOfferings.FirstOrDefaultAsync(o => o.Id == serviceOfferingId)
+            ?? throw new KeyNotFoundException("Odabrana ponuda nije pronađena.");
+
+        if (!offering.IsActive)
+            throw new InvalidOperationException("Odabrana ponuda više nije dostupna.");
+
+        return offering;
     }
 
     private static ServiceOrderResponse ToResponse(ServiceOrder s) => new()

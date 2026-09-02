@@ -1,4 +1,5 @@
 using MassTransit;
+using MerhumAPI.Common;
 using MerhumAPI.Data;
 using MerhumAPI.Models;
 using MerhumAPI.DTOs.Payment;
@@ -46,10 +47,17 @@ public class PaymentService :IPaymentService
 		if (scopeToUserId != null && order.Deceased.UserId != scopeToUserId)
 			throw new UnauthorizedAccessException("Nemate pristup ovoj narudžbi.");
 
-		var alreadyPaid = await _db.Payments
-		    .AnyAsync(p => p.ServiceOrderId == serviceOrderId && p.Status == PaymentStatus.Completed);
-		if (alreadyPaid)
+		var live = await _db.Payments
+		    .Where(p => p.ServiceOrderId == serviceOrderId)
+		    .Where(p => p.Status == PaymentStatus.Completed || p.Status == PaymentStatus.Pending)
+		    .Select(p => p.Status)
+		    .FirstOrDefaultAsync();
+
+		if (live == PaymentStatus.Completed)
 			throw new InvalidOperationException("Ova narudžba je već plaćena.");
+
+		if (live == PaymentStatus.Pending)
+			throw new InvalidOperationException("Plaćanje za ovu narudžbu je već pokrenuto.");
 
 		var eurAmount = Math.Round(order.Price / GetBamToEurRate(), 2, MidpointRounding.AwayFromZero);
 
@@ -104,8 +112,28 @@ public class PaymentService :IPaymentService
 		payment.CompletedAt = DateTime.UtcNow;
 		await _db.SaveChangesAsync();
 
+		await AdvanceOrderAfterPaymentAsync(payment.ServiceOrderId);
 		await PublishConfirmationAsync(payment);
-			await NotifyServiceOrderOwnerAsync(payment.ServiceOrderId, "Plaćanje uspješno", "Vaše plaćanje pogrebne usluge je uspješno izvršeno.");
+		await NotifyServiceOrderOwnerAsync(payment.ServiceOrderId, "Plaćanje uspješno", "Vaše plaćanje pogrebne usluge je uspješno izvršeno.");
+		return true;
+	}
+
+	// without this an abandoned PayPal session would keep the order blocked forever
+	public async Task<bool> CancelPendingPaymentAsync(int serviceOrderId, string? scopeToUserId)
+	{
+		var payment = await _db.Payments
+		    .Include(p => p.ServiceOrder).ThenInclude(o => o.Deceased)
+		    .Where(p => p.ServiceOrderId == serviceOrderId && p.Status == PaymentStatus.Pending)
+		    .OrderByDescending(p => p.Id)
+		    .FirstOrDefaultAsync();
+
+		if (payment == null) return false;
+
+		if (scopeToUserId != null && payment.ServiceOrder.Deceased.UserId != scopeToUserId)
+			throw new UnauthorizedAccessException("Nemate pristup ovom plaćanju.");
+
+		payment.Status = PaymentStatus.Cancelled;
+		await _db.SaveChangesAsync();
 		return true;
 	}
 
@@ -186,11 +214,23 @@ public class PaymentService :IPaymentService
 			};
 		}
 
+	private async Task AdvanceOrderAfterPaymentAsync(int serviceOrderId)
+	{
+		var order = await _db.ServiceOrders.FindAsync(serviceOrderId);
+		if (order == null) return;
+
+		if (!StatusTransitions.ServiceOrderAllows(order.Status, ServiceOrderStatus.InProgress)) return;
+
+		order.Status = ServiceOrderStatus.InProgress;
+		await _db.SaveChangesAsync();
+	}
+
 		private async Task PublishConfirmationAsync(PaymentEntity payment)
 	{
 		var order = await _db.ServiceOrders
 		    .Include(o => o.Deceased)
 		    .Include(o => o.ServiceType)
+		    .Include(o => o.FuneralHome)
 		    .FirstOrDefaultAsync(o => o.Id == payment.ServiceOrderId);
 
 		if (order == null)
@@ -200,25 +240,37 @@ public class PaymentService :IPaymentService
 			return;
 		}
 
-		var recipientEmail = order.Deceased?.ContactPersonEmail;
-		var recipientName = order.Deceased?.ContactPersonName ?? string.Empty;
+		// the confirmation goes to the family and to the funeral home that will do the work
+		var recipients = new List<(string Name, string Email)>();
 
-		if (string.IsNullOrWhiteSpace(recipientEmail))
+		if (!string.IsNullOrWhiteSpace(order.Deceased?.ContactPersonEmail))
+			recipients.Add((order.Deceased.ContactPersonName ?? string.Empty, order.Deceased.ContactPersonEmail));
+
+		if (!string.IsNullOrWhiteSpace(order.FuneralHome?.Email))
+			recipients.Add((order.FuneralHome.Name, order.FuneralHome.Email));
+
+		if (recipients.Count == 0)
 		{
 			_logger.LogInformation("No contact email for order {OrderId}, skipping payment confirmation email.", order.Id);
 			return;
 		}
 
-		await _publishEndpoint.Publish(new PaymentCompletedMessage(
-		    payment.Id,
-		    order.Id,
-		    order.ServiceType?.Name ?? string.Empty,
-		    payment.Amount,
-		    payment.Currency,
-		    recipientName,
-		    recipientEmail,
-		    payment.CompletedAt ?? DateTime.UtcNow
-		));
+		foreach (var recipient in recipients)
+		{
+			await _publishEndpoint.Publish(new PaymentCompletedMessage(
+			    payment.Id,
+			    order.Id,
+			    order.ServiceType?.Name ?? string.Empty,
+			    payment.Amount,
+			    payment.Currency,
+			    recipient.Name,
+			    recipient.Email,
+			    payment.CompletedAt ?? DateTime.UtcNow
+			));
+		}
+
+		if (order.FuneralHome?.UserId != null)
+			await _notificationService.CreateAsync(order.FuneralHome.UserId, "Plaćanje zaprimljeno", "Narudžba pogrebne usluge je plaćena.");
 	}
 
 	private async Task NotifyServiceOrderOwnerAsync(int serviceOrderId, string title, string message)
