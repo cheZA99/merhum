@@ -52,7 +52,7 @@ public class ReportService : IReportService
         var totalAppointments = await _db.Appointments.CountAsync();
         var totalServiceOrders = await _db.ServiceOrders.CountAsync();
         var totalGraveSites = await _db.GraveSites.CountAsync();
-        var availableGraveSites = await _db.GraveSites.CountAsync(g => g.Status == "Available");
+        var availableGraveSites = await _db.GraveSites.CountAsync(g => g.Status == GraveSiteStatus.Available);
 
         return new
         {
@@ -99,9 +99,9 @@ public class ReportService : IReportService
                 c.Name,
                 CityName = c.City.Name,
                 TotalSites = c.TotalPlaces,
-                OccupiedSites = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == "Occupied"),
-                FreeSites = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == "Available"),
-                ReservedSites = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == "Reserved"),
+                OccupiedSites = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == GraveSiteStatus.Occupied),
+                FreeSites = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == GraveSiteStatus.Available),
+                ReservedSites = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == GraveSiteStatus.Reserved),
             })
             .ToListAsync();
 

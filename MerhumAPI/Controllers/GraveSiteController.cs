@@ -1,5 +1,6 @@
 using MerhumAPI.Common;
 using MerhumAPI.DTOs.GraveSite;
+using MerhumAPI.Models;
 using MerhumAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,7 @@ public class GraveSiteController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<PagedResponse<GraveSiteResponse>>> GetAll(
         [FromQuery] int? cemeteryId,
-        [FromQuery] string? status,
+        [FromQuery] GraveSiteStatus? status,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20)
     {
@@ -87,7 +88,10 @@ public class GraveSiteController : ControllerBase
     [Authorize(Policy = "DesktopAccess")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateGraveSiteStatusRequest request)
     {
-        var updated = await _graveSiteService.UpdateStatusAsync(id, request.Status);
+        if (!Enum.TryParse<GraveSiteStatus>(request.Status, ignoreCase: true, out var target))
+            return BadRequest(ApiResponse<object>.Fail("Nepoznat status mezarskog mjesta."));
+
+        var updated = await _graveSiteService.UpdateStatusAsync(id, target);
         if (!updated) return NotFound(ApiResponse<object>.Fail("Grave site not found."));
         return NoContent();
     }

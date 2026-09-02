@@ -38,11 +38,11 @@ public class CemeteryService : ICemeteryService
                 MuftiateId = c.Majlis != null ? c.Majlis.MuftiateId : 0,
                 MuftiateName = c.Majlis != null && c.Majlis.Muftiate != null ? c.Majlis.Muftiate.Name : string.Empty,
                 TotalPlaces = c.TotalPlaces,
-                OccupiedPlaces = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == "Occupied"),
-                AvailablePlaces = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == "Available"),
-                ReservedPlaces = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == "Reserved"),
+                OccupiedPlaces = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == GraveSiteStatus.Occupied),
+                AvailablePlaces = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == GraveSiteStatus.Available),
+                ReservedPlaces = _db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == GraveSiteStatus.Reserved),
                 FillPercentage = c.TotalPlaces > 0
-                    ? Math.Round((double)_db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == "Occupied") / c.TotalPlaces * 100, 1)
+                    ? Math.Round((double)_db.GraveSites.Count(g => g.CemeteryId == c.Id && g.Status == GraveSiteStatus.Occupied) / c.TotalPlaces * 100, 1)
                     : 0.0,
                 Latitude = c.Latitude,
                 Longitude = c.Longitude,
@@ -58,9 +58,9 @@ public class CemeteryService : ICemeteryService
         var c = await _db.Cemeteries.Include(x => x.City).Include(x => x.Majlis).ThenInclude(m => m.Muftiate).FirstOrDefaultAsync(x => x.Id == id);
         if (c == null) return null;
 
-        var occupied = await _db.GraveSites.CountAsync(g => g.CemeteryId == id && g.Status == "Occupied");
-        var available = await _db.GraveSites.CountAsync(g => g.CemeteryId == id && g.Status == "Available");
-        var reserved = await _db.GraveSites.CountAsync(g => g.CemeteryId == id && g.Status == "Reserved");
+        var occupied = await _db.GraveSites.CountAsync(g => g.CemeteryId == id && g.Status == GraveSiteStatus.Occupied);
+        var available = await _db.GraveSites.CountAsync(g => g.CemeteryId == id && g.Status == GraveSiteStatus.Available);
+        var reserved = await _db.GraveSites.CountAsync(g => g.CemeteryId == id && g.Status == GraveSiteStatus.Reserved);
 
         return new CemeteryResponse
         {

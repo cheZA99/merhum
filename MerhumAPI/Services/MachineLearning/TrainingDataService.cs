@@ -52,7 +52,7 @@ public class TrainingDataService :ITrainingDataService
 	private async Task<CemeteryFeatures> CalculateFeaturesAsync(int cemeteryId, string name, int totalCapacity)
 	{
 		var occupancy = await _db.GraveSites
-		    .CountAsync(g => g.CemeteryId == cemeteryId && g.Status == "Occupied");
+		    .CountAsync(g => g.CemeteryId == cemeteryId && g.Status == GraveSiteStatus.Occupied);
 
 		var occupancyPercentage = totalCapacity > 0
 		    ? Math.Round((double)occupancy / totalCapacity * 100, 1)

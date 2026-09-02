@@ -132,7 +132,7 @@ public static class SeedData
 				SectionId = i <= 8 ? sec1A.Id : sec1B.Id,
 				PlotNumber = $"A-{i:D3}",
 				Row = (i - 1) / 5 + 1,
-				Status = i <= 5 ? "Occupied" : i <= 8 ? "Reserved" : "Available"
+				Status = i <= 5 ? GraveSiteStatus.Occupied : i <= 8 ? GraveSiteStatus.Reserved : GraveSiteStatus.Available
 			});
 		}
 		for (int i = 1; i <= 15; i++)
@@ -143,7 +143,7 @@ public static class SeedData
 				SectionId = i <= 8 ? sec2A.Id : sec2B.Id,
 				PlotNumber = $"B-{i:D3}",
 				Row = (i - 1) / 5 + 1,
-				Status = i <= 4 ? "Occupied" : "Available"
+				Status = i <= 4 ? GraveSiteStatus.Occupied : GraveSiteStatus.Available
 			});
 		}
 		// Bare gets bulk-occupied so it stands out from the other cemeteries for the ML prediction
@@ -155,7 +155,7 @@ public static class SeedData
 				SectionId = sec1B.Id,
 				PlotNumber = $"A-BULK-{i:D4}",
 				Row = (i - 1) / 50 + 1,
-				Status = "Occupied"
+				Status = GraveSiteStatus.Occupied
 			});
 		}
 		db.GraveSites.AddRange(graveSites);

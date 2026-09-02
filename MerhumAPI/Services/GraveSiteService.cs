@@ -13,7 +13,7 @@ public class GraveSiteService : IGraveSiteService
 
     public GraveSiteService(ApplicationDbContext db) => _db = db;
 
-    public async Task<PagedResponse<GraveSiteResponse>> GetAllAsync(int? cemeteryId, string? status, int pageNumber, int pageSize)
+    public async Task<PagedResponse<GraveSiteResponse>> GetAllAsync(int? cemeteryId, GraveSiteStatus? status, int pageNumber, int pageSize)
     {
         (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
 
@@ -26,8 +26,8 @@ public class GraveSiteService : IGraveSiteService
         if (cemeteryId.HasValue)
             query = query.Where(g => g.CemeteryId == cemeteryId.Value);
 
-        if (!string.IsNullOrWhiteSpace(status))
-            query = query.Where(g => g.Status == status);
+        if (status.HasValue)
+            query = query.Where(g => g.Status == status.Value);
 
         var total = await query.CountAsync();
         var items = await query
@@ -52,6 +52,8 @@ public class GraveSiteService : IGraveSiteService
 
     public async Task<GraveSiteResponse> CreateAsync(GraveSiteRequest request)
     {
+        await ValidatePlacementAsync(request, null);
+
         var site = new GraveSite
         {
             CemeteryId = request.CemeteryId,
@@ -60,7 +62,7 @@ public class GraveSiteService : IGraveSiteService
             Row = request.Row,
             Latitude = request.Latitude,
             Longitude = request.Longitude,
-            Status = "Available"
+            Status = GraveSiteStatus.Available
         };
         _db.GraveSites.Add(site);
         await _db.SaveChangesAsync();
@@ -72,6 +74,8 @@ public class GraveSiteService : IGraveSiteService
     {
         var site = await _db.GraveSites.FindAsync(id);
         if (site == null) return false;
+
+        await ValidatePlacementAsync(request, id);
 
         site.CemeteryId = request.CemeteryId;
         site.SectionId = request.SectionId;
@@ -94,8 +98,14 @@ public class GraveSiteService : IGraveSiteService
         if (alreadyAssigned)
             throw new InvalidOperationException("Ovaj preminuli je već dodijeljen drugom mezarskom mjestu.");
 
+        if (site.DeceasedId != null && site.DeceasedId != deceasedId)
+            throw new InvalidOperationException("Mezarsko mjesto je već zauzeto drugim preminulim.");
+
+        if (site.Status == GraveSiteStatus.Occupied && site.DeceasedId == null)
+            throw new InvalidOperationException("Mezarsko mjesto je označeno kao zauzeto.");
+
         site.DeceasedId = deceasedId;
-        site.Status = "Occupied";
+        site.Status = GraveSiteStatus.Occupied;
 
         var qrUrl = $"{baseUrl}/api/gravesite/{id}";
         site.QrCodeUrl = QRGenerator.GenerateAndSave(qrUrl, $"gravesite-{id}");
@@ -109,15 +119,23 @@ public class GraveSiteService : IGraveSiteService
         var site = await _db.GraveSites.FindAsync(id);
         if (site == null) return false;
         site.DeceasedId = null;
-        site.Status = "Available";
+        site.Status = GraveSiteStatus.Available;
         await _db.SaveChangesAsync();
         return true;
     }
 
-    public async Task<bool> UpdateStatusAsync(int id, string status)
+    public async Task<bool> UpdateStatusAsync(int id, GraveSiteStatus status)
     {
         var site = await _db.GraveSites.FindAsync(id);
         if (site == null) return false;
+
+        // occupancy follows the assigned deceased, so it is not something to set by hand
+        if (status == GraveSiteStatus.Occupied)
+            throw new InvalidOperationException("Zauzetost se postavlja dodjelom preminulog, ne ručno.");
+
+        if (site.DeceasedId != null)
+            throw new InvalidOperationException("Mezarsko mjesto ima dodijeljenog preminulog, prvo ga uklonite.");
+
         site.Status = status;
         await _db.SaveChangesAsync();
         return true;
@@ -127,9 +145,34 @@ public class GraveSiteService : IGraveSiteService
     {
         var site = await _db.GraveSites.FindAsync(id);
         if (site == null) return false;
+
+        if (site.DeceasedId != null || site.Status != GraveSiteStatus.Available)
+            throw new InvalidOperationException("Mezarsko mjesto se koristi i ne može se obrisati.");
+
+        var usedByAppointment = await _db.Appointments.AnyAsync(a => a.GraveSiteId == id);
+        if (usedByAppointment)
+            throw new InvalidOperationException("Mezarsko mjesto je vezano za termin i ne može se obrisati.");
+
         _db.GraveSites.Remove(site);
         await _db.SaveChangesAsync();
         return true;
+    }
+
+    private async Task ValidatePlacementAsync(GraveSiteRequest request, int? siteId)
+    {
+        if (request.SectionId.HasValue)
+        {
+            var sectionFits = await _db.CemeterySections
+                .AnyAsync(s => s.Id == request.SectionId.Value && s.CemeteryId == request.CemeteryId);
+            if (!sectionFits)
+                throw new InvalidOperationException("Odabrani sektor ne pripada odabranom mezarju.");
+        }
+
+        var duplicate = await _db.GraveSites.AnyAsync(g => g.CemeteryId == request.CemeteryId
+            && g.PlotNumber == request.PlotNumber
+            && (siteId == null || g.Id != siteId));
+        if (duplicate)
+            throw new InvalidOperationException("Mezarje već ima mjesto sa tim brojem.");
     }
 
     private static GraveSiteResponse ToResponse(GraveSite g) => new()
@@ -141,7 +184,7 @@ public class GraveSiteService : IGraveSiteService
         SectionName = g.Section?.Name,
         PlotNumber = g.PlotNumber,
         Row = g.Row,
-        Status = g.Status,
+        Status = g.Status.ToString(),
         DeceasedId = g.DeceasedId,
         DeceasedFullName = g.Deceased != null ? $"{g.Deceased.FirstName} {g.Deceased.LastName}" : null,
         QrCodeUrl = g.QrCodeUrl,

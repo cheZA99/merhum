@@ -89,7 +89,7 @@ class AppointmentService {
   Future<List<Map<String, dynamic>>> getAvailableGraveSites(int cemeteryId) async {
     final response = await _api.get('/api/gravesite', queryParams: {
       'cemeteryId': cemeteryId,
-      'status': 'Free',
+      'status': 'Available',
       'pageSize': 500,
     });
     final raw = response.data as Map<String, dynamic>;

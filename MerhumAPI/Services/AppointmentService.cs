@@ -87,6 +87,8 @@ public class AppointmentService : IAppointmentService
 
     public async Task<AppointmentResponse> CreateAsync(AppointmentRequest request, string userId)
     {
+        await ValidateScheduleAsync(request, null);
+
         var appointment = new Appointment
         {
             DeceasedId = request.DeceasedId,
@@ -101,6 +103,7 @@ public class AppointmentService : IAppointmentService
         };
 
         _db.Appointments.Add(appointment);
+        await ReserveGraveSiteAsync(appointment.GraveSiteId, null);
         await _db.SaveChangesAsync();
 
         await _db.Entry(appointment).Reference(a => a.Deceased).LoadAsync();
@@ -154,6 +157,9 @@ public class AppointmentService : IAppointmentService
         var appointment = await _db.Appointments.FindAsync(id);
         if (appointment == null) return null;
 
+        await ValidateScheduleAsync(request, id);
+        await ReserveGraveSiteAsync(request.GraveSiteId, appointment.GraveSiteId);
+
         appointment.DeceasedId = request.DeceasedId;
         appointment.MosqueId = request.MosqueId;
         appointment.CemeteryId = request.CemeteryId;
@@ -191,6 +197,7 @@ public class AppointmentService : IAppointmentService
             appointment.CancelledAt = DateTime.UtcNow;
             appointment.CancelledByUserId = changedByUserId;
             appointment.CancellationReason = reason;
+            await ReleaseGraveSiteAsync(appointment.GraveSiteId);
         }
 
         await _db.SaveChangesAsync();
@@ -201,6 +208,69 @@ public class AppointmentService : IAppointmentService
             await _notificationService.CreateForDeceasedAsync(appointment.DeceasedId, "Dženaza obavljena", "Dženaza je evidentirana kao obavljena.");
 
         return StatusChangeResult.Ok;
+    }
+
+    // a mosque cannot hold two funerals closer together than this
+    private static readonly TimeSpan MosqueSlot = TimeSpan.FromHours(2);
+
+    private async Task ValidateScheduleAsync(AppointmentRequest request, int? appointmentId)
+    {
+        var from = request.FuneralDateTime - MosqueSlot;
+        var to = request.FuneralDateTime + MosqueSlot;
+
+        var clash = await _db.Appointments.AnyAsync(a => a.MosqueId == request.MosqueId
+            && a.Status != AppointmentStatus.Cancelled
+            && (appointmentId == null || a.Id != appointmentId)
+            && a.FuneralDateTime > from
+            && a.FuneralDateTime < to);
+
+        if (clash)
+            throw new InvalidOperationException("Mesdžid već ima zakazan termin unutar dva sata od tog vremena.");
+
+        if (request.ImamId.HasValue)
+        {
+            var imamServesMosque = await _db.Imams.AnyAsync(i => i.Id == request.ImamId.Value && i.MosqueId == request.MosqueId);
+            if (!imamServesMosque)
+                throw new InvalidOperationException("Odabrani imam ne pripada odabranom mesdžidu.");
+        }
+
+        if (request.GraveSiteId.HasValue)
+        {
+            var site = await _db.GraveSites.FirstOrDefaultAsync(g => g.Id == request.GraveSiteId.Value)
+                ?? throw new KeyNotFoundException("Mezarsko mjesto nije pronađeno.");
+
+            if (site.CemeteryId != request.CemeteryId)
+                throw new InvalidOperationException("Mezarsko mjesto ne pripada odabranom mezarju.");
+
+            var alreadyHeldHere = appointmentId != null
+                && await _db.Appointments.AnyAsync(a => a.Id == appointmentId && a.GraveSiteId == site.Id);
+
+            if (!alreadyHeldHere && (site.Status != GraveSiteStatus.Available || site.DeceasedId != null))
+                throw new InvalidOperationException("Odabrano mezarsko mjesto nije slobodno.");
+        }
+    }
+
+    // a booked site stops being offered to anyone else until the funeral is held or called off
+    private async Task ReserveGraveSiteAsync(int? graveSiteId, int? previousGraveSiteId)
+    {
+        if (previousGraveSiteId == graveSiteId) return;
+
+        await ReleaseGraveSiteAsync(previousGraveSiteId);
+
+        if (graveSiteId == null) return;
+
+        var site = await _db.GraveSites.FindAsync(graveSiteId.Value);
+        if (site != null && site.Status == GraveSiteStatus.Available)
+            site.Status = GraveSiteStatus.Reserved;
+    }
+
+    private async Task ReleaseGraveSiteAsync(int? graveSiteId)
+    {
+        if (graveSiteId == null) return;
+
+        var site = await _db.GraveSites.FindAsync(graveSiteId.Value);
+        if (site != null && site.Status == GraveSiteStatus.Reserved && site.DeceasedId == null)
+            site.Status = GraveSiteStatus.Available;
     }
 
     private static AppointmentResponse ToResponse(Appointment a) => new()

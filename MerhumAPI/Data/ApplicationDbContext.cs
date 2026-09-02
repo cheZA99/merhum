@@ -72,7 +72,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<GraveSite>(e =>
         {
-            e.Property(x => x.Status).HasDefaultValue("Available");
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).HasDefaultValue(GraveSiteStatus.Available);
             e.HasIndex(x => new { x.CemeteryId, x.PlotNumber }).IsUnique();
             // Avoid multiple cascade paths from Deceased
             e.HasOne(x => x.Deceased)

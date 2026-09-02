@@ -21,9 +21,7 @@ public class GraveSite
 
     public int? Row { get; set; }
 
-    [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = "Available"; // Available / Occupied / Reserved
+    public GraveSiteStatus Status { get; set; } = GraveSiteStatus.Available;
 
     [ForeignKey(nameof(Deceased))]
     public int? DeceasedId { get; set; }
