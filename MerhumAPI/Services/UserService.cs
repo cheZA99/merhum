@@ -1,4 +1,5 @@
 using MerhumAPI.Common;
+using MerhumAPI.Data;
 using MerhumAPI.DTOs.User;
 using MerhumAPI.Models;
 using Microsoft.AspNetCore.Identity;
@@ -9,8 +10,13 @@ namespace MerhumAPI.Services;
 public class UserService : IUserService
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ApplicationDbContext _db;
 
-    public UserService(UserManager<ApplicationUser> userManager) => _userManager = userManager;
+    public UserService(UserManager<ApplicationUser> userManager, ApplicationDbContext db)
+    {
+        _userManager = userManager;
+        _db = db;
+    }
 
     public async Task<PagedResponse<UserResponse>> GetAllAsync(
         string? name, string? username, string? role, bool? isLocked,
@@ -36,33 +42,32 @@ public class UserService : IUserService
                 ? query.Where(u => !u.IsActive)
                 : query.Where(u => u.IsActive);
 
-        var allUsers = await query.OrderBy(u => u.UserName).ToListAsync();
-
-        // role filter runs in memory (async role lookup)
-        List<ApplicationUser> filtered;
         if (!string.IsNullOrWhiteSpace(role))
         {
-            var usersInRole = await _userManager.GetUsersInRoleAsync(role);
-            var usersInRoleIds = usersInRole.Select(u => u.Id).ToHashSet();
-            filtered = allUsers.Where(u => usersInRoleIds.Contains(u.Id)).ToList();
-        }
-        else
-        {
-            filtered = allUsers;
+            var roleId = await _db.Roles.Where(r => r.Name == role).Select(r => r.Id).FirstOrDefaultAsync();
+            query = query.Where(u => _db.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == roleId));
         }
 
-        var total = filtered.Count;
-        var paged = filtered
+        var total = await query.CountAsync();
+        var paged = await query
+            .OrderBy(u => u.UserName)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .ToList();
+            .ToListAsync();
 
-        var responses = new List<UserResponse>();
-        foreach (var u in paged)
-        {
-            var roles = await _userManager.GetRolesAsync(u);
-            responses.Add(MapToResponse(u, roles.FirstOrDefault() ?? string.Empty));
-        }
+        // one lookup for the whole page instead of one per user
+        var pagedIds = paged.Select(u => u.Id).ToList();
+        var pagedRoles = await (from ur in _db.UserRoles
+                                join r in _db.Roles on ur.RoleId equals r.Id
+                                where pagedIds.Contains(ur.UserId)
+                                select new { ur.UserId, RoleName = r.Name })
+            .ToListAsync();
+
+        var roleByUser = pagedRoles.ToLookup(x => x.UserId, x => x.RoleName ?? string.Empty);
+
+        var responses = paged
+            .Select(u => MapToResponse(u, roleByUser[u.Id].FirstOrDefault() ?? string.Empty))
+            .ToList();
 
         return PagedResponse<UserResponse>.Create(responses, total, pageNumber, pageSize);
     }
@@ -84,8 +89,7 @@ public class UserService : IUserService
         var user = await _userManager.FindByIdAsync(id);
         if (user == null) return false;
 
-        var validRoles = new[] { "Administrator", "Porodica", "JavniKorisnik", "Imam", "PogrebnoPreduzeće" };
-        if (!validRoles.Contains(request.Role))
+        if (!Roles.All.Contains(request.Role))
             return false;
 
         user.FirstName = request.FirstName;
@@ -103,14 +107,20 @@ public class UserService : IUserService
         if (currentRole != request.Role)
         {
             if (currentRole != null)
-                await _userManager.RemoveFromRoleAsync(user, currentRole);
-            await _userManager.AddToRoleAsync(user, request.Role);
+            {
+                var removeResult = await _userManager.RemoveFromRoleAsync(user, currentRole);
+                if (!removeResult.Succeeded) return false;
+            }
+
+            var addResult = await _userManager.AddToRoleAsync(user, request.Role);
+            if (!addResult.Succeeded) return false;
         }
 
         if (!string.IsNullOrWhiteSpace(request.NewPassword))
         {
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            await _userManager.ResetPasswordAsync(user, token, request.NewPassword);
+            var passwordResult = await _userManager.ResetPasswordAsync(user, token, request.NewPassword);
+            if (!passwordResult.Succeeded) return false;
         }
 
         return true;
@@ -131,8 +141,16 @@ public class UserService : IUserService
         var user = await _userManager.FindByIdAsync(id);
         if (user == null) return false;
 
+        // the new role is checked first, so a bad name cannot leave the user with none
+        if (!Roles.All.Contains(role)) return false;
+
         var currentRoles = await _userManager.GetRolesAsync(user);
-        await _userManager.RemoveFromRolesAsync(user, currentRoles);
+        if (currentRoles.Count > 0)
+        {
+            var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+            if (!removeResult.Succeeded) return false;
+        }
+
         var result = await _userManager.AddToRoleAsync(user, role);
         return result.Succeeded;
     }

@@ -1,3 +1,4 @@
+using MerhumAPI.Common;
 using MerhumAPI.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -29,8 +30,7 @@ public static class SeedData
 		if (await db.Countries.AnyAsync())
 			return;
 
-		var roles = new[] { "Administrator", "Porodica", "JavniKorisnik", "Imam", "PogrebnoPreduzeće" };
-		foreach (var role in roles)
+		foreach (var role in Roles.All)
 		{
 			if (!await roleManager.RoleExistsAsync(role))
 				await roleManager.CreateAsync(new IdentityRole(role));

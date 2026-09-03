@@ -59,9 +59,16 @@ public class ContextBuilderService : IContextBuilderService
         }
         else
         {
+            var cemeteryIds = cemeteries.Select(c => c.Id).ToList();
+            var freeByCemetery = await _db.GraveSites
+                .Where(g => cemeteryIds.Contains(g.CemeteryId) && g.Status == GraveSiteStatus.Available)
+                .GroupBy(g => g.CemeteryId)
+                .Select(g => new { CemeteryId = g.Key, Free = g.Count() })
+                .ToDictionaryAsync(x => x.CemeteryId, x => x.Free);
+
             foreach (var c in cemeteries)
             {
-                var free = await _db.GraveSites.CountAsync(g => g.CemeteryId == c.Id && g.Status == GraveSiteStatus.Available);
+                var free = freeByCemetery.TryGetValue(c.Id, out var count) ? count : 0;
                 var occupancy = c.TotalPlaces > 0
                     ? Math.Round(((double)(c.TotalPlaces - free) / c.TotalPlaces) * 100.0, 1)
                     : 0.0;
