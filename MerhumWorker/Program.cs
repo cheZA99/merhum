@@ -1,3 +1,4 @@
+using MerhumContracts;
 using MassTransit;
 using MerhumWorker.Consumers;
 using MerhumWorker.Services;
@@ -40,43 +41,43 @@ builder.Services.AddMassTransit(x =>
             h.Password(password);
         });
 
-        cfg.ReceiveEndpoint("merhum.prijavljen", e =>
+        cfg.ReceiveEndpoint(MessageTopology.FuneralRegistered, e =>
         {
             e.ConfigureConsumer<FuneralRegisteredConsumer>(ctx);
             e.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
         });
 
-        cfg.ReceiveEndpoint("merhum.termin.potvrden", e =>
+        cfg.ReceiveEndpoint(MessageTopology.AppointmentConfirmed, e =>
         {
             e.ConfigureConsumer<AppointmentConfirmedConsumer>(ctx);
             e.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
         });
 
-        cfg.ReceiveEndpoint("merhum.imam.obavjestenje", e =>
+        cfg.ReceiveEndpoint(MessageTopology.ImamNotification, e =>
         {
             e.ConfigureConsumer<ImamNotificationConsumer>(ctx);
             e.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
         });
 
-        cfg.ReceiveEndpoint("merhum.usluga.narucena", e =>
+        cfg.ReceiveEndpoint(MessageTopology.ServiceOrdered, e =>
         {
             e.ConfigureConsumer<ServiceOrderedConsumer>(ctx);
             e.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
         });
 
-        cfg.ReceiveEndpoint("merhum.smrtovnica.kreirana", e =>
+        cfg.ReceiveEndpoint(MessageTopology.ObituaryCreated, e =>
         {
             e.ConfigureConsumer<ObituaryCreatedConsumer>(ctx);
             e.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
         });
 
-        cfg.ReceiveEndpoint("merhum.godisnjica", e =>
+        cfg.ReceiveEndpoint(MessageTopology.AnniversaryReminder, e =>
         {
             e.ConfigureConsumer<AnniversaryReminderConsumer>(ctx);
             e.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
         });
 
-        cfg.ReceiveEndpoint("merhum.placanje.izvrseno", e =>
+        cfg.ReceiveEndpoint(MessageTopology.PaymentCompleted, e =>
         {
             e.ConfigureConsumer<PaymentCompletedConsumer>(ctx);
             e.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));

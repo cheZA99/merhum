@@ -2,7 +2,7 @@ using MassTransit;
 using MerhumAPI.Common;
 using MerhumAPI.Data;
 using MerhumAPI.DTOs.ServiceOrder;
-using MerhumAPI.Messages;
+using MerhumContracts;
 using MerhumAPI.Models;
 using Microsoft.EntityFrameworkCore;
 

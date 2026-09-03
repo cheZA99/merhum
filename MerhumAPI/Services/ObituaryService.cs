@@ -4,7 +4,7 @@ using MerhumAPI.Data;
 using MerhumAPI.DTOs.Condolence;
 using MerhumAPI.DTOs.Obituary;
 using MerhumAPI.Helpers;
-using MerhumAPI.Messages;
+using MerhumContracts;
 using MerhumAPI.Models;
 using Microsoft.EntityFrameworkCore;
 

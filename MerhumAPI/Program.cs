@@ -1,6 +1,7 @@
 using MassTransit;
 using MerhumAPI.Data;
 using MerhumAPI.Middleware;
+using MerhumContracts;
 using MerhumAPI.Models;
 using MerhumAPI.Services;
 using MerhumAPI.Services.Chat;
@@ -91,14 +92,14 @@ builder.Services.AddMassTransit(x =>
 		    h.Password(password);
 	    });
 
-		cfg.Message<MerhumAPI.Messages.FuneralRegisteredMessage>(m => m.SetEntityName("merhum.prijavljen"));
-		cfg.Message<MerhumAPI.Messages.AppointmentConfirmedMessage>(m => m.SetEntityName("merhum.termin.potvrden"));
-		cfg.Message<MerhumAPI.Messages.ServiceOrderedMessage>(m => m.SetEntityName("merhum.usluge.narudzba"));
-		cfg.Message<MerhumAPI.Messages.ImamNotificationMessage>(m => m.SetEntityName("merhum.imam.obavjestenje"));
-		cfg.Message<MerhumAPI.Messages.CommunityNotificationMessage>(m => m.SetEntityName("merhum.dzemat.notifikacija"));
-		cfg.Message<MerhumAPI.Messages.ObituaryCreatedMessage>(m => m.SetEntityName("merhum.smrtovnica.kreirana"));
-		cfg.Message<MerhumAPI.Messages.AnniversaryReminderMessage>(m => m.SetEntityName("merhum.godisnjica"));
-		cfg.Message<MerhumAPI.Messages.PaymentCompletedMessage>(m => m.SetEntityName("merhum.placanje.izvrseno"));
+		cfg.Message<FuneralRegisteredMessage>(m => m.SetEntityName(MessageTopology.FuneralRegistered));
+		cfg.Message<AppointmentConfirmedMessage>(m => m.SetEntityName(MessageTopology.AppointmentConfirmed));
+		cfg.Message<ServiceOrderedMessage>(m => m.SetEntityName(MessageTopology.ServiceOrdered));
+		cfg.Message<ImamNotificationMessage>(m => m.SetEntityName(MessageTopology.ImamNotification));
+		cfg.Message<CommunityNotificationMessage>(m => m.SetEntityName(MessageTopology.CommunityNotification));
+		cfg.Message<ObituaryCreatedMessage>(m => m.SetEntityName(MessageTopology.ObituaryCreated));
+		cfg.Message<AnniversaryReminderMessage>(m => m.SetEntityName(MessageTopology.AnniversaryReminder));
+		cfg.Message<PaymentCompletedMessage>(m => m.SetEntityName(MessageTopology.PaymentCompleted));
 	});
 });
 

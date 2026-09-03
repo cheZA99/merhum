@@ -1,4 +1,4 @@
-namespace MerhumWorker.Messages;
+namespace MerhumContracts;
 
 public record ObituaryCreatedMessage(
     int ObituaryId,

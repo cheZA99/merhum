@@ -38,8 +38,8 @@ services:
   merhum-api:
     image: ${DOCKER_REGISTRY-}merhumapi
     build:
-      context: ./MerhumAPI
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: MerhumAPI/Dockerfile
     ports:
       - "5000:8080"
     depends_on:
@@ -76,8 +76,8 @@ services:
   merhum-worker:
     image: ${DOCKER_REGISTRY-}merhumworker
     build:
-      context: ./MerhumWorker
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: MerhumWorker/Dockerfile
     depends_on:
       merhum-rabbitmq:
         condition: service_healthy

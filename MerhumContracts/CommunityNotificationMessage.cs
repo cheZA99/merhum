@@ -1,4 +1,4 @@
-namespace MerhumAPI.Messages;
+namespace MerhumContracts;
 
 public record CommunityNotificationMessage(
     int DeceasedId,

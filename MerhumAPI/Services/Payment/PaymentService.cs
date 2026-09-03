@@ -3,7 +3,7 @@ using MerhumAPI.Common;
 using MerhumAPI.Data;
 using MerhumAPI.Models;
 using MerhumAPI.DTOs.Payment;
-using MerhumAPI.Messages;
+using MerhumContracts;
 using Microsoft.EntityFrameworkCore;
 using PaymentEntity = MerhumAPI.Models.Payment;
 

@@ -1,5 +1,5 @@
 using MassTransit;
-using MerhumWorker.Messages;
+using MerhumContracts;
 using MerhumWorker.Services;
 using MerhumWorker.Templates;
 

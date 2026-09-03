@@ -1,4 +1,4 @@
-using MerhumWorker.Messages;
+using MerhumContracts;
 
 namespace MerhumWorker.Templates;
 

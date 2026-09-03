@@ -4,13 +4,14 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["MerhumWorker.csproj", "."]
-RUN dotnet restore "./MerhumWorker.csproj"
+COPY ["MerhumWorker/MerhumWorker.csproj", "MerhumWorker/"]
+COPY ["MerhumContracts/MerhumContracts.csproj", "MerhumContracts/"]
+RUN dotnet restore "MerhumWorker/MerhumWorker.csproj"
 COPY . .
-RUN dotnet build "MerhumWorker.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "MerhumWorker/MerhumWorker.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "MerhumWorker.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "MerhumWorker/MerhumWorker.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
