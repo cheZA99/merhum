@@ -11,6 +11,7 @@ public class CemeteryPredictionService :ICemeteryPredictionService
 	private readonly ILogger<CemeteryPredictionService> _logger;
 	private readonly SemaphoreSlim _trainLock = new(1, 1);
 	private readonly string _modelPath;
+	private readonly Random _splitRandom = new(42);
 
 	private ITransformer? _model;
 
@@ -31,18 +32,23 @@ public class CemeteryPredictionService :ICemeteryPredictionService
 		await _trainLock.WaitAsync();
 		try
 		{
-			List<CemeteryData> trainingData;
+			TrainingDataSet trainingData;
 			using (var scope = _scopeFactory.CreateScope())
 			{
 				var dataService = scope.ServiceProvider.GetRequiredService<ITrainingDataService>();
 				trainingData = await dataService.BuildTrainingDataAsync();
 			}
 
-			if (trainingData.Count < 10)
+			if (trainingData.TotalCount < 10)
 				throw new InvalidOperationException("Not enough training data to train the model.");
 
-			var dataView = _mlContext.Data.LoadFromEnumerable(trainingData);
-			var split = _mlContext.Data.TrainTestSplit(dataView, testFraction: 0.2);
+			// the test set holds real history only, so the score never becomes a test of the generator
+			var shuffledReal = trainingData.Real.OrderBy(_ => _splitRandom.Next()).ToList();
+			var testCount = shuffledReal.Count >= 5 ? shuffledReal.Count / 5 : 0;
+			var testRows = shuffledReal.Take(testCount).ToList();
+			var trainRows = shuffledReal.Skip(testCount).Concat(trainingData.Synthetic).ToList();
+
+			var dataView = _mlContext.Data.LoadFromEnumerable(trainRows);
 
 			var pipeline = _mlContext.Transforms
 			    .Concatenate(
@@ -55,18 +61,26 @@ public class CemeteryPredictionService :ICemeteryPredictionService
 				   labelColumnName: nameof(CemeteryData.MonthsUntilFull),
 				   featureColumnName: "Features"));
 
-			var model = pipeline.Fit(split.TrainSet);
-
-			var predictions = model.Transform(split.TestSet);
-			var metrics = _mlContext.Regression.Evaluate(
-			    predictions, labelColumnName: nameof(CemeteryData.MonthsUntilFull));
+			var model = pipeline.Fit(dataView);
 
 			_mlContext.Model.Save(model, dataView.Schema, _modelPath);
 			_model = model;
 
+			if (testRows.Count == 0)
+			{
+				_logger.LogWarning(
+				    "Cemetery prediction model trained on {Real} real and {Synthetic} synthetic rows. Too little history to score it.",
+				    trainingData.Real.Count, trainingData.Synthetic.Count);
+				return;
+			}
+
+			var predictions = model.Transform(_mlContext.Data.LoadFromEnumerable(testRows));
+			var metrics = _mlContext.Regression.Evaluate(
+			    predictions, labelColumnName: nameof(CemeteryData.MonthsUntilFull));
+
 			_logger.LogInformation(
-			    "Cemetery prediction model trained on {Rows} rows. R2={RSquared:F3}, RMSE={Rmse:F2}.",
-			    trainingData.Count, metrics.RSquared, metrics.RootMeanSquaredError);
+			    "Cemetery prediction model trained on {Real} real and {Synthetic} synthetic rows, scored on {Test} real rows. R2={RSquared:F3}, RMSE={Rmse:F2}.",
+			    trainingData.Real.Count, trainingData.Synthetic.Count, testRows.Count, metrics.RSquared, metrics.RootMeanSquaredError);
 		}
 		finally
 		{
