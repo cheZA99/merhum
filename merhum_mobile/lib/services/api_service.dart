@@ -7,6 +7,11 @@ class ApiService {
   static final _storage = FlutterSecureStorage();
   static Dio? _dio;
 
+  /// Called once, centrally, whenever a request comes back 401. Wired up by
+  /// AuthProvider so an expired/invalid token kicks the user back to login
+  /// instead of every screen quietly showing "no data".
+  static VoidCallback? onUnauthorized;
+
   static Dio get dio {
     _dio ??= Dio(BaseOptions(
       baseUrl: apiBaseUrl,
@@ -20,6 +25,12 @@ class ApiService {
             options.headers['Authorization'] = 'Bearer $token';
           }
           handler.next(options);
+        },
+        onError: (error, handler) {
+          if (error.response?.statusCode == 401) {
+            onUnauthorized?.call();
+          }
+          handler.next(error);
         },
       ))
       ..interceptors.add(LogInterceptor(

@@ -1,25 +1,30 @@
 import 'package:flutter/material.dart';
 import '../models/service_order_model.dart';
 import '../services/service_order_service.dart';
+import '../utils/api_error.dart';
 
 class ServiceOrderProvider extends ChangeNotifier {
   List<ServiceOrderModel> _orders = [];
   List<Map<String, dynamic>> _funeralHomes = [];
   List<Map<String, dynamic>> _serviceTypes = [];
   bool _isLoading = false;
+  String? _error;
 
   List<ServiceOrderModel> get orders => _orders;
   List<Map<String, dynamic>> get funeralHomes => _funeralHomes;
   List<Map<String, dynamic>> get serviceTypes => _serviceTypes;
   bool get isLoading => _isLoading;
+  String? get error => _error;
 
   Future<void> loadForDeceased(int deceasedId) async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
     try {
       _orders = await ServiceOrderService.getByDeceasedId(deceasedId);
-    } catch (_) {
+    } catch (e) {
       _orders = [];
+      _error = parseApiError(e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -28,11 +33,13 @@ class ServiceOrderProvider extends ChangeNotifier {
 
   Future<void> loadMyOrders({String? status}) async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
     try {
       _orders = await ServiceOrderService.getMyOrders(status: status);
-    } catch (_) {
+    } catch (e) {
       _orders = [];
+      _error = parseApiError(e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -44,7 +51,10 @@ class ServiceOrderProvider extends ChangeNotifier {
     try {
       _funeralHomes = await ServiceOrderService.getFuneralHomes();
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      _error = parseApiError(e);
+      notifyListeners();
+    }
   }
 
   Future<void> loadServiceTypes() async {
@@ -52,17 +62,22 @@ class ServiceOrderProvider extends ChangeNotifier {
     try {
       _serviceTypes = await ServiceOrderService.getServiceTypes();
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      _error = parseApiError(e);
+      notifyListeners();
+    }
   }
 
   Future<bool> create(Map<String, dynamic> body) async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
     try {
       final result = await ServiceOrderService.create(body);
       _orders.insert(0, result);
       return true;
-    } catch (_) {
+    } catch (e) {
+      _error = parseApiError(e);
       return false;
     } finally {
       _isLoading = false;
@@ -91,7 +106,9 @@ class ServiceOrderProvider extends ChangeNotifier {
         notifyListeners();
       }
       return true;
-    } catch (_) {
+    } catch (e) {
+      _error = parseApiError(e);
+      notifyListeners();
       return false;
     }
   }

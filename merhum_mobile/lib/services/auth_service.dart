@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'api_service.dart';
 
@@ -46,6 +47,22 @@ class AuthService {
 
   static Future<bool> isLoggedIn() async {
     final token = await _storage.read(key: _keyToken);
-    return token != null && token.isNotEmpty;
+    if (token == null || token.isEmpty) return false;
+    return !_isTokenExpired(token);
+  }
+
+  static bool _isTokenExpired(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return true;
+      final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+      final claims = jsonDecode(payload) as Map<String, dynamic>;
+      final exp = claims['exp'] as int?;
+      if (exp == null) return true;
+      final expiresAt = DateTime.fromMillisecondsSinceEpoch(exp * 1000, isUtc: true);
+      return DateTime.now().toUtc().isAfter(expiresAt);
+    } catch (_) {
+      return true;
+    }
   }
 }

@@ -16,20 +16,16 @@ class AppointmentService {
   }
 
   static Future<AppointmentModel?> getByDeceasedId(int deceasedId) async {
-    try {
-      final res = await ApiService.get('/api/termini', queryParams: {'deceasedId': deceasedId, 'pageSize': 1});
-      final data = res.data;
-      List items;
-      if (data is Map) {
-        items = (data['items'] as List? ?? []);
-      } else {
-        items = (data as List? ?? []);
-      }
-      if (items.isEmpty) return null;
-      return AppointmentModel.fromJson(items.first as Map<String, dynamic>);
-    } catch (_) {
-      return null;
+    final res = await ApiService.get('/api/termini', queryParams: {'deceasedId': deceasedId, 'pageSize': 1});
+    final data = res.data;
+    List items;
+    if (data is Map) {
+      items = (data['items'] as List? ?? []);
+    } else {
+      items = (data as List? ?? []);
     }
+    if (items.isEmpty) return null;
+    return AppointmentModel.fromJson(items.first as Map<String, dynamic>);
   }
 
   static Future<AppointmentModel> create(Map<String, dynamic> body) async {

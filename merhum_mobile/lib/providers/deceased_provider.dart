@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/deceased_model.dart';
 import '../models/status_history_model.dart';
 import '../services/deceased_service.dart';
+import '../utils/api_error.dart';
 
 class DeceasedProvider extends ChangeNotifier {
   List<DeceasedModel> _myDeceased = [];
@@ -24,7 +25,7 @@ class DeceasedProvider extends ChangeNotifier {
     try {
       _myDeceased = await DeceasedService.getMyDeceased();
     } catch (e) {
-      _error = e.toString();
+      _error = parseApiError(e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -38,7 +39,7 @@ class DeceasedProvider extends ChangeNotifier {
       _selected = await DeceasedService.getById(id);
       _statusHistory = await DeceasedService.getStatusHistory(id);
     } catch (e) {
-      _error = e.toString();
+      _error = parseApiError(e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -53,7 +54,7 @@ class DeceasedProvider extends ChangeNotifier {
       _myDeceased.insert(0, result);
       return result;
     } catch (e) {
-      _error = e.toString();
+      _error = parseApiError(e);
       return null;
     } finally {
       _isLoading = false;
@@ -66,6 +67,9 @@ class DeceasedProvider extends ChangeNotifier {
     try {
       _cities = await DeceasedService.getCities();
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      _error = parseApiError(e);
+      notifyListeners();
+    }
   }
 }

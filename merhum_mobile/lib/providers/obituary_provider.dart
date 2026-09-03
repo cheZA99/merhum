@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/obituary_model.dart';
 import '../models/condolence_model.dart';
 import '../services/obituary_service.dart';
+import '../utils/api_error.dart';
 
 class ObituaryProvider extends ChangeNotifier {
   List<ObituaryModel> _results = [];
@@ -28,7 +29,7 @@ class ObituaryProvider extends ChangeNotifier {
     try {
       _results = await ObituaryService.search(query);
     } catch (e) {
-      _error = e.toString();
+      _error = parseApiError(e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -39,7 +40,10 @@ class ObituaryProvider extends ChangeNotifier {
     try {
       _recent = await ObituaryService.search(null, pageSize: 5);
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      _error = parseApiError(e);
+      notifyListeners();
+    }
   }
 
   Future<void> loadDetail(String slug) async {
@@ -49,7 +53,7 @@ class ObituaryProvider extends ChangeNotifier {
     try {
       _detail = await ObituaryService.getBySlug(slug);
     } catch (e) {
-      _error = e.toString();
+      _error = parseApiError(e);
     } finally {
       _isLoadingDetail = false;
       notifyListeners();
@@ -61,8 +65,9 @@ class ObituaryProvider extends ChangeNotifier {
     notifyListeners();
     try {
       _upcomingFunerals = await ObituaryService.getUpcomingFunerals(cityId: cityId);
-    } catch (_) {
+    } catch (e) {
       _upcomingFunerals = [];
+      _error = parseApiError(e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -74,7 +79,9 @@ class ObituaryProvider extends ChangeNotifier {
       await ObituaryService.addCondolence(obituaryId, authorName, text);
       await loadDetail(slug);
       return true;
-    } catch (_) {
+    } catch (e) {
+      _error = parseApiError(e);
+      notifyListeners();
       return false;
     }
   }

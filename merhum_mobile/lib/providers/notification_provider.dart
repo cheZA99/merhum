@@ -2,16 +2,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/notification_model.dart';
 import '../services/notification_service.dart';
+import '../utils/api_error.dart';
 
 class NotificationProvider extends ChangeNotifier {
   List<NotificationModel> _items = [];
   int _unreadCount = 0;
   bool _loading = false;
+  String? _error;
   Timer? _timer;
 
   List<NotificationModel> get items => _items;
   int get unreadCount => _unreadCount;
   bool get loading => _loading;
+  String? get error => _error;
 
   void startPolling() {
     refreshUnreadCount();
@@ -27,16 +30,20 @@ class NotificationProvider extends ChangeNotifier {
     try {
       _unreadCount = await NotificationService.getUnreadCount();
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      _error = parseApiError(e);
+    }
   }
 
   Future<void> loadNotifications() async {
     _loading = true;
+    _error = null;
     notifyListeners();
     try {
       _items = await NotificationService.getNotifications();
       _unreadCount = _items.where((n) => !n.isRead).length;
-    } catch (_) {
+    } catch (e) {
+      _error = parseApiError(e);
     } finally {
       _loading = false;
       notifyListeners();
@@ -51,7 +58,10 @@ class NotificationProvider extends ChangeNotifier {
       _items[idx] = _items[idx].markedRead();
       if (_unreadCount > 0) _unreadCount--;
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      _error = parseApiError(e);
+      notifyListeners();
+    }
   }
 
   Future<void> markAllRead() async {
@@ -60,7 +70,10 @@ class NotificationProvider extends ChangeNotifier {
       _items = _items.map((n) => n.markedRead()).toList();
       _unreadCount = 0;
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      _error = parseApiError(e);
+      notifyListeners();
+    }
   }
 
   @override

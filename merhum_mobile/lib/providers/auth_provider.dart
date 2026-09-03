@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import '../services/api_service.dart';
 import '../services/auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
+  AuthProvider() {
+    ApiService.onUnauthorized = _handleUnauthorized;
+  }
+
   bool _isLoggedIn = false;
   String _role = '';
   String _username = '';
   String _firstName = '';
   String _lastName = '';
   bool _isLoading = false;
+  bool _sessionExpired = false;
 
   bool get isLoggedIn => _isLoggedIn;
   String get role => _role;
@@ -20,6 +26,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isPorodica => _role == 'Porodica';
   bool get isImam => _role == 'Imam';
   bool get isFuneralHome => _role == 'PogrebnoPreduzeće';
+  bool get sessionExpired => _sessionExpired;
 
   Future<void> checkAuthStatus() async {
     _isLoggedIn = await AuthService.isLoggedIn();
@@ -38,6 +45,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       final data = await AuthService.login(username, password);
       _isLoggedIn = true;
+      _sessionExpired = false;
       _role = data['role'] as String? ?? '';
       _username = data['username'] as String? ?? '';
       _firstName = data['firstName'] as String? ?? '';
@@ -67,6 +75,22 @@ class AuthProvider extends ChangeNotifier {
   Future<void> logout() async {
     await AuthService.logout();
     _isLoggedIn = false;
+    _role = '';
+    _username = '';
+    _firstName = '';
+    _lastName = '';
+    notifyListeners();
+  }
+
+  void acknowledgeSessionExpired() {
+    _sessionExpired = false;
+  }
+
+  Future<void> _handleUnauthorized() async {
+    if (!_isLoggedIn) return;
+    await AuthService.logout();
+    _isLoggedIn = false;
+    _sessionExpired = true;
     _role = '';
     _username = '';
     _firstName = '';

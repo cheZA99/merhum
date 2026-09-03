@@ -101,6 +101,16 @@ class _AppRootState extends State<_AppRoot> {
 
     final auth = context.watch<AuthProvider>();
 
+    if (auth.sessionExpired) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sesija je istekla. Prijavite se ponovo.')),
+        );
+        context.read<AuthProvider>().acknowledgeSessionExpired();
+      });
+    }
+
     if (!auth.isLoggedIn) return const HomeScreen();
     if (auth.isPorodica) return const FamilyDashboardScreen();
     if (auth.isImam) return const ImamAppointmentsScreen();

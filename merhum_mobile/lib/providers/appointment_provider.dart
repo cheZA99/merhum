@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/appointment_model.dart';
 import '../services/appointment_service.dart';
+import '../utils/api_error.dart';
 
 class AppointmentProvider extends ChangeNotifier {
   List<AppointmentModel> _appointments = [];
@@ -10,6 +11,7 @@ class AppointmentProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _cemeteries = [];
   List<Map<String, dynamic>> _graveSites = [];
   bool _isLoading = false;
+  String? _error;
 
   List<AppointmentModel> get appointments => _appointments;
   AppointmentModel? get selectedAppointment => _selectedAppointment;
@@ -18,14 +20,17 @@ class AppointmentProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get cemeteries => _cemeteries;
   List<Map<String, dynamic>> get graveSites => _graveSites;
   bool get isLoading => _isLoading;
+  String? get error => _error;
 
   Future<void> loadMyAppointments({bool upcoming = false}) async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
     try {
       _appointments = await AppointmentService.getMyAppointments(upcoming: upcoming);
-    } catch (_) {
+    } catch (e) {
       _appointments = [];
+      _error = parseApiError(e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -36,7 +41,10 @@ class AppointmentProvider extends ChangeNotifier {
     try {
       _selectedAppointment = await AppointmentService.getByDeceasedId(deceasedId);
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      _error = parseApiError(e);
+      notifyListeners();
+    }
   }
 
   Future<void> loadMosques() async {
@@ -44,14 +52,20 @@ class AppointmentProvider extends ChangeNotifier {
     try {
       _mosques = await AppointmentService.getMosques();
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      _error = parseApiError(e);
+      notifyListeners();
+    }
   }
 
   Future<void> loadImamsByMosque(int mosqueId) async {
     try {
       _imams = await AppointmentService.getImamsByMosque(mosqueId);
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      _error = parseApiError(e);
+      notifyListeners();
+    }
   }
 
   Future<void> loadCemeteries() async {
@@ -59,24 +73,32 @@ class AppointmentProvider extends ChangeNotifier {
     try {
       _cemeteries = await AppointmentService.getCemeteries();
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      _error = parseApiError(e);
+      notifyListeners();
+    }
   }
 
   Future<void> loadGraveSites(int cemeteryId) async {
     try {
       _graveSites = await AppointmentService.getAvailableGraveSites(cemeteryId);
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      _error = parseApiError(e);
+      notifyListeners();
+    }
   }
 
   Future<bool> createAppointment(Map<String, dynamic> body) async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
     try {
       final result = await AppointmentService.create(body);
       _selectedAppointment = result;
       return true;
-    } catch (_) {
+    } catch (e) {
+      _error = parseApiError(e);
       return false;
     } finally {
       _isLoading = false;

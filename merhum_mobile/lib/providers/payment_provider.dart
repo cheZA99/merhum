@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
 import '../services/payment_service.dart';
+import '../utils/api_error.dart';
 
 class PaymentProvider extends ChangeNotifier {
   final Map<int, String> _statusByOrder = {};
+  String? _error;
 
   String statusFor(int serviceOrderId) => _statusByOrder[serviceOrderId] ?? 'None';
   bool isPaid(int serviceOrderId) => statusFor(serviceOrderId) == 'Completed';
+  String? get error => _error;
 
   Future<void> loadStatuses(List<int> serviceOrderIds) async {
     await Future.wait(serviceOrderIds.map(_loadStatus));
@@ -16,15 +18,18 @@ class PaymentProvider extends ChangeNotifier {
   Future<void> _loadStatus(int serviceOrderId) async {
     try {
       _statusByOrder[serviceOrderId] = await PaymentService.getPaymentStatus(serviceOrderId);
-    } catch (_) {
+    } catch (e) {
       _statusByOrder[serviceOrderId] = 'None';
+      _error = parseApiError(e);
     }
   }
 
   Future<Map<String, dynamic>?> initiate(int serviceOrderId) async {
     try {
       return await PaymentService.initiatePayment(serviceOrderId);
-    } catch (_) {
+    } catch (e) {
+      _error = parseApiError(e);
+      notifyListeners();
       return null;
     }
   }
@@ -37,7 +42,9 @@ class PaymentProvider extends ChangeNotifier {
         notifyListeners();
       }
       return ok;
-    } catch (_) {
+    } catch (e) {
+      _error = parseApiError(e);
+      notifyListeners();
       return false;
     }
   }
@@ -48,14 +55,11 @@ class PaymentProvider extends ChangeNotifier {
       _statusByOrder[serviceOrderId] = 'Refunded';
       notifyListeners();
       return null;
-    } on DioException catch (e) {
-      final data = e.response?.data;
-      if (data is Map && data['message'] is String) {
-        return data['message'] as String;
-      }
-      return 'Greška pri povratu sredstava.';
-    } catch (_) {
-      return 'Greška pri povratu sredstava.';
+    } catch (e) {
+      final message = parseApiError(e, 'Greška pri povratu sredstava.');
+      _error = message;
+      notifyListeners();
+      return message;
     }
   }
 }
