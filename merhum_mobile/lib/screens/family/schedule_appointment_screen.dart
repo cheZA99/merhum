@@ -68,7 +68,7 @@ class _ScheduleAppointmentScreenState extends State<ScheduleAppointmentScreen> {
       'funeralDateTime': _date!.toIso8601String(),
       'cemeteryId': _cemeteryId,
       'graveSiteId': _graveSiteId,
-      'notes': _notesCtrl.text.trim(),
+      'note': _notesCtrl.text.trim(),
     });
     if (!mounted) return;
     setState(() => _submitting = false);
@@ -162,7 +162,7 @@ class _ScheduleAppointmentScreenState extends State<ScheduleAppointmentScreen> {
                   decoration: const InputDecoration(labelText: 'Mezarsko mjesto'),
                   items: ap.graveSites.map((g) => DropdownMenuItem<int>(
                     value: g['id'] as int,
-                    child: Text(g['number'] as String? ?? g['name'] as String? ?? ''),
+                    child: Text(g['plotNumber'] as String? ?? ''),
                   )).toList(),
                   onChanged: (v) => setState(() => _graveSiteId = v),
                   validator: (v) => v == null ? 'Obavezno polje' : null,

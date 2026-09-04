@@ -50,13 +50,13 @@ class AppointmentModel {
         mosqueLatitude: (j['mosqueLatitude'] as num?)?.toDouble(),
         mosqueLongitude: (j['mosqueLongitude'] as num?)?.toDouble(),
         imamId: j['imamId'] as int?,
-        imamName: j['imamName'] as String?,
+        imamName: j['imamFullName'] as String?,
         cemeteryId: j['cemeteryId'] as int?,
         cemeteryName: j['cemeteryName'] as String?,
         graveSiteId: j['graveSiteId'] as int?,
-        graveSiteNumber: j['graveSiteNumber'] as String?,
-        notes: j['notes'] as String?,
-        contactPerson: j['contactPerson'] as String?,
-        contactPhone: j['contactPhone'] as String?,
+        graveSiteNumber: j['gravePlotNumber'] as String?,
+        notes: j['note'] as String?,
+        contactPerson: j['contactPersonName'] as String?,
+        contactPhone: j['contactPersonPhone'] as String?,
       );
 }

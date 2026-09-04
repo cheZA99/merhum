@@ -36,17 +36,6 @@ class ObituaryService {
     return ObituaryModel.fromJson(body['data'] as Map<String, dynamic>);
   }
 
-  static Future<ObituaryModel?> getByDeceasedId(int deceasedId) async {
-    final res = await ApiService.get('/api/smrtovnice', queryParams: {
-      'deceasedId': deceasedId,
-      'pageSize': 1,
-    });
-    final data = res.data as Map<String, dynamic>;
-    final items = (data['items'] as List? ?? []);
-    if (items.isEmpty) return null;
-    return ObituaryModel.fromJson(items.first as Map<String, dynamic>);
-  }
-
   static Future<List<Map<String, dynamic>>> getUpcomingFunerals({int? cityId}) async {
     final res = await ApiService.get('/api/appointment/upcoming', queryParams: {
       if (cityId != null) 'cityId': cityId,

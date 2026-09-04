@@ -13,6 +13,7 @@ class DeceasedModel {
   final String? contactEmail;
   final int? procedureStatusId;
   final String? procedureStatusName;
+  final String? obituarySlug;
 
   DeceasedModel({
     required this.id,
@@ -29,6 +30,7 @@ class DeceasedModel {
     this.contactEmail,
     this.procedureStatusId,
     this.procedureStatusName,
+    this.obituarySlug,
   });
 
   String get fullName => '$firstName $lastName';
@@ -43,10 +45,11 @@ class DeceasedModel {
         cityId: j['cityId'] as int?,
         cityName: j['cityName'] as String?,
         photoUrl: j['photoUrl'] as String?,
-        contactPerson: j['contactPerson'] as String?,
-        contactPhone: j['contactPhone'] as String?,
-        contactEmail: j['contactEmail'] as String?,
+        contactPerson: j['contactPersonName'] as String?,
+        contactPhone: j['contactPersonPhone'] as String?,
+        contactEmail: j['contactPersonEmail'] as String?,
         procedureStatusId: j['procedureStatusId'] as int?,
         procedureStatusName: j['procedureStatusName'] as String?,
+        obituarySlug: j['obituarySlug'] as String?,
       );
 }
