@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../utils/constants.dart';
+import 'grave_site_detail_screen.dart';
 import 'obituary_detail_screen.dart';
 
 class QrScannerScreen extends StatefulWidget {
@@ -26,17 +27,32 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     if (raw == null) return;
     _handled = true;
 
+    // the system generates two formats, an obituary link and a grave site link
     if (raw.contains('/smrtovnica/')) {
       final slug = raw.split('/smrtovnica/').last.split('?').first;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => ObituaryDetailScreen(slug: slug)),
       );
-    } else {
-      setState(() => _handled = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nepoznat QR kod'), backgroundColor: AppColors.warning),
-      );
+      return;
     }
+
+    final graveSiteId = _graveSiteIdFrom(raw);
+    if (graveSiteId != null) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => GraveSiteDetailScreen(graveSiteId: graveSiteId)),
+      );
+      return;
+    }
+
+    setState(() => _handled = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Nepoznat QR kod'), backgroundColor: AppColors.warning),
+    );
+  }
+
+  int? _graveSiteIdFrom(String raw) {
+    final match = RegExp(r'/api/gravesite/(\d+)', caseSensitive: false).firstMatch(raw);
+    return match == null ? null : int.tryParse(match.group(1)!);
   }
 
   @override

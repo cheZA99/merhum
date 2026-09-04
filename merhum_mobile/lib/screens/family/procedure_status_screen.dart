@@ -248,14 +248,7 @@ class _ProcedureStatusScreenState extends State<ProcedureStatusScreen> {
                     _paymentBadge(status),
                   ],
                 ),
-                if (paid) ...[
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: _paying ? null : () => _refund(o),
-                    icon: const Icon(Icons.undo, size: 18),
-                    label: const Text('Refundiraj'),
-                  ),
-                ] else if (!refunded) ...[
+                if (!paid && !refunded) ...[
                   const SizedBox(height: 12),
                   ElevatedButton.icon(
                     onPressed: _paying ? null : () => _pay(o),
@@ -297,34 +290,30 @@ class _ProcedureStatusScreenState extends State<ProcedureStatusScreen> {
     );
   }
 
-  Future<void> _refund(ServiceOrderModel order) async {
+  Future<void> _pay(ServiceOrderModel order) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Povrat sredstava'),
-        content: const Text('Da li ste sigurni da želite povrat za ovu uslugu?'),
+        title: const Text('Potvrda plaćanja'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(order.serviceTypeName ?? 'Usluga', style: AppTextStyles.body),
+            const SizedBox(height: 6),
+            Text(order.funeralHomeName ?? '', style: AppTextStyles.bodyMedium),
+            const SizedBox(height: 6),
+            Text('Iznos: ${DateFormatter.money(order.price)}', style: AppTextStyles.heading3),
+          ],
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Odustani')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Refundiraj')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Plati')),
         ],
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
-    final pp = context.read<PaymentProvider>();
-    setState(() => _paying = true);
-    final error = await pp.refund(order.id);
-    if (!mounted) return;
-    setState(() => _paying = false);
-
-    if (error == null) {
-      _showSnack('Povrat sredstava uspješno izvršen.', AppColors.success);
-    } else {
-      _showSnack(error, AppColors.error);
-    }
-  }
-
-  Future<void> _pay(ServiceOrderModel order) async {
     final pp = context.read<PaymentProvider>();
     setState(() => _paying = true);
 
@@ -347,7 +336,12 @@ class _ProcedureStatusScreenState extends State<ProcedureStatusScreen> {
     final result = await Navigator.of(context).push<PayPalResult>(
       MaterialPageRoute(builder: (_) => PayPalWebViewScreen(approvalUrl: approvalUrl)),
     );
-    if (!mounted || result != PayPalResult.approved) return;
+    if (!mounted) return;
+
+    if (result != PayPalResult.approved) {
+      await pp.cancel(order.id);
+      return;
+    }
 
     setState(() => _paying = true);
     final ok = await pp.capture(paypalOrderId, order.id);

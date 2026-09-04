@@ -35,10 +35,13 @@ class ServiceOrderService {
     return ((body['data'] as List?) ?? []).cast<Map<String, dynamic>>();
   }
 
-  static Future<List<Map<String, dynamic>>> getServiceTypes() async {
-    final res = await ApiService.get('/api/ReferenceData/service-types', queryParams: {'pageSize': 100});
-    final raw = res.data;
-    final list = raw is List ? raw : (raw as Map<String, dynamic>)['data'] as List? ?? [];
-    return list.cast<Map<String, dynamic>>();
+  static Future<List<Map<String, dynamic>>> getOfferings(int funeralHomeId) async {
+    final res = await ApiService.get('/api/ServiceOffering', queryParams: {
+      'funeralHomeId': funeralHomeId,
+      'activeOnly': true,
+      'pageSize': 100,
+    });
+    final body = res.data as Map<String, dynamic>;
+    return ((body['data'] as List?) ?? []).cast<Map<String, dynamic>>();
   }
 }

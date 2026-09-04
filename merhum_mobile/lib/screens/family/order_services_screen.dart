@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/service_order_provider.dart';
 import '../../utils/constants.dart';
@@ -14,37 +13,72 @@ class OrderServicesScreen extends StatefulWidget {
 
 class _OrderServicesScreenState extends State<OrderServicesScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _priceCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
   int? _funeralHomeId;
-  int? _serviceTypeId;
+  int? _offeringId;
   bool _submitting = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final sp = context.read<ServiceOrderProvider>();
-      sp.loadFuneralHomes();
-      sp.loadServiceTypes();
+      context.read<ServiceOrderProvider>().loadFuneralHomes();
     });
   }
 
   @override
   void dispose() {
-    _priceCtrl.dispose();
     _notesCtrl.dispose();
     super.dispose();
   }
 
+  Map<String, dynamic>? get _selectedOffering {
+    final offerings = context.read<ServiceOrderProvider>().offerings;
+    for (final o in offerings) {
+      if (o['id'] == _offeringId) return o;
+    }
+    return null;
+  }
+
+  Future<bool> _confirm() async {
+    final offering = _selectedOffering;
+    if (offering == null) return false;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Potvrda narudžbe'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Usluga: ${offering['serviceTypeName'] ?? ''}', style: AppTextStyles.body),
+            const SizedBox(height: 6),
+            Text('Preduzeće: ${offering['funeralHomeName'] ?? ''}', style: AppTextStyles.body),
+            const SizedBox(height: 6),
+            Text('Cijena: ${offering['price']} KM', style: AppTextStyles.heading3),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Odustani')),
+          ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Naruči')),
+        ],
+      ),
+    );
+
+    return confirmed ?? false;
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (!await _confirm()) return;
+    if (!mounted) return;
+
     setState(() => _submitting = true);
+    // the price is not sent, the server reads it from the chosen offering
     final ok = await context.read<ServiceOrderProvider>().create({
       'deceasedId': widget.deceasedId,
-      'funeralHomeId': _funeralHomeId,
-      'serviceTypeId': _serviceTypeId,
-      'price': double.parse(_priceCtrl.text),
+      'serviceOfferingId': _offeringId,
       'note': _notesCtrl.text.trim(),
     });
     if (!mounted) return;
@@ -82,31 +116,25 @@ class _OrderServicesScreenState extends State<OrderServicesScreen> {
                     value: f['id'] as int,
                     child: Text(f['name'] as String? ?? ''),
                   )).toList(),
-                  onChanged: (v) => setState(() => _funeralHomeId = v),
+                  onChanged: (v) {
+                    setState(() {
+                      _funeralHomeId = v;
+                      _offeringId = null;
+                    });
+                    if (v != null) context.read<ServiceOrderProvider>().loadOfferings(v);
+                  },
                   validator: (v) => v == null ? 'Obavezno polje' : null,
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
-                  value: _serviceTypeId,
-                  decoration: const InputDecoration(labelText: 'Vrsta usluge'),
-                  items: sp.serviceTypes.map((s) => DropdownMenuItem<int>(
-                    value: s['id'] as int,
-                    child: Text(s['name'] as String? ?? ''),
+                  value: _offeringId,
+                  decoration: const InputDecoration(labelText: 'Usluga i cijena'),
+                  items: sp.offerings.map((o) => DropdownMenuItem<int>(
+                    value: o['id'] as int,
+                    child: Text('${o['serviceTypeName'] ?? ''} - ${o['price']} KM'),
                   )).toList(),
-                  onChanged: (v) => setState(() => _serviceTypeId = v),
+                  onChanged: (v) => setState(() => _offeringId = v),
                   validator: (v) => v == null ? 'Obavezno polje' : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _priceCtrl,
-                  decoration: const InputDecoration(labelText: 'Cijena', suffixText: 'KM'),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
-                  validator: (v) {
-                    final val = double.tryParse(v ?? '');
-                    if (val == null || val <= 0) return 'Unesite cijenu veću od 0';
-                    return null;
-                  },
                 ),
                 const SizedBox(height: 12),
                 TextFormField(

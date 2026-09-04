@@ -17,8 +17,8 @@ class NotificationProvider extends ChangeNotifier {
   String? get error => _error;
 
   void startPolling() {
-    refreshUnreadCount();
-    _timer ??= Timer.periodic(const Duration(seconds: 25), (_) => refreshUnreadCount());
+    refresh();
+    _timer ??= Timer.periodic(const Duration(seconds: 25), (_) => refresh());
   }
 
   void stopPolling() {
@@ -26,13 +26,16 @@ class NotificationProvider extends ChangeNotifier {
     _timer = null;
   }
 
-  Future<void> refreshUnreadCount() async {
+  // silent refresh of both list and badge, so an open list cannot show a stale state
+  Future<void> refresh() async {
     try {
-      _unreadCount = await NotificationService.getUnreadCount();
-      notifyListeners();
+      _items = await NotificationService.getNotifications();
+      _unreadCount = _items.where((n) => !n.isRead).length;
+      _error = null;
     } catch (e) {
       _error = parseApiError(e);
     }
+    notifyListeners();
   }
 
   Future<void> loadNotifications() async {

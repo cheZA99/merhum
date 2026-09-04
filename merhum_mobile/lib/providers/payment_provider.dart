@@ -49,17 +49,15 @@ class PaymentProvider extends ChangeNotifier {
     }
   }
 
-  Future<String?> refund(int serviceOrderId) async {
+  // releases the pending payment so the order does not stay blocked after a cancelled PayPal session
+  Future<void> cancel(int serviceOrderId) async {
     try {
-      await PaymentService.refundPayment(serviceOrderId);
-      _statusByOrder[serviceOrderId] = 'Refunded';
+      await PaymentService.cancelPayment(serviceOrderId);
+      _statusByOrder[serviceOrderId] = 'None';
       notifyListeners();
-      return null;
     } catch (e) {
-      final message = parseApiError(e, 'Greška pri povratu sredstava.');
-      _error = message;
+      _error = parseApiError(e);
       notifyListeners();
-      return message;
     }
   }
 }

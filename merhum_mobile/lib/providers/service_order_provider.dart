@@ -6,13 +6,13 @@ import '../utils/api_error.dart';
 class ServiceOrderProvider extends ChangeNotifier {
   List<ServiceOrderModel> _orders = [];
   List<Map<String, dynamic>> _funeralHomes = [];
-  List<Map<String, dynamic>> _serviceTypes = [];
+  List<Map<String, dynamic>> _offerings = [];
   bool _isLoading = false;
   String? _error;
 
   List<ServiceOrderModel> get orders => _orders;
   List<Map<String, dynamic>> get funeralHomes => _funeralHomes;
-  List<Map<String, dynamic>> get serviceTypes => _serviceTypes;
+  List<Map<String, dynamic>> get offerings => _offerings;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -57,15 +57,15 @@ class ServiceOrderProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> loadServiceTypes() async {
-    if (_serviceTypes.isNotEmpty) return;
+  Future<void> loadOfferings(int funeralHomeId) async {
+    _offerings = [];
+    notifyListeners();
     try {
-      _serviceTypes = await ServiceOrderService.getServiceTypes();
-      notifyListeners();
+      _offerings = await ServiceOrderService.getOfferings(funeralHomeId);
     } catch (e) {
       _error = parseApiError(e);
-      notifyListeners();
     }
+    notifyListeners();
   }
 
   Future<bool> create(Map<String, dynamic> body) async {
