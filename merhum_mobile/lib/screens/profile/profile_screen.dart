@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/constants.dart';
 import '../auth/login_screen.dart';
+import 'edit_profile_screen.dart';
 import '../public/home_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -121,6 +122,17 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                  ),
+                  icon: const Icon(Icons.edit_outlined),
+                  label: const Text('Uredi profil'),
+                ),
+              ),
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(

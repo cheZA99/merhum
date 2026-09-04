@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'api_service.dart';
 
@@ -35,6 +36,36 @@ class AuthService {
   static Future<void> changePassword(String currentPassword, String newPassword) async {
     await ApiService.post('/api/auth/change-password', {
       'currentPassword': currentPassword,
+      'newPassword': newPassword,
+    });
+  }
+
+  static Future<Map<String, dynamic>> getProfile() async {
+    final res = await ApiService.get('/api/auth/me');
+    return res.data as Map<String, dynamic>;
+  }
+
+  static Future<void> updateProfile(Map<String, dynamic> body) async {
+    await ApiService.put('/api/auth/me', body);
+    await _storage.write(key: _keyFirstName, value: body['firstName'] as String?);
+    await _storage.write(key: _keyLastName, value: body['lastName'] as String?);
+  }
+
+  static Future<String?> uploadProfilePhoto(String filePath) async {
+    final form = FormData.fromMap({'file': await MultipartFile.fromFile(filePath)});
+    final res = await ApiService.dio.post('/api/auth/me/photo', data: form);
+    final body = res.data as Map<String, dynamic>;
+    return body['photoUrl'] as String?;
+  }
+
+  static Future<void> forgotPassword(String email) async {
+    await ApiService.post('/api/auth/forgot-password', {'email': email});
+  }
+
+  static Future<void> resetPassword(String email, String token, String newPassword) async {
+    await ApiService.post('/api/auth/reset-password', {
+      'email': email,
+      'token': token,
       'newPassword': newPassword,
     });
   }

@@ -100,6 +100,7 @@ builder.Services.AddMassTransit(x =>
 		cfg.Message<ObituaryCreatedMessage>(m => m.SetEntityName(MessageTopology.ObituaryCreated));
 		cfg.Message<AnniversaryReminderMessage>(m => m.SetEntityName(MessageTopology.AnniversaryReminder));
 		cfg.Message<PaymentCompletedMessage>(m => m.SetEntityName(MessageTopology.PaymentCompleted));
+		cfg.Message<PasswordResetRequestedMessage>(m => m.SetEntityName(MessageTopology.PasswordResetRequested));
 	});
 });
 

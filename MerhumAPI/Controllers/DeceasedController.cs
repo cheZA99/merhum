@@ -82,12 +82,9 @@ public class DeceasedController : ControllerBase
     [Authorize(Policy = "DesktopAccess")]
     public async Task<IActionResult> UploadPhoto(int id, IFormFile file)
     {
-        if (file == null || file.Length == 0)
-            return BadRequest(new { message = "No file provided." });
-
-        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-        if (ext is not (".jpg" or ".jpeg" or ".png" or ".webp"))
-            return BadRequest(new { message = "Unsupported file type." });
+        var problem = await ImageUpload.ValidateAsync(file);
+        if (problem != null)
+            return BadRequest(new { message = problem });
 
         var photoUrl = await _deceasedService.UploadPhotoAsync(id, file);
         if (photoUrl == null) return NotFound();

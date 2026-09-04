@@ -6,6 +6,7 @@ import '../family/family_dashboard_screen.dart';
 import '../imam/imam_appointments_screen.dart';
 import '../funeral_home/funeral_home_orders_screen.dart';
 import '../public/home_screen.dart';
+import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -108,7 +109,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                         : const Text('Prijavi se'),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                    ),
+                    child: const Text('Zaboravili ste lozinku?', style: TextStyle(color: AppColors.primary)),
+                  ),
                   TextButton(
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const RegisterScreen()),

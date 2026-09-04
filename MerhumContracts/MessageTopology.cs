@@ -11,4 +11,5 @@ public static class MessageTopology
     public const string ObituaryCreated = "merhum.smrtovnica.kreirana";
     public const string AnniversaryReminder = "merhum.godisnjica";
     public const string PaymentCompleted = "merhum.placanje.izvrseno";
+    public const string PasswordResetRequested = "merhum.lozinka.reset";
 }

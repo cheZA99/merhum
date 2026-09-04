@@ -1,7 +1,9 @@
+using MassTransit;
 using MerhumAPI.Common;
 using MerhumAPI.DTOs.Auth;
 using MerhumAPI.Models;
 using MerhumAPI.Services;
+using MerhumContracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,17 +18,20 @@ public class AuthController : ControllerBase
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly ITokenService _tokenService;
     private readonly IConfiguration _configuration;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     public AuthController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         ITokenService tokenService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IPublishEndpoint publishEndpoint)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _tokenService = tokenService;
         _configuration = configuration;
+        _publishEndpoint = publishEndpoint;
     }
 
     [HttpPost("login")]
@@ -177,7 +182,101 @@ public class AuthController : ControllerBase
             user.UserName,
             user.Email,
             user.FullName,
+            user.FirstName,
+            user.LastName,
+            Phone = user.PhoneNumber,
+            user.CityId,
+            user.PhotoUrl,
             Roles = roles
         });
+    }
+
+    [HttpPut("me")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<ActionResult<ApiResponse<object>>> UpdateProfile([FromBody] UpdateProfileRequest request)
+    {
+        var user = await _userManager.FindByIdAsync(User.GetUserId());
+        if (user == null) return NotFound(ApiResponse<object>.Fail("Korisnik nije pronađen."));
+
+        var takenBy = await _userManager.FindByEmailAsync(request.Email);
+        if (takenBy != null && takenBy.Id != user.Id)
+            return BadRequest(ApiResponse<object>.Fail("Email adresa je već u upotrebi."));
+
+        user.FirstName = request.FirstName;
+        user.LastName = request.LastName;
+        user.PhoneNumber = request.Phone;
+        user.CityId = request.CityId;
+
+        var emailResult = await _userManager.SetEmailAsync(user, request.Email);
+        if (!emailResult.Succeeded)
+            return BadRequest(ApiResponse<object>.Fail("Email adresu nije bilo moguće promijeniti."));
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            return BadRequest(ApiResponse<object>.Fail("Podatke nije bilo moguće sačuvati."));
+
+        return Ok(ApiResponse<object>.Ok(new { }, "Podaci su sačuvani."));
+    }
+
+    [HttpPost("me/photo")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> UploadProfilePhoto(IFormFile file)
+    {
+        var problem = await ImageUpload.ValidateAsync(file);
+        if (problem != null)
+            return BadRequest(new { message = problem });
+
+        var user = await _userManager.FindByIdAsync(User.GetUserId());
+        if (user == null) return NotFound();
+
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        var folder = Path.Combine("wwwroot", "uploads", "profiles");
+        Directory.CreateDirectory(folder);
+
+        var fileName = $"user-{user.Id}-{Guid.NewGuid():N}{extension}";
+        await using (var stream = new FileStream(Path.Combine(folder, fileName), FileMode.Create))
+            await file.CopyToAsync(stream);
+
+        user.PhotoUrl = $"/uploads/profiles/{fileName}";
+        await _userManager.UpdateAsync(user);
+
+        return Ok(new { photoUrl = user.PhotoUrl });
+    }
+
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<object>>> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        var user = await _userManager.FindByEmailAsync(request.Email);
+
+        // the same answer either way, so the endpoint cannot be used to discover which emails exist
+        if (user != null && user.IsActive)
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            await _publishEndpoint.Publish(new PasswordResetRequestedMessage(
+                user.Id,
+                user.FullName,
+                request.Email,
+                token,
+                DateTime.UtcNow
+            ));
+        }
+
+        return Ok(ApiResponse<object>.Ok(new { }, "Ako nalog postoji, kod za promjenu lozinke je poslan na email."));
+    }
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<object>>> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        var user = await _userManager.FindByEmailAsync(request.Email);
+        if (user == null)
+            return BadRequest(ApiResponse<object>.Fail("Kod nije ispravan ili je istekao."));
+
+        var result = await _userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
+        if (!result.Succeeded)
+            return BadRequest(ApiResponse<object>.Fail("Kod nije ispravan ili je istekao."));
+
+        return Ok(ApiResponse<object>.Ok(new { }, "Lozinka je promijenjena."));
     }
 }

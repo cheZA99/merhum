@@ -27,6 +27,7 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<ObituaryCreatedConsumer>();
     x.AddConsumer<AnniversaryReminderConsumer>();
     x.AddConsumer<PaymentCompletedConsumer>();
+    x.AddConsumer<PasswordResetRequestedConsumer>();
 
     x.UsingRabbitMq((ctx, cfg) =>
     {
@@ -80,6 +81,12 @@ builder.Services.AddMassTransit(x =>
         cfg.ReceiveEndpoint(MessageTopology.PaymentCompleted, e =>
         {
             e.ConfigureConsumer<PaymentCompletedConsumer>(ctx);
+            e.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
+        });
+
+        cfg.ReceiveEndpoint(MessageTopology.PasswordResetRequested, e =>
+        {
+            e.ConfigureConsumer<PasswordResetRequestedConsumer>(ctx);
             e.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
         });
     });
