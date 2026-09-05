@@ -50,7 +50,7 @@ public class PaymentService :IPaymentService
 		var live = await _db.Payments
 		    .Where(p => p.ServiceOrderId == serviceOrderId)
 		    .Where(p => p.Status == PaymentStatus.Completed || p.Status == PaymentStatus.Pending)
-		    .Select(p => p.Status)
+		    .Select(p => (PaymentStatus?)p.Status)
 		    .FirstOrDefaultAsync();
 
 		if (live == PaymentStatus.Completed)
