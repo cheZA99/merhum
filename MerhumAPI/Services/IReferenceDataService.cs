@@ -22,6 +22,9 @@ public interface IReferenceDataService
 
     Task<PagedResponse<ProcedureStatusResponse>> GetProcedureStatusesAsync(int pageNumber, int pageSize);
 
+    Task<PagedResponse<MuftiateResponse>> GetMuftiatesAsync(int pageNumber, int pageSize);
+    Task<PagedResponse<MajlisResponse>> GetMajlisesAsync(int? muftiateId, int pageNumber, int pageSize);
+
     Task<PagedResponse<CemeterySectionResponse>> GetCemeterySectionsAsync(int? cemeteryId, int pageNumber, int pageSize);
     Task<CemeterySectionResponse> CreateSectionAsync(SectionRequest request);
     Task<bool> UpdateSectionAsync(int id, SectionRequest request);

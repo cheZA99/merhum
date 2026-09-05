@@ -9,6 +9,8 @@ class CemeteryProvider extends ChangeNotifier {
 
   List<CemeteryModel> _all = [];
   List<Map<String, dynamic>> cities = [];
+  List<Map<String, dynamic>> muftiates = [];
+  List<Map<String, dynamic>> majlises = [];
   bool isLoading = false;
   String? errorMessage;
   String? searchName;
@@ -38,6 +40,20 @@ class CemeteryProvider extends ChangeNotifier {
   Future<void> loadCities() async {
     try {
       cities = await _service.getCities();
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  Future<void> loadMuftiates() async {
+    try {
+      muftiates = await _service.getMuftiates();
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  Future<void> loadMajlises(int muftiateId) async {
+    try {
+      majlises = await _service.getMajlises(muftiateId);
     } catch (_) {}
     notifyListeners();
   }

@@ -110,6 +110,14 @@ public class ReferenceDataController : ControllerBase
 	public async Task<IActionResult> GetProcedureStatuses([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
 	    => Ok(await _referenceDataService.GetProcedureStatusesAsync(pageNumber, pageSize));
 
+	[HttpGet("muftiates")]
+	public async Task<IActionResult> GetMuftiates([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 50)
+	    => Ok(await _referenceDataService.GetMuftiatesAsync(pageNumber, pageSize));
+
+	[HttpGet("majlises")]
+	public async Task<IActionResult> GetMajlises([FromQuery] int? muftiateId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 100)
+	    => Ok(await _referenceDataService.GetMajlisesAsync(muftiateId, pageNumber, pageSize));
+
 	[HttpGet("cemetery-sections")]
 	public async Task<IActionResult> GetCemeterySections([FromQuery] int? cemeteryId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
 	    => Ok(await _referenceDataService.GetCemeterySectionsAsync(cemeteryId, pageNumber, pageSize));

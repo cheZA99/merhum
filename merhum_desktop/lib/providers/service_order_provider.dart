@@ -86,6 +86,29 @@ class ServiceOrderProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
+  List<Map<String, dynamic>> offerings = [];
+
+  Future<void> loadOfferings(int funeralHomeId) async {
+    offerings = [];
+    notifyListeners();
+    try {
+      offerings = await _service.getOfferings(funeralHomeId);
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  Future<bool> changeStatus(int id, String status) async {
+    try {
+      await _service.updateStatus(id, status);
+      await loadAll();
+      return true;
+    } on DioException catch (e) {
+      errorMessage = _parseError(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> create(Map<String, dynamic> data) async {
     try {
       await _service.create(data);

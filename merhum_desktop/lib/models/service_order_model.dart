@@ -5,6 +5,7 @@ class ServiceOrderModel {
   final int funeralHomeId;
   final String funeralHomeName;
   final int serviceTypeId;
+  final int serviceOfferingId;
   final String serviceTypeName;
   final double price;
   final String status;
@@ -19,6 +20,7 @@ class ServiceOrderModel {
     required this.funeralHomeId,
     required this.funeralHomeName,
     required this.serviceTypeId,
+    this.serviceOfferingId = 0,
     required this.serviceTypeName,
     required this.price,
     required this.status,
@@ -35,6 +37,7 @@ class ServiceOrderModel {
       funeralHomeId: json['funeralHomeId'] as int,
       funeralHomeName: json['funeralHomeName'] as String? ?? '',
       serviceTypeId: json['serviceTypeId'] as int,
+      serviceOfferingId: json['serviceOfferingId'] as int? ?? 0,
       serviceTypeName: json['serviceTypeName'] as String? ?? '',
       price: (json['price'] as num).toDouble(),
       status: json['status'] as String? ?? '',

@@ -5,6 +5,7 @@ import '../../models/grave_site_model.dart';
 import '../../providers/cemetery_provider.dart';
 import '../../providers/grave_site_provider.dart';
 import '../../utils/constants.dart';
+import '../../widgets/location_picker_field.dart';
 import '../../utils/status_helper.dart';
 
 class GraveSiteFormScreen extends StatefulWidget {
@@ -257,40 +258,13 @@ class _GraveSiteFormScreenState extends State<GraveSiteFormScreen> {
                   ),
                   const SizedBox(height: 16),
                 ],
-                Row(
-                  children: [
-                    Expanded(
-                      child: _field(
-                        controller: _latCtrl,
-                        label: 'Geografska širina',
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return null;
-                          if (double.tryParse(v) == null) {
-                            return 'Neispravan broj.';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _field(
-                        controller: _lngCtrl,
-                        label: 'Geografska dužina',
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return null;
-                          if (double.tryParse(v) == null) {
-                            return 'Neispravan broj.';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                  ],
+                LocationPickerField(
+                  latitude: double.tryParse(_latCtrl.text),
+                  longitude: double.tryParse(_lngCtrl.text),
+                  onChanged: (lat, lng) => setState(() {
+                    _latCtrl.text = lat.toStringAsFixed(6);
+                    _lngCtrl.text = lng.toStringAsFixed(6);
+                  }),
                 ),
                 const SizedBox(height: 4),
                 const Text(

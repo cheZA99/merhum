@@ -159,6 +159,48 @@ public class ReferenceDataService : IReferenceDataService
         return PagedResponse<ProcedureStatusResponse>.Create(items, total, pageNumber, pageSize);
     }
 
+    public async Task<PagedResponse<MuftiateResponse>> GetMuftiatesAsync(int pageNumber, int pageSize)
+    {
+        (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
+
+        var query = _db.Muftiates.OrderBy(m => m.Name);
+        var total = await query.CountAsync();
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(m => new MuftiateResponse { Id = m.Id, Name = m.Name, IsActive = m.IsActive })
+            .ToListAsync();
+
+        return PagedResponse<MuftiateResponse>.Create(items, total, pageNumber, pageSize);
+    }
+
+    public async Task<PagedResponse<MajlisResponse>> GetMajlisesAsync(int? muftiateId, int pageNumber, int pageSize)
+    {
+        (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
+
+        var query = _db.Majlises.Include(m => m.Muftiate).AsQueryable();
+
+        if (muftiateId.HasValue)
+            query = query.Where(m => m.MuftiateId == muftiateId.Value);
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderBy(m => m.Name)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(m => new MajlisResponse
+            {
+                Id = m.Id,
+                Name = m.Name,
+                MuftiateId = m.MuftiateId,
+                MuftiateName = m.Muftiate != null ? m.Muftiate.Name : string.Empty,
+                IsActive = m.IsActive
+            })
+            .ToListAsync();
+
+        return PagedResponse<MajlisResponse>.Create(items, total, pageNumber, pageSize);
+    }
+
     public async Task<PagedResponse<CemeterySectionResponse>> GetCemeterySectionsAsync(int? cemeteryId, int pageNumber, int pageSize)
     {
         (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);

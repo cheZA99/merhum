@@ -194,6 +194,7 @@ public class ServiceOrderService : IServiceOrderService
         FuneralHomeId = s.FuneralHomeId,
         FuneralHomeName = s.FuneralHome?.Name ?? string.Empty,
         ServiceTypeId = s.ServiceTypeId,
+        ServiceOfferingId = s.ServiceOfferingId,
         ServiceTypeName = s.ServiceType?.Name ?? string.Empty,
         Price = s.Price,
         Status = s.Status.ToString(),

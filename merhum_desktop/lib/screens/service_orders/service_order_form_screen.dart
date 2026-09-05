@@ -25,7 +25,7 @@ class _ServiceOrderFormScreenState extends State<ServiceOrderFormScreen> {
 
   int? _selectedDeceasedId;
   int? _selectedFuneralHomeId;
-  int? _selectedServiceTypeId;
+  int? _selectedOfferingId;
   String _selectedStatus = 'Ordered';
   DateTime? _completedAt;
   final _priceCtrl = TextEditingController();
@@ -41,7 +41,7 @@ class _ServiceOrderFormScreenState extends State<ServiceOrderFormScreen> {
     if (o != null) {
       _selectedDeceasedId = o.deceasedId;
       _selectedFuneralHomeId = o.funeralHomeId;
-      _selectedServiceTypeId = o.serviceTypeId;
+      _selectedOfferingId = o.serviceOfferingId;
       _selectedStatus = o.status;
       _completedAt = o.completedAt?.toLocal();
       _priceCtrl.text = o.price.toStringAsFixed(2);
@@ -51,7 +51,9 @@ class _ServiceOrderFormScreenState extends State<ServiceOrderFormScreen> {
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ServiceOrderProvider>().loadDropdownData();
+      final provider = context.read<ServiceOrderProvider>();
+      provider.loadDropdownData();
+      if (_selectedFuneralHomeId != null) provider.loadOfferings(_selectedFuneralHomeId!);
     });
   }
 
@@ -89,9 +91,7 @@ class _ServiceOrderFormScreenState extends State<ServiceOrderFormScreen> {
                   const SizedBox(height: 16),
                   _buildFuneralHomeField(p),
                   const SizedBox(height: 16),
-                  _buildServiceTypeField(p),
-                  const SizedBox(height: 16),
-                  _buildPriceField(),
+                  _buildOfferingField(p),
                   const SizedBox(height: 16),
                   _buildStatusField(),
                   const SizedBox(height: 16),
@@ -147,46 +147,34 @@ class _ServiceOrderFormScreenState extends State<ServiceOrderFormScreen> {
           child: Text(f['name'] as String? ?? ''),
         );
       }).toList(),
-      onChanged: (v) => setState(() => _selectedFuneralHomeId = v),
+      onChanged: (v) {
+        setState(() {
+          _selectedFuneralHomeId = v;
+          _selectedOfferingId = null;
+        });
+        if (v != null) context.read<ServiceOrderProvider>().loadOfferings(v);
+      },
       validator: (v) => v == null ? 'Odaberite pogrebno preduzeće' : null,
     );
   }
 
-  Widget _buildServiceTypeField(ServiceOrderProvider p) {
+  Widget _buildOfferingField(ServiceOrderProvider p) {
     return DropdownButtonFormField<int>(
-      value: _selectedServiceTypeId,
+      value: _selectedOfferingId,
       isExpanded: true,
       decoration: const InputDecoration(
-        labelText: 'Vrsta usluge *',
+        labelText: 'Usluga i cijena *',
         border: OutlineInputBorder(),
       ),
-      hint: const Text('Odaberite vrstu usluge'),
-      items: p.serviceTypes.map((s) {
+      hint: const Text('Odaberite uslugu iz cjenovnika'),
+      items: p.offerings.map((o) {
         return DropdownMenuItem<int>(
-          value: s['id'] as int,
-          child: Text(s['name'] as String? ?? ''),
+          value: o['id'] as int,
+          child: Text('${o['serviceTypeName'] ?? ''} - ${o['price']} KM'),
         );
       }).toList(),
-      onChanged: (v) => setState(() => _selectedServiceTypeId = v),
-      validator: (v) => v == null ? 'Odaberite vrstu usluge' : null,
-    );
-  }
-
-  Widget _buildPriceField() {
-    return TextFormField(
-      controller: _priceCtrl,
-      decoration: const InputDecoration(
-        labelText: 'Cijena *',
-        border: OutlineInputBorder(),
-        suffixText: 'KM',
-      ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
-      validator: (v) {
-        final val = double.tryParse(v ?? '');
-        if (val == null || val <= 0) return 'Unesite cijenu veću od 0';
-        return null;
-      },
+      onChanged: (v) => setState(() => _selectedOfferingId = v),
+      validator: (v) => v == null ? 'Odaberite uslugu' : null,
     );
   }
 
@@ -283,15 +271,10 @@ class _ServiceOrderFormScreenState extends State<ServiceOrderFormScreen> {
 
     setState(() => _isSaving = true);
 
+    // the price comes from the chosen offering, the server never takes it from here
     final data = {
       'deceasedId': _selectedDeceasedId,
-      'funeralHomeId': _selectedFuneralHomeId,
-      'serviceTypeId': _selectedServiceTypeId,
-      'price': double.parse(_priceCtrl.text),
-      'status': _selectedStatus,
-      'completedAt': _selectedStatus == 'Completed'
-          ? (_completedAt ?? DateTime.now()).toUtc().toIso8601String()
-          : null,
+      'serviceOfferingId': _selectedOfferingId,
       'note': _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
     };
 
@@ -299,6 +282,10 @@ class _ServiceOrderFormScreenState extends State<ServiceOrderFormScreen> {
     bool ok;
     if (_isEdit) {
       ok = await p.update(widget.order!.id, data);
+      // status has its own endpoint, so it is applied separately when it changed
+      if (ok && _selectedStatus != widget.order!.status) {
+        ok = await p.changeStatus(widget.order!.id, _selectedStatus);
+      }
     } else {
       ok = await p.create(data);
     }

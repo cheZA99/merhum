@@ -63,6 +63,21 @@ class ServiceOrderService {
     return list.cast<Map<String, dynamic>>();
   }
 
+  Future<List<Map<String, dynamic>>> getOfferings(int funeralHomeId) async {
+    final response = await _api.get('/api/ServiceOffering', queryParams: {
+      'funeralHomeId': funeralHomeId,
+      'activeOnly': true,
+      'pageSize': 100,
+    });
+    final raw = response.data;
+    final list = raw is List ? raw : (raw['data'] as List? ?? []);
+    return list.cast<Map<String, dynamic>>();
+  }
+
+  Future<void> updateStatus(int id, String status) async {
+    await _api.patch('/api/ServiceOrder/$id/status', data: {'status': status});
+  }
+
   Future<List<Map<String, dynamic>>> getServiceTypes() async {
     final response = await _api
         .get('/api/referencedata/service-types', queryParams: {'pageSize': 100});

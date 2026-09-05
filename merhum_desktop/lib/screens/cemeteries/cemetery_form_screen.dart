@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/cemetery_model.dart';
 import '../../providers/cemetery_provider.dart';
 import '../../utils/constants.dart';
+import '../../widgets/location_picker_field.dart';
 
 class CemeteryFormScreen extends StatefulWidget {
   final CemeteryModel? cemetery;
@@ -21,6 +22,8 @@ class _CemeteryFormScreenState extends State<CemeteryFormScreen> {
   late final TextEditingController _latCtrl;
   late final TextEditingController _lngCtrl;
   int? _selectedCityId;
+  int? _selectedMuftiateId;
+  int? _selectedMajlisId;
   bool _isActive = true;
   bool _isSaving = false;
 
@@ -41,6 +44,14 @@ class _CemeteryFormScreenState extends State<CemeteryFormScreen> {
     _lngCtrl = TextEditingController(
         text: g?.longitude != null ? g!.longitude.toString() : '');
     _selectedCityId = g?.cityId != 0 ? g?.cityId : null;
+    _selectedMuftiateId = (g?.muftiateId ?? 0) != 0 ? g!.muftiateId : null;
+    _selectedMajlisId = (g?.majlisId ?? 0) != 0 ? g!.majlisId : null;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<CemeteryProvider>();
+      provider.loadMuftiates();
+      if (_selectedMuftiateId != null) provider.loadMajlises(_selectedMuftiateId!);
+    });
     _isActive = g?.isActive ?? true;
   }
 
@@ -62,6 +73,7 @@ class _CemeteryFormScreenState extends State<CemeteryFormScreen> {
       'name': _nameCtrl.text.trim(),
       'address': _addressCtrl.text.trim(),
       'cityId': _selectedCityId,
+      'majlisId': _selectedMajlisId,
       'totalPlaces': int.parse(_totalCtrl.text),
       'latitude': _latCtrl.text.isEmpty ? null : double.tryParse(_latCtrl.text),
       'longitude': _lngCtrl.text.isEmpty ? null : double.tryParse(_lngCtrl.text),
@@ -88,7 +100,8 @@ class _CemeteryFormScreenState extends State<CemeteryFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cities = context.watch<CemeteryProvider>().cities;
+    final provider = context.watch<CemeteryProvider>();
+    final cities = provider.cities;
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEdit ? 'Uredi groblje' : 'Novo groblje'),
@@ -135,6 +148,40 @@ class _CemeteryFormScreenState extends State<CemeteryFormScreen> {
                   validator: (v) => v == null ? 'Grad je obavezan.' : null,
                 ),
                 const SizedBox(height: 16),
+                DropdownButtonFormField<int>(
+                  value: _selectedMuftiateId,
+                  decoration: const InputDecoration(
+                      labelText: 'Muftijstvo', border: OutlineInputBorder()),
+                  items: provider.muftiates
+                      .map((m) => DropdownMenuItem<int>(
+                            value: m['id'] as int,
+                            child: Text(m['name'] as String? ?? ''),
+                          ))
+                      .toList(),
+                  onChanged: (v) {
+                    setState(() {
+                      _selectedMuftiateId = v;
+                      _selectedMajlisId = null;
+                    });
+                    if (v != null) context.read<CemeteryProvider>().loadMajlises(v);
+                  },
+                  validator: (v) => v == null ? 'Muftijstvo je obavezno.' : null,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<int>(
+                  value: _selectedMajlisId,
+                  decoration: const InputDecoration(
+                      labelText: 'Medžlis', border: OutlineInputBorder()),
+                  items: provider.majlises
+                      .map((m) => DropdownMenuItem<int>(
+                            value: m['id'] as int,
+                            child: Text(m['name'] as String? ?? ''),
+                          ))
+                      .toList(),
+                  onChanged: (v) => setState(() => _selectedMajlisId = v),
+                  validator: (v) => v == null ? 'Medžlis je obavezan.' : null,
+                ),
+                const SizedBox(height: 16),
                 _field(
                   controller: _addressCtrl,
                   label: 'Adresa',
@@ -158,38 +205,14 @@ class _CemeteryFormScreenState extends State<CemeteryFormScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _field(
-                        controller: _latCtrl,
-                        label: 'Geografska širina',
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return null;
-                          if (double.tryParse(v) == null) return 'Neispravan broj.';
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _field(
-                        controller: _lngCtrl,
-                        label: 'Geografska dužina',
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return null;
-                          if (double.tryParse(v) == null) return 'Neispravan broj.';
-                          return null;
-                        },
-                      ),
-                    ),
-                  ],
+                LocationPickerField(
+                  latitude: double.tryParse(_latCtrl.text),
+                  longitude: double.tryParse(_lngCtrl.text),
+                  onChanged: (lat, lng) => setState(() {
+                    _latCtrl.text = lat.toStringAsFixed(6);
+                    _lngCtrl.text = lng.toStringAsFixed(6);
+                  }),
                 ),
-                const SizedBox(height: 4),
-                const Text('Unesite GPS koordinate groblja.',
-                    style: AppTextStyles.caption),
                 const SizedBox(height: 16),
                 SwitchListTile(
                   title: const Text('Aktivan'),

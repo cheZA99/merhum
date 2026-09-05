@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/mosque_model.dart';
 import '../../providers/mosque_provider.dart';
 import '../../utils/constants.dart';
+import '../../widgets/location_picker_field.dart';
 
 class MosqueFormScreen extends StatefulWidget {
   final MosqueModel? mosque;
@@ -200,41 +201,13 @@ class _MosqueFormScreenState extends State<MosqueFormScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _field(
-                        controller: _latCtrl,
-                        label: 'Geografska širina',
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return null;
-                          if (double.tryParse(v) == null) return 'Neispravan broj.';
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _field(
-                        controller: _lngCtrl,
-                        label: 'Geografska dužina',
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return null;
-                          if (double.tryParse(v) == null) return 'Neispravan broj.';
-                          return null;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Koordinate možete pronaći na Google Mapama.',
-                  style: AppTextStyles.caption,
+                LocationPickerField(
+                  latitude: double.tryParse(_latCtrl.text),
+                  longitude: double.tryParse(_lngCtrl.text),
+                  onChanged: (lat, lng) => setState(() {
+                    _latCtrl.text = lat.toStringAsFixed(6);
+                    _lngCtrl.text = lng.toStringAsFixed(6);
+                  }),
                 ),
                 const SizedBox(height: 16),
                 SwitchListTile(

@@ -3,6 +3,10 @@ class CemeteryModel {
   final String name;
   final String address;
   final int cityId;
+  final int majlisId;
+  final String majlisName;
+  final int muftiateId;
+  final String muftiateName;
   final String cityName;
   final int totalPlots;
   final int occupiedPlots;
@@ -18,6 +22,10 @@ class CemeteryModel {
     required this.name,
     required this.address,
     required this.cityId,
+    this.majlisId = 0,
+    this.majlisName = '',
+    this.muftiateId = 0,
+    this.muftiateName = '',
     required this.cityName,
     required this.totalPlots,
     this.occupiedPlots = 0,
@@ -37,6 +45,10 @@ class CemeteryModel {
       name: json['name'] as String? ?? '',
       address: json['address'] as String? ?? '',
       cityId: json['cityId'] as int? ?? 0,
+      majlisId: json['majlisId'] as int? ?? 0,
+      majlisName: json['majlisName'] as String? ?? '',
+      muftiateId: json['muftiateId'] as int? ?? 0,
+      muftiateName: json['muftiateName'] as String? ?? '',
       cityName: json['cityName'] as String? ?? '',
       totalPlots: json['totalPlaces'] as int? ?? 0,
       occupiedPlots: json['occupiedPlaces'] as int? ?? 0,
@@ -53,6 +65,7 @@ class CemeteryModel {
         'name': name,
         'address': address,
         'cityId': cityId,
+        'majlisId': majlisId,
         'totalPlaces': totalPlots,
         'latitude': latitude,
         'longitude': longitude,

@@ -8,6 +8,7 @@ public class ServiceOrderResponse
     public int FuneralHomeId { get; set; }
     public string FuneralHomeName { get; set; } = string.Empty;
     public int ServiceTypeId { get; set; }
+    public int? ServiceOfferingId { get; set; }
     public string ServiceTypeName { get; set; } = string.Empty;
     public decimal Price { get; set; }
     public string Status { get; set; } = string.Empty;
