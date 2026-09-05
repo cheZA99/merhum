@@ -40,6 +40,14 @@ class ApiService {
     );
   }
 
+  Future<List<int>> getBytes(String path) async {
+    final response = await _dio.get<List<int>>(
+      path,
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return response.data ?? <int>[];
+  }
+
   Future<Response> get(String path, {Map<String, dynamic>? queryParams}) =>
       _dio.get(path, queryParameters: queryParams);
 

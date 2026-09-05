@@ -10,6 +10,22 @@ class CemeteryProvider extends ChangeNotifier {
   List<CemeteryModel> _all = [];
   List<Map<String, dynamic>> cities = [];
   List<Map<String, dynamic>> muftiates = [];
+  int? filterMuftiateId;
+  int? filterMajlisId;
+
+  Future<void> setMuftiateFilter(int? muftiateId) async {
+    filterMuftiateId = muftiateId;
+    filterMajlisId = null;
+    majlises = [];
+    if (muftiateId != null) await loadMajlises(muftiateId);
+    await loadAll();
+  }
+
+  Future<void> setMajlisFilter(int? majlisId) async {
+    filterMajlisId = majlisId;
+    await loadAll();
+  }
+
   List<Map<String, dynamic>> majlises = [];
   bool isLoading = false;
   String? errorMessage;
@@ -26,7 +42,7 @@ class CemeteryProvider extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
-      _all = await _service.getAll(name: searchName);
+      _all = await _service.getAll(name: searchName, majlisId: filterMajlisId, muftiateId: filterMuftiateId);
     } on DioException catch (e) {
       errorMessage = _parseError(e);
     } catch (_) {

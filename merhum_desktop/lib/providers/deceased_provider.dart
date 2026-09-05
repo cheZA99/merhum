@@ -9,6 +9,8 @@ class DeceasedProvider extends ChangeNotifier {
   final DeceasedService _service;
   DeceasedProvider(this._service);
 
+  Future<List<int>> obituaryPdf(String slug) => _service.getObituaryPdf(slug);
+
   List<DeceasedModel> deceasedList = [];
   List<ProcedureStatusModel> statuses = [];
   List<Map<String, dynamic>> cities = [];

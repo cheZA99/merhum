@@ -5,9 +5,11 @@ class CemeteryService {
   final ApiService _api;
   CemeteryService(this._api);
 
-  Future<List<CemeteryModel>> getAll({String? name}) async {
+  Future<List<CemeteryModel>> getAll({String? name, int? majlisId, int? muftiateId}) async {
     final params = <String, dynamic>{'pageSize': 500};
     if (name != null && name.isNotEmpty) params['search'] = name;
+    if (majlisId != null) params['majlisId'] = majlisId;
+    if (muftiateId != null) params['muftiateId'] = muftiateId;
 
     final response = await _api.get('/api/cemetery', queryParams: params);
     final raw = response.data as Map<String, dynamic>;

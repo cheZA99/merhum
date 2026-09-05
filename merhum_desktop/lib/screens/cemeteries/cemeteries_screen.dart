@@ -27,6 +27,7 @@ class _CemeteriesScreenState extends State<CemeteriesScreen> {
       final p = context.read<CemeteryProvider>();
       p.loadAll();
       p.loadCities();
+      p.loadMuftiates();
     });
   }
 
@@ -81,6 +82,42 @@ class _CemeteriesScreenState extends State<CemeteriesScreen> {
                 provider.setSearch(v);
               },
             ),
+          ),
+          const SizedBox(width: 12),
+          DropdownButton<int?>(
+            value: provider.filterMuftiateId,
+            hint: const Text('Sva muftijstva'),
+            underline: const SizedBox(),
+            items: [
+              const DropdownMenuItem<int?>(
+                  value: null, child: Text('Sva muftijstva')),
+              ...provider.muftiates.map((m) => DropdownMenuItem<int?>(
+                    value: m['id'] as int,
+                    child: Text(m['name'] as String? ?? ''),
+                  )),
+            ],
+            onChanged: (v) {
+              setState(() => _currentPage = 0);
+              provider.setMuftiateFilter(v);
+            },
+          ),
+          const SizedBox(width: 12),
+          DropdownButton<int?>(
+            value: provider.filterMajlisId,
+            hint: const Text('Svi medžlisi'),
+            underline: const SizedBox(),
+            items: [
+              const DropdownMenuItem<int?>(
+                  value: null, child: Text('Svi medžlisi')),
+              ...provider.majlises.map((m) => DropdownMenuItem<int?>(
+                    value: m['id'] as int,
+                    child: Text(m['name'] as String? ?? ''),
+                  )),
+            ],
+            onChanged: (v) {
+              setState(() => _currentPage = 0);
+              provider.setMajlisFilter(v);
+            },
           ),
           const SizedBox(width: 12),
           DropdownButton<int?>(

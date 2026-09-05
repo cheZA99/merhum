@@ -13,8 +13,9 @@ class ReportPdfGenerator {
   static Future<File> generateAndOpen(
     String title,
     List<pw.Widget> content,
-    String fileName,
-  ) async {
+    String fileName, {
+    bool open = true,
+  }) async {
     final pdf = pw.Document();
     final now = DateTime.now();
 
@@ -32,8 +33,10 @@ class ReportPdfGenerator {
     final file = File('${dir.path}\\$fileName.pdf');
     await file.writeAsBytes(await pdf.save());
 
-    // Open with system default PDF viewer on Windows
-    await Process.run('cmd', ['/c', 'start', '', file.path], runInShell: true);
+    if (open) {
+      // Open with system default PDF viewer on Windows
+      await Process.run('cmd', ['/c', 'start', '', file.path], runInShell: true);
+    }
     return file;
   }
 
@@ -119,7 +122,7 @@ class ReportPdfGenerator {
     );
   }
 
-  static Future<File> burialReport(Map<String, dynamic> data, int year) {
+  static Future<File> burialReport(Map<String, dynamic> data, int year, {bool open = true}) {
     final byMonth = (data['byMonth'] as List? ?? []).cast<Map<String, dynamic>>();
     final byCemetery = (data['byCemetery'] as List? ?? []).cast<Map<String, dynamic>>();
     final total = byMonth.fold<int>(0, (s, m) => s + (m['count'] as int? ?? 0));
@@ -160,10 +163,11 @@ class ReportPdfGenerator {
         ),
       ],
       'ukopi_$year',
+      open: open,
     );
   }
 
-  static Future<File> cemeteryCapacityReport(Map<String, dynamic> data) {
+  static Future<File> cemeteryCapacityReport(Map<String, dynamic> data, {bool open = true}) {
     final cemeteries = (data['cemeteries'] as List? ?? []).cast<Map<String, dynamic>>();
 
     return generateAndOpen(
@@ -187,10 +191,11 @@ class ReportPdfGenerator {
         ),
       ],
       'popunjenost_groblja_${DateFormat('yyyyMMdd').format(DateTime.now())}',
+      open: open,
     );
   }
 
-  static Future<File> servicesReport(Map<String, dynamic> data, int year) {
+  static Future<File> servicesReport(Map<String, dynamic> data, int year, {bool open = true}) {
     final byType = (data['byServiceType'] as List? ?? []).cast<Map<String, dynamic>>();
     final byHome = (data['byFuneralHome'] as List? ?? []).cast<Map<String, dynamic>>();
 
@@ -234,10 +239,11 @@ class ReportPdfGenerator {
         ),
       ],
       'usluge_$year',
+      open: open,
     );
   }
 
-  static Future<File> obituariesStatsReport(Map<String, dynamic> data) {
+  static Future<File> obituariesStatsReport(Map<String, dynamic> data, {bool open = true}) {
     final topViewed = (data['topViewed'] as List? ?? []).cast<Map<String, dynamic>>();
 
     return generateAndOpen(
@@ -270,10 +276,11 @@ class ReportPdfGenerator {
         ],
       ],
       'smrtovnice_${DateFormat('yyyyMMdd').format(DateTime.now())}',
+      open: open,
     );
   }
 
-  static Future<File> financialReport(Map<String, dynamic> data, int year) {
+  static Future<File> financialReport(Map<String, dynamic> data, int year, {bool open = true}) {
     final byMonth = (data['byMonth'] as List? ?? []).cast<Map<String, dynamic>>();
     final totalRevenue = (data['totalRevenue'] as num?)?.toDouble() ?? 0;
     final completedRevenue = (data['completedRevenue'] as num?)?.toDouble() ?? 0;
@@ -307,6 +314,7 @@ class ReportPdfGenerator {
         ),
       ],
       'finansije_$year',
+      open: open,
     );
   }
 }

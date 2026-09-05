@@ -3,14 +3,27 @@ import 'package:provider/provider.dart';
 import '../../models/reference/country_model.dart';
 import '../../providers/reference_provider.dart';
 import '../../utils/constants.dart';
+import '../../widgets/list_search_field.dart';
 
-class CountriesTab extends StatelessWidget {
+class CountriesTab extends StatefulWidget {
   const CountriesTab({super.key});
+
+  @override
+  State<CountriesTab> createState() => _CountriesTabState();
+}
+
+class _CountriesTabState extends State<CountriesTab> {
+  String _query = '';
 
   @override
   Widget build(BuildContext context) {
     return Consumer<ReferenceProvider>(
       builder: (context, provider, _) {
+        final q = _query.trim().toLowerCase();
+        final rows = q.isEmpty
+            ? provider.countries
+            : provider.countries.where((c) => c.name.toLowerCase().contains(q) || c.code.toLowerCase().contains(q)).toList();
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -28,9 +41,14 @@ class CountriesTab extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
+            ListSearchField(
+              hint: 'Pretraži države po nazivu ili kodu',
+              onChanged: (v) => setState(() => _query = v),
+            ),
+            const SizedBox(height: 16),
             if (provider.isLoading)
               const Center(child: CircularProgressIndicator())
-            else if (provider.countries.isEmpty)
+            else if (rows.isEmpty)
               const Center(
                   child: Text('Nema pronađenih država.', style: AppTextStyles.body))
             else
@@ -46,7 +64,7 @@ class CountriesTab extends StatelessWidget {
                         DataColumn(label: Text('Kod')),
                         DataColumn(label: Text('Akcije')),
                       ],
-                      rows: provider.countries
+                      rows: rows
                           .map((c) => _buildRow(context, provider, c))
                           .toList(),
                     ),

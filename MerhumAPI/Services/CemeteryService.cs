@@ -12,7 +12,7 @@ public class CemeteryService : ICemeteryService
 
     public CemeteryService(ApplicationDbContext db) => _db = db;
 
-    public async Task<PagedResponse<CemeteryResponse>> GetAllAsync(string? search, int pageNumber, int pageSize)
+    public async Task<PagedResponse<CemeteryResponse>> GetAllAsync(string? search, int? majlisId, int? muftiateId, int pageNumber, int pageSize)
     {
         (pageNumber, pageSize) = Pagination.Normalize(pageNumber, pageSize);
 
@@ -20,6 +20,12 @@ public class CemeteryService : ICemeteryService
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(c => c.Name.Contains(search) || c.Address.Contains(search));
+
+        if (majlisId.HasValue)
+            query = query.Where(c => c.MajlisId == majlisId.Value);
+
+        if (muftiateId.HasValue)
+            query = query.Where(c => c.Majlis.MuftiateId == muftiateId.Value);
 
         var total = await query.CountAsync();
         var items = await query

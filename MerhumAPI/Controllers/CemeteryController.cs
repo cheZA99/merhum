@@ -18,10 +18,12 @@ public class CemeteryController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<PagedResponse<CemeteryResponse>>> GetAll(
         [FromQuery] string? search,
+        [FromQuery] int? majlisId,
+        [FromQuery] int? muftiateId,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20)
     {
-        var result = await _cemeteryService.GetAllAsync(search, pageNumber, pageSize);
+        var result = await _cemeteryService.GetAllAsync(search, majlisId, muftiateId, pageNumber, pageSize);
         return Ok(result);
     }
 

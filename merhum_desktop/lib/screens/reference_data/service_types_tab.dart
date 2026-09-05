@@ -3,14 +3,27 @@ import 'package:provider/provider.dart';
 import '../../models/reference/service_type_model.dart';
 import '../../providers/reference_provider.dart';
 import '../../utils/constants.dart';
+import '../../widgets/list_search_field.dart';
 
-class ServiceTypesTab extends StatelessWidget {
+class ServiceTypesTab extends StatefulWidget {
   const ServiceTypesTab({super.key});
+
+  @override
+  State<ServiceTypesTab> createState() => _ServiceTypesTabState();
+}
+
+class _ServiceTypesTabState extends State<ServiceTypesTab> {
+  String _query = '';
 
   @override
   Widget build(BuildContext context) {
     return Consumer<ReferenceProvider>(
       builder: (context, provider, _) {
+        final q = _query.trim().toLowerCase();
+        final rows = q.isEmpty
+            ? provider.serviceTypes
+            : provider.serviceTypes.where((s) => s.name.toLowerCase().contains(q)).toList();
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -28,9 +41,14 @@ class ServiceTypesTab extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
+            ListSearchField(
+              hint: 'Pretraži usluge po nazivu',
+              onChanged: (v) => setState(() => _query = v),
+            ),
+            const SizedBox(height: 16),
             if (provider.isLoading)
               const Center(child: CircularProgressIndicator())
-            else if (provider.serviceTypes.isEmpty)
+            else if (rows.isEmpty)
               const Center(
                   child: Text('Nema pronađenih vrsta usluga.',
                       style: AppTextStyles.body))
@@ -47,7 +65,7 @@ class ServiceTypesTab extends StatelessWidget {
                         DataColumn(label: Text('Opis')),
                         DataColumn(label: Text('Akcije')),
                       ],
-                      rows: provider.serviceTypes
+                      rows: rows
                           .map((s) => _buildRow(context, provider, s))
                           .toList(),
                     ),

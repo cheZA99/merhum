@@ -67,6 +67,9 @@ class DeceasedService {
     );
   }
 
+  Future<List<int>> getObituaryPdf(String slug) =>
+      _api.getBytes('/api/report/obituary/$slug/pdf');
+
   Future<void> delete(int id) async {
     await _api.delete('/api/deceased/$id');
   }

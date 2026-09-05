@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/api_config.dart';
@@ -8,6 +9,7 @@ import '../../navigation/app_navigation.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/deceased_provider.dart';
 import '../../utils/constants.dart';
+import '../../utils/pdf_downloader.dart';
 import 'deceased_form_screen.dart';
 import 'widgets/status_chip_widget.dart';
 import 'widgets/status_timeline_widget.dart';
@@ -24,6 +26,31 @@ class DeceasedDetailsScreen extends StatefulWidget {
 class _DeceasedDetailsScreenState extends State<DeceasedDetailsScreen> {
   late DeceasedModel _deceased;
   List<StatusHistoryModel>? _history;
+  bool _downloadingPdf = false;
+
+  Future<void> _openObituaryPdf(String slug) =>
+      _withPdf(slug, (bytes, name) => PdfDownloader.saveAndOpen(bytes, name));
+
+  Future<void> _printObituaryPdf(String slug) => _withPdf(slug, (bytes, name) async {
+        final file = await PdfDownloader.save(bytes, name);
+        await PdfDownloader.printFile(file);
+        return file;
+      });
+
+  Future<void> _withPdf(String slug, Future<File> Function(List<int>, String) action) async {
+    setState(() => _downloadingPdf = true);
+    try {
+      final bytes = await context.read<DeceasedProvider>().obituaryPdf(slug);
+      await action(bytes, 'smrtovnica-$slug');
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Smrtovnicu nije bilo moguće preuzeti.')),
+      );
+    } finally {
+      if (mounted) setState(() => _downloadingPdf = false);
+    }
+  }
 
   @override
   void initState() {
@@ -495,15 +522,22 @@ class _DeceasedDetailsScreenState extends State<DeceasedDetailsScreen> {
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                OutlinedButton(
-                                  onPressed: () {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(const SnackBar(
-                                      content: Text(
-                                          'PDF nije dostupan u ovoj verziji.'),
-                                    ));
-                                  },
-                                  child: const Text('Preuzmi PDF'),
+                                OutlinedButton.icon(
+                                  onPressed: _downloadingPdf
+                                      ? null
+                                      : () => _openObituaryPdf(
+                                          _deceased.obituarySlug!),
+                                  icon: const Icon(Icons.picture_as_pdf, size: 18),
+                                  label: const Text('Preuzmi PDF'),
+                                ),
+                                const SizedBox(width: 12),
+                                OutlinedButton.icon(
+                                  onPressed: _downloadingPdf
+                                      ? null
+                                      : () => _printObituaryPdf(
+                                          _deceased.obituarySlug!),
+                                  icon: const Icon(Icons.print, size: 18),
+                                  label: const Text('Štampaj'),
                                 ),
                               ],
                             ),

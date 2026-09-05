@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../navigation/app_navigation.dart';
 import '../../providers/report_provider.dart';
 import '../../utils/constants.dart';
+import '../../utils/pdf_downloader.dart';
 import '../../utils/report_pdf_generator.dart';
 import '../../widgets/sidebar_widget.dart';
 import 'tabs/burial_report_tab.dart';
@@ -95,6 +97,8 @@ class _ReportsScreenState extends State<ReportsScreen>
                         const SizedBox(width: 12),
                       ],
                       _buildDownloadButton(),
+                      const SizedBox(width: 12),
+                      _buildPrintButton(),
                     ],
                   ),
                 ),
@@ -184,6 +188,19 @@ class _ReportsScreenState extends State<ReportsScreen>
     );
   }
 
+  Widget _buildPrintButton() {
+    return Consumer<ReportProvider>(
+      builder: (context, p, _) {
+        final hasData = _currentTabHasData(p);
+        return OutlinedButton.icon(
+          onPressed: (!hasData || _isPdfGenerating) ? null : () => _printPdf(p),
+          icon: const Icon(Icons.print, size: 18),
+          label: const Text('Štampaj'),
+        );
+      },
+    );
+  }
+
   bool _currentTabHasData(ReportProvider p) {
     switch (_tabController.index) {
       case 0: return p.burialData != null;
@@ -195,26 +212,52 @@ class _ReportsScreenState extends State<ReportsScreen>
     }
   }
 
+  Future<void> _printPdf(ReportProvider p) async {
+    setState(() => _isPdfGenerating = true);
+    try {
+      final file = await _generatePdf(p, open: false);
+      await PdfDownloader.printFile(file);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Izvještaj je poslan na štampu.'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Greška pri štampanju: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isPdfGenerating = false);
+    }
+  }
+
+  Future<File> _generatePdf(ReportProvider p, {bool open = true}) {
+    switch (_tabController.index) {
+      case 0:
+        return ReportPdfGenerator.burialReport(p.burialData!, p.selectedYear, open: open);
+      case 1:
+        return ReportPdfGenerator.cemeteryCapacityReport(p.cemeteryCapacityData!, open: open);
+      case 2:
+        return ReportPdfGenerator.servicesReport(p.servicesData!, p.selectedYear, open: open);
+      case 3:
+        return ReportPdfGenerator.obituariesStatsReport(p.obituariesStatsData!, open: open);
+      default:
+        return ReportPdfGenerator.financialReport(p.financialData!, p.selectedYear, open: open);
+    }
+  }
+
   Future<void> _downloadPdf(ReportProvider p) async {
     setState(() => _isPdfGenerating = true);
     try {
-      switch (_tabController.index) {
-        case 0:
-          await ReportPdfGenerator.burialReport(p.burialData!, p.selectedYear);
-          break;
-        case 1:
-          await ReportPdfGenerator.cemeteryCapacityReport(p.cemeteryCapacityData!);
-          break;
-        case 2:
-          await ReportPdfGenerator.servicesReport(p.servicesData!, p.selectedYear);
-          break;
-        case 3:
-          await ReportPdfGenerator.obituariesStatsReport(p.obituariesStatsData!);
-          break;
-        case 4:
-          await ReportPdfGenerator.financialReport(p.financialData!, p.selectedYear);
-          break;
-      }
+      await _generatePdf(p);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
