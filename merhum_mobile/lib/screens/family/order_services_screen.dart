@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/service_order_provider.dart';
 import '../../utils/constants.dart';
+import '../../utils/validators.dart';
 
 class OrderServicesScreen extends StatefulWidget {
   final int deceasedId;
@@ -123,7 +124,7 @@ class _OrderServicesScreenState extends State<OrderServicesScreen> {
                     });
                     if (v != null) context.read<ServiceOrderProvider>().loadOfferings(v);
                   },
-                  validator: (v) => v == null ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.choice(v, 'pogrebno preduzeće'),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
@@ -134,7 +135,7 @@ class _OrderServicesScreenState extends State<OrderServicesScreen> {
                     child: Text('${o['serviceTypeName'] ?? ''} - ${o['price']} KM'),
                   )).toList(),
                   onChanged: (v) => setState(() => _offeringId = v),
-                  validator: (v) => v == null ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.choice(v, 'uslugu'),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(

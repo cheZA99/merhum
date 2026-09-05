@@ -5,6 +5,7 @@ import '../../models/obituary_model.dart';
 import '../../providers/deceased_provider.dart';
 import '../../services/obituary_service.dart';
 import '../../utils/constants.dart';
+import '../../utils/validators.dart';
 import 'share_obituary_screen.dart';
 
 class CreateObituaryScreen extends StatefulWidget {
@@ -72,7 +73,7 @@ class _CreateObituaryScreenState extends State<CreateObituaryScreen> {
                     child: Text(d.fullName),
                   )).toList(),
                   onChanged: (v) => setState(() => _deceasedId = v),
-                  validator: (v) => v == null ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.choice(v, 'preminulog'),
                 ),
                 const SizedBox(height: 16),
                 Card(

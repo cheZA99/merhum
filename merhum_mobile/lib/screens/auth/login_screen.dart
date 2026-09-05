@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/constants.dart';
+import '../../utils/validators.dart';
 import '../family/family_dashboard_screen.dart';
 import '../imam/imam_appointments_screen.dart';
 import '../funeral_home/funeral_home_orders_screen.dart';
@@ -86,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextFormField(
                     controller: _usernameCtrl,
                     decoration: const InputDecoration(labelText: 'Korisničko ime', prefixIcon: Icon(Icons.person_outline)),
-                    validator: (v) => v?.isEmpty == true ? 'Obavezno polje' : null,
+                    validator: (v) => Validators.required(v, 'korisničko ime'),
                   ),
                   const SizedBox(height: 14),
                   TextFormField(
@@ -100,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () => setState(() => _obscure = !_obscure),
                       ),
                     ),
-                    validator: (v) => v?.isEmpty == true ? 'Obavezno polje' : null,
+                    validator: (v) => Validators.required(v, 'lozinku'),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(

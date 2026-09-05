@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/deceased_provider.dart';
 import '../../utils/constants.dart';
+import '../../utils/validators.dart';
 import '../../utils/date_formatter.dart';
 
 class RegisterDeceasedScreen extends StatefulWidget {
@@ -65,9 +66,13 @@ class _RegisterDeceasedScreenState extends State<RegisterDeceasedScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_dateOfDeath == null) {
+    final dateProblem = Validators.pastDate(_dateOfDeath, 'datum smrti') ??
+        (_dateOfBirth == null ? null : Validators.pastDate(_dateOfBirth, 'datum rođenja')) ??
+        Validators.orderedDates(_dateOfBirth, _dateOfDeath, 'Datum smrti ne može biti prije datuma rođenja');
+
+    if (dateProblem != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Odaberite datum smrti'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(dateProblem), backgroundColor: AppColors.error),
       );
       return;
     }
@@ -119,13 +124,13 @@ class _RegisterDeceasedScreenState extends State<RegisterDeceasedScreen> {
                 TextFormField(
                   controller: _firstNameCtrl,
                   decoration: const InputDecoration(labelText: 'Ime'),
-                  validator: (v) => v?.isEmpty == true ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.name(v, 'ime'),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _lastNameCtrl,
                   decoration: const InputDecoration(labelText: 'Prezime'),
-                  validator: (v) => v?.isEmpty == true ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.name(v, 'prezime'),
                 ),
                 const SizedBox(height: 12),
                 _DateField(
@@ -143,7 +148,7 @@ class _RegisterDeceasedScreenState extends State<RegisterDeceasedScreen> {
                 TextFormField(
                   controller: _placeOfDeathCtrl,
                   decoration: const InputDecoration(labelText: 'Mjesto smrti'),
-                  validator: (v) => v?.isEmpty == true ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.required(v, 'mjesto smrti'),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
@@ -154,7 +159,7 @@ class _RegisterDeceasedScreenState extends State<RegisterDeceasedScreen> {
                     child: Text(c['name'] as String? ?? ''),
                   )).toList(),
                   onChanged: (v) => setState(() => _cityId = v),
-                  validator: (v) => v == null ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.choice(v, 'grad'),
                 ),
                 const SizedBox(height: 24),
                 const Text('Kontakt osoba', style: AppTextStyles.heading3),
@@ -162,20 +167,21 @@ class _RegisterDeceasedScreenState extends State<RegisterDeceasedScreen> {
                 TextFormField(
                   controller: _contactNameCtrl,
                   decoration: const InputDecoration(labelText: 'Ime i prezime'),
-                  validator: (v) => v?.isEmpty == true ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.name(v, 'ime i prezime kontakt osobe'),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _contactPhoneCtrl,
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(labelText: 'Telefon'),
-                  validator: (v) => v?.isEmpty == true ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.phone(v),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _contactEmailCtrl,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(labelText: 'Email'),
+                  validator: (v) => Validators.email(v, isRequired: false),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(

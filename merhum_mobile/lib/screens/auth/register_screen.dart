@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../../utils/constants.dart';
+import '../../utils/validators.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -82,55 +83,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _firstNameCtrl,
                   decoration: const InputDecoration(labelText: 'Ime'),
-                  validator: (v) => v?.isEmpty == true ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.name(v, 'ime'),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _lastNameCtrl,
                   decoration: const InputDecoration(labelText: 'Prezime'),
-                  validator: (v) => v?.isEmpty == true ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.name(v, 'prezime'),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _usernameCtrl,
                   decoration: const InputDecoration(labelText: 'Korisničko ime'),
-                  validator: (v) => v?.isEmpty == true ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.name(v, 'korisničko ime'),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(labelText: 'Email'),
-                  validator: (v) {
-                    if (v?.isEmpty == true) return 'Obavezno polje';
-                    if (!v!.contains('@')) return 'Neispravan email';
-                    return null;
-                  },
+                  validator: (v) => Validators.email(v),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _phoneCtrl,
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(labelText: 'Telefon'),
-                  validator: (v) => v?.isEmpty == true ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.phone(v),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _passwordCtrl,
                   obscureText: true,
                   decoration: const InputDecoration(labelText: 'Lozinka'),
-                  validator: (v) {
-                    if (v?.isEmpty == true) return 'Obavezno polje';
-                    if ((v?.length ?? 0) < 6) return 'Najmanje 6 znakova';
-                    return null;
-                  },
+                  validator: (v) => Validators.password(v, minLength: 6),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _confirmCtrl,
                   obscureText: true,
                   decoration: const InputDecoration(labelText: 'Potvrdi lozinku'),
-                  validator: (v) => v?.isEmpty == true ? 'Obavezno polje' : null,
+                  validator: (v) => v != _passwordCtrl.text ? 'Lozinke se ne podudaraju' : null,
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(

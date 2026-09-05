@@ -5,9 +5,11 @@ namespace MerhumAPI.DTOs.ServiceOrder;
 public class ServiceOrderRequest
 {
     [Required]
+    [Range(1, int.MaxValue, ErrorMessage = "Odaberite ispravnu stavku.")]
     public int DeceasedId { get; set; }
 
     [Required]
+    [Range(1, int.MaxValue, ErrorMessage = "Odaberite ispravnu stavku.")]
     public int ServiceOfferingId { get; set; }
 
     [MaxLength(500)]

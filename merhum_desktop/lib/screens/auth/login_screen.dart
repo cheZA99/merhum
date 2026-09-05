@@ -86,8 +86,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           onFieldSubmitted: (_) =>
                               FocusScope.of(context).requestFocus(_passwordFocus),
                           validator: (v) {
-                            if (v == null || v.isEmpty) return 'Obavezno polje';
-                            if (v.length < 3) return 'Minimum 3 karaktera';
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Unesite korisničko ime';
+                            }
+                            if (v.trim().length < 3) {
+                              return 'Korisničko ime mora imati najmanje 3 znaka';
+                            }
                             return null;
                           },
                         ),
@@ -109,8 +113,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           onFieldSubmitted: (_) => _submit(),
                           validator: (v) {
-                            if (v == null || v.isEmpty) return 'Obavezno polje';
-                            if (v.length < 4) return 'Minimum 4 karaktera';
+                            if (v == null || v.isEmpty) return 'Unesite lozinku';
+                            if (v.length < 4) {
+                              return 'Lozinka mora imati najmanje 4 znaka';
+                            }
                             return null;
                           },
                         ),

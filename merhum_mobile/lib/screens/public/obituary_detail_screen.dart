@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/obituary_provider.dart';
 import '../../utils/constants.dart';
+import '../../utils/validators.dart';
 import '../../utils/date_formatter.dart';
 import '../../widgets/loading_widget.dart';
 
@@ -48,7 +49,7 @@ class _ObituaryDetailScreenState extends State<ObituaryDetailScreen> {
                 TextFormField(
                   controller: nameCtrl,
                   decoration: const InputDecoration(labelText: 'Vaše ime'),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.name(v, 'vaše ime'),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -56,7 +57,7 @@ class _ObituaryDetailScreenState extends State<ObituaryDetailScreen> {
                   decoration: const InputDecoration(labelText: 'Kondolencija'),
                   maxLines: 4,
                   maxLength: 1000,
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.required(v, 'tekst kondolencije'),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(

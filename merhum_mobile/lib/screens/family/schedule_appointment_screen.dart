@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/appointment_provider.dart';
 import '../../utils/constants.dart';
+import '../../utils/validators.dart';
 import '../../utils/date_formatter.dart';
 
 class ScheduleAppointmentScreen extends StatefulWidget {
@@ -112,7 +113,7 @@ class _ScheduleAppointmentScreenState extends State<ScheduleAppointmentScreen> {
                     });
                     if (v != null) context.read<AppointmentProvider>().loadImamsByMosque(v);
                   },
-                  validator: (v) => v == null ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.choice(v, 'mesdžid'),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
@@ -123,7 +124,7 @@ class _ScheduleAppointmentScreenState extends State<ScheduleAppointmentScreen> {
                     child: Text(i['fullName'] as String? ?? i['name'] as String? ?? ''),
                   )).toList(),
                   onChanged: (v) => setState(() => _imamId = v),
-                  validator: (v) => v == null ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.choice(v, 'imama'),
                 ),
                 const SizedBox(height: 12),
                 InkWell(
@@ -154,7 +155,7 @@ class _ScheduleAppointmentScreenState extends State<ScheduleAppointmentScreen> {
                     });
                     if (v != null) context.read<AppointmentProvider>().loadGraveSites(v);
                   },
-                  validator: (v) => v == null ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.choice(v, 'mezarje'),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
@@ -165,7 +166,7 @@ class _ScheduleAppointmentScreenState extends State<ScheduleAppointmentScreen> {
                     child: Text(g['plotNumber'] as String? ?? ''),
                   )).toList(),
                   onChanged: (v) => setState(() => _graveSiteId = v),
-                  validator: (v) => v == null ? 'Obavezno polje' : null,
+                  validator: (v) => Validators.choice(v, 'mezarsko mjesto'),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(

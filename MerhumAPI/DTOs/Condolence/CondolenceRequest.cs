@@ -5,6 +5,7 @@ namespace MerhumAPI.DTOs.Condolence;
 public class CondolenceRequest
 {
     [Required]
+    [Range(1, int.MaxValue, ErrorMessage = "Odaberite ispravnu stavku.")]
     public int ObituaryId { get; set; }
 
     [Required, MaxLength(150)]
