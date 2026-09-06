@@ -267,9 +267,9 @@ public static class SeedData
 		db.Appointments.AddRange(
 			new Appointment { DeceasedId = dec1.Id, MosqueId = mosque1.Id, CemeteryId = cem1.Id, ImamId = imam1.Id, GraveSiteId = graveSites[0].Id, FuneralDateTime = new DateTime(2024, 1, 11, 13, 0, 0), Status = AppointmentStatus.Held, CreatedByUserId = adminUser.Id },
 			new Appointment { DeceasedId = dec2.Id, MosqueId = mosque2.Id, CemeteryId = cem2.Id, ImamId = imam2.Id, GraveSiteId = graveSites[15].Id, FuneralDateTime = new DateTime(2024, 2, 6, 14, 0, 0), Status = AppointmentStatus.Held, CreatedByUserId = adminUser.Id },
-			new Appointment { DeceasedId = dec3.Id, MosqueId = mosque3.Id, CemeteryId = cem3.Id, ImamId = imam1.Id, FuneralDateTime = funeralBase.AddDays(3).AddHours(13), Status = AppointmentStatus.Scheduled, CreatedByUserId = adminUser.Id },
-			new Appointment { DeceasedId = dec4.Id, MosqueId = mosque4.Id, CemeteryId = cem4.Id, ImamId = imam1.Id, FuneralDateTime = funeralBase.AddDays(7).AddHours(11), Status = AppointmentStatus.Scheduled, CreatedByUserId = adminUser.Id },
-			new Appointment { DeceasedId = dec5.Id, MosqueId = mosque1.Id, CemeteryId = cem1.Id, ImamId = imam2.Id, FuneralDateTime = funeralBase.AddDays(12).AddHours(14), Status = AppointmentStatus.Scheduled, CreatedByUserId = adminUser.Id }
+			new Appointment { DeceasedId = dec3.Id, MosqueId = mosque3.Id, CemeteryId = cem3.Id, ImamId = imam3.Id, FuneralDateTime = funeralBase.AddDays(3).AddHours(13), Status = AppointmentStatus.Scheduled, CreatedByUserId = adminUser.Id },
+			new Appointment { DeceasedId = dec4.Id, MosqueId = mosque4.Id, CemeteryId = cem4.Id, ImamId = imam4.Id, FuneralDateTime = funeralBase.AddDays(7).AddHours(11), Status = AppointmentStatus.Scheduled, CreatedByUserId = adminUser.Id },
+			new Appointment { DeceasedId = dec5.Id, MosqueId = mosque1.Id, CemeteryId = cem1.Id, ImamId = imam1.Id, FuneralDateTime = funeralBase.AddDays(12).AddHours(14), Status = AppointmentStatus.Scheduled, CreatedByUserId = adminUser.Id }
 		);
 
 		// recent burial history for Bare so its predicted burial rate stands out too
