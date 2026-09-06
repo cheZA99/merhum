@@ -60,17 +60,26 @@ public class ContextBuilderService : IContextBuilderService
         else
         {
             var cemeteryIds = cemeteries.Select(c => c.Id).ToList();
-            var freeByCemetery = await _db.GraveSites
-                .Where(g => cemeteryIds.Contains(g.CemeteryId) && g.Status == GraveSiteStatus.Available)
+            var siteCounts = await _db.GraveSites
+                .Where(g => cemeteryIds.Contains(g.CemeteryId))
                 .GroupBy(g => g.CemeteryId)
-                .Select(g => new { CemeteryId = g.Key, Free = g.Count() })
-                .ToDictionaryAsync(x => x.CemeteryId, x => x.Free);
+                .Select(g => new
+                {
+                    CemeteryId = g.Key,
+                    Free = g.Count(x => x.Status == GraveSiteStatus.Available),
+                    Occupied = g.Count(x => x.Status == GraveSiteStatus.Occupied)
+                })
+                .ToListAsync();
 
             foreach (var c in cemeteries)
             {
-                var free = freeByCemetery.TryGetValue(c.Id, out var count) ? count : 0;
+                var counts = siteCounts.FirstOrDefault(x => x.CemeteryId == c.Id);
+                var free = counts?.Free ?? 0;
+                var occupied = counts?.Occupied ?? 0;
+
+                // same formula the reports and the cemetery list use, so the numbers agree everywhere
                 var occupancy = c.TotalPlaces > 0
-                    ? Math.Round(((double)(c.TotalPlaces - free) / c.TotalPlaces) * 100.0, 1)
+                    ? Math.Round((double)occupied / c.TotalPlaces * 100.0, 1)
                     : 0.0;
                 sb.AppendLine($"- {c.Name} ({c.City.Name}) - ukupno mjesta: {c.TotalPlaces}, slobodno: {free}, popunjenost: {occupancy.ToString(culture)}%");
             }

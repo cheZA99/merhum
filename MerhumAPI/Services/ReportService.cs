@@ -124,31 +124,52 @@ public class ReportService : IReportService
     {
         var targetYear = year ?? DateTime.UtcNow.Year;
 
-        var byType = await _db.ServiceOrders
-            .Include(s => s.ServiceType)
-            .Where(s => s.OrderedAt.Year == targetYear)
-            .GroupBy(s => new { s.ServiceTypeId, ServiceTypeName = s.ServiceType != null ? s.ServiceType.Name : "Nepoznato" })
-            .Select(g => new
-            {
-                g.Key.ServiceTypeName,
-                Count = g.Count(),
-                TotalRevenue = g.Sum(s => _db.Payments.Any(p => p.ServiceOrderId == s.Id && p.Status == PaymentStatus.Completed) ? s.Price : 0m)
-            })
-            .OrderByDescending(x => x.TotalRevenue)
+        var ordered = _db.ServiceOrders.Where(s => s.OrderedAt.Year == targetYear);
+
+        // revenue is counted separately from volume, because only a confirmed payment is income
+        var paid = ordered.Where(s => _db.Payments.Any(p => p.ServiceOrderId == s.Id && p.Status == PaymentStatus.Completed));
+
+        var countsByType = await ordered
+            .GroupBy(s => new { s.ServiceTypeId, Name = s.ServiceType != null ? s.ServiceType.Name : "Nepoznato" })
+            .Select(g => new { g.Key.ServiceTypeId, g.Key.Name, Count = g.Count() })
             .ToListAsync();
 
-        var byFuneralHome = await _db.ServiceOrders
-            .Include(s => s.FuneralHome)
-            .Where(s => s.OrderedAt.Year == targetYear)
-            .GroupBy(s => new { s.FuneralHomeId, FuneralHomeName = s.FuneralHome != null ? s.FuneralHome.Name : "Nepoznato" })
-            .Select(g => new
+        var revenueByType = await paid
+            .GroupBy(s => s.ServiceTypeId)
+            .Select(g => new { ServiceTypeId = g.Key, Revenue = g.Sum(s => s.Price) })
+            .ToListAsync();
+
+        var byType = countsByType
+            .Select(c => new
             {
-                g.Key.FuneralHomeName,
-                Count = g.Count(),
-                TotalRevenue = g.Sum(s => _db.Payments.Any(p => p.ServiceOrderId == s.Id && p.Status == PaymentStatus.Completed) ? s.Price : 0m)
+                ServiceTypeName = c.Name,
+                c.Count,
+                TotalRevenue = revenueByType.FirstOrDefault(r => r.ServiceTypeId == c.ServiceTypeId)?.Revenue ?? 0m
             })
             .OrderByDescending(x => x.TotalRevenue)
+            .ThenByDescending(x => x.Count)
+            .ToList();
+
+        var countsByHome = await ordered
+            .GroupBy(s => new { s.FuneralHomeId, Name = s.FuneralHome != null ? s.FuneralHome.Name : "Nepoznato" })
+            .Select(g => new { g.Key.FuneralHomeId, g.Key.Name, Count = g.Count() })
             .ToListAsync();
+
+        var revenueByHome = await paid
+            .GroupBy(s => s.FuneralHomeId)
+            .Select(g => new { FuneralHomeId = g.Key, Revenue = g.Sum(s => s.Price) })
+            .ToListAsync();
+
+        var byFuneralHome = countsByHome
+            .Select(c => new
+            {
+                FuneralHomeName = c.Name,
+                c.Count,
+                TotalRevenue = revenueByHome.FirstOrDefault(r => r.FuneralHomeId == c.FuneralHomeId)?.Revenue ?? 0m
+            })
+            .OrderByDescending(x => x.TotalRevenue)
+            .ThenByDescending(x => x.Count)
+            .ToList();
 
         return new { Year = targetYear, ByServiceType = byType, ByFuneralHome = byFuneralHome };
     }
@@ -196,21 +217,31 @@ public class ReportService : IReportService
     {
         var targetYear = year ?? DateTime.UtcNow.Year;
 
-        // an order only turns into revenue once its payment is confirmed
-        var paidOrders = _db.ServiceOrders
-            .Where(s => s.OrderedAt.Year == targetYear
-                && _db.Payments.Any(p => p.ServiceOrderId == s.Id && p.Status == PaymentStatus.Completed));
+        var ordered = _db.ServiceOrders.Where(s => s.OrderedAt.Year == targetYear);
 
-        var byMonth = await paidOrders
+        // an order only turns into revenue once its payment is confirmed, but it still counts as volume
+        var paidOrders = ordered
+            .Where(s => _db.Payments.Any(p => p.ServiceOrderId == s.Id && p.Status == PaymentStatus.Completed));
+
+        var countsByMonth = await ordered
             .GroupBy(s => s.OrderedAt.Month)
-            .Select(g => new
+            .Select(g => new { Month = g.Key, OrderCount = g.Count() })
+            .ToListAsync();
+
+        var revenueByMonth = await paidOrders
+            .GroupBy(s => s.OrderedAt.Month)
+            .Select(g => new { Month = g.Key, Revenue = g.Sum(s => s.Price) })
+            .ToListAsync();
+
+        var byMonth = countsByMonth
+            .Select(c => new
             {
-                Month = g.Key,
-                OrderCount = g.Count(),
-                TotalRevenue = g.Sum(s => s.Price)
+                c.Month,
+                c.OrderCount,
+                TotalRevenue = revenueByMonth.FirstOrDefault(r => r.Month == c.Month)?.Revenue ?? 0m
             })
             .OrderBy(x => x.Month)
-            .ToListAsync();
+            .ToList();
 
         var totalRevenue = byMonth.Sum(x => x.TotalRevenue);
         var totalOrders = byMonth.Sum(x => x.OrderCount);
