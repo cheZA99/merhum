@@ -103,7 +103,6 @@ class _FuneralHomeFormScreenState extends State<FuneralHomeFormScreen> {
         backgroundColor: Colors.white,
         foregroundColor: AppColors.textDark,
         elevation: 1,
-        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.close),

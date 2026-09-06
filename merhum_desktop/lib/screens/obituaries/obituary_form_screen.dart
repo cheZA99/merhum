@@ -32,8 +32,8 @@ class _ObituaryFormScreenState extends State<ObituaryFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nova smrtovnica'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.textDark,
         actions: [
           IconButton(
             icon: const Icon(Icons.close),

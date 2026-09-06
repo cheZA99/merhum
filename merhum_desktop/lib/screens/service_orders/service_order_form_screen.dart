@@ -69,8 +69,8 @@ class _ServiceOrderFormScreenState extends State<ServiceOrderFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEdit ? 'Uredi nalog' : 'Novi nalog'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.textDark,
         actions: [
           IconButton(
             icon: const Icon(Icons.close),

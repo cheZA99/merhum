@@ -77,8 +77,8 @@ class _UserFormScreenState extends State<UserFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEdit ? 'Uredi korisnika' : 'Novi korisnik'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.textDark,
         actions: [
           IconButton(
             icon: const Icon(Icons.close),
