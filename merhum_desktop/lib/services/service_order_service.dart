@@ -74,6 +74,10 @@ class ServiceOrderService {
     return list.cast<Map<String, dynamic>>();
   }
 
+  Future<void> refundPayment(int serviceOrderId) async {
+    await _api.post('/api/payments/refund/$serviceOrderId', data: null);
+  }
+
   Future<void> updateStatus(int id, String status) async {
     await _api.patch('/api/ServiceOrder/$id/status', data: {'status': status});
   }

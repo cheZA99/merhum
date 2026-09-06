@@ -255,7 +255,7 @@ class _ServiceOrdersScreenState extends State<ServiceOrdersScreen> {
             4: FlexColumnWidth(1.2),
             5: FlexColumnWidth(1.5),
             6: FlexColumnWidth(1.5),
-            7: FixedColumnWidth(100),
+            7: FixedColumnWidth(150),
           },
           children: [
             _tableHeader(),
@@ -323,6 +323,12 @@ class _ServiceOrdersScreenState extends State<ServiceOrdersScreen> {
                 tooltip: 'Uredi',
                 onPressed: () => _openForm(order: o),
               ),
+              if (isAdmin)
+                IconButton(
+                  icon: const Icon(Icons.undo, size: 18),
+                  tooltip: 'Refundiraj plaćanje',
+                  onPressed: () => _confirmRefund(o),
+                ),
               if (isAdmin)
                 IconButton(
                   icon: const Icon(Icons.delete, size: 18, color: AppColors.error),
@@ -428,6 +434,35 @@ class _ServiceOrdersScreenState extends State<ServiceOrdersScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmRefund(ServiceOrderModel o) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Povrat sredstava'),
+        content: Text(
+            'Izvršiti povrat za nalog "${o.serviceTypeName ?? ''}" u iznosu od ${o.price.toStringAsFixed(2)} KM?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Odustani')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Refundiraj'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final p = context.read<ServiceOrderProvider>();
+    final ok = await p.refund(o.id);
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(ok ? 'Povrat sredstava izvršen.' : (p.errorMessage ?? 'Povrat nije uspio.')),
+      backgroundColor: ok ? AppColors.success : AppColors.error,
+    ));
   }
 
   void _confirmDelete(ServiceOrderModel o) {

@@ -97,6 +97,18 @@ class ServiceOrderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> refund(int serviceOrderId) async {
+    try {
+      await _service.refundPayment(serviceOrderId);
+      await loadAll();
+      return true;
+    } on DioException catch (e) {
+      errorMessage = _parseError(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> changeStatus(int id, String status) async {
     try {
       await _service.updateStatus(id, status);
