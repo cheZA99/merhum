@@ -103,9 +103,17 @@ class AppointmentProvider extends ChangeNotifier {
     }
   }
 
-  Future<List<Map<String, dynamic>>> loadGraveSitesForCemetery(int cemeteryId) async {
+  Future<List<Map<String, dynamic>>> loadGraveSitesForCemetery(int cemeteryId, {int? keepSiteId}) async {
     try {
-      graveSites = await _service.getAvailableGraveSites(cemeteryId);
+      final sites = await _service.getAvailableGraveSites(cemeteryId);
+
+      // a booked site is Reserved, so the one this appointment already holds is added back in
+      if (keepSiteId != null && !sites.any((s) => s['id'] == keepSiteId)) {
+        final held = await _service.getGraveSiteById(keepSiteId);
+        if (held != null) sites.insert(0, held);
+      }
+
+      graveSites = sites;
       notifyListeners();
       return graveSites;
     } catch (_) {

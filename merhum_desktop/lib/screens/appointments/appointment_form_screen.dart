@@ -65,7 +65,7 @@ class _AppointmentFormScreenState extends State<AppointmentFormScreen> {
         if (mounted) setState(() => _imams = imams);
       }
       if (_selectedCemeteryId != null) {
-        final sites = await p.loadGraveSitesForCemetery(_selectedCemeteryId!);
+        final sites = await p.loadGraveSitesForCemetery(_selectedCemeteryId!, keepSiteId: _selectedGraveSiteId);
         if (mounted) setState(() => _graveSites = sites);
       }
     });
@@ -82,8 +82,8 @@ class _AppointmentFormScreenState extends State<AppointmentFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEdit ? 'Uredi termin' : 'Zakažite termin'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.textDark,
         actions: [
           IconButton(
             icon: const Icon(Icons.close),
@@ -206,12 +206,23 @@ class _AppointmentFormScreenState extends State<AppointmentFormScreen> {
         style: const TextStyle(color: AppColors.textLight),
       ),
       disabledHint: const Text('Prvo odaberite džamiju', style: TextStyle(color: AppColors.textLight)),
-      items: _imams.map((i) {
-        return DropdownMenuItem<int?>(
-          value: i['id'] as int,
-          child: Text('${i['firstName']} ${i['lastName']}'),
-        );
-      }).toList(),
+      items: _imams.any((i) => i['id'] == _selectedImamId) || _selectedImamId == null
+          ? _imams.map((i) {
+              return DropdownMenuItem<int?>(
+                value: i['id'] as int,
+                child: Text('${i['firstName']} ${i['lastName']}'),
+              );
+            }).toList()
+          : [
+              DropdownMenuItem<int?>(
+                value: _selectedImamId,
+                child: const Text('Trenutno dodijeljen imam (izvan ovog mesdžida)'),
+              ),
+              ..._imams.map((i) => DropdownMenuItem<int?>(
+                    value: i['id'] as int,
+                    child: Text('${i['firstName']} ${i['lastName']}'),
+                  )),
+            ],
       onChanged: _selectedMosqueId == null ? null : (v) => setState(() => _selectedImamId = v),
     );
   }

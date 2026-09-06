@@ -86,6 +86,16 @@ class AppointmentService {
     return list.cast<Map<String, dynamic>>();
   }
 
+  Future<Map<String, dynamic>?> getGraveSiteById(int id) async {
+    try {
+      final response = await _api.get('/api/gravesite/$id');
+      final raw = response.data as Map<String, dynamic>;
+      return (raw['data'] as Map<String, dynamic>?) ?? raw;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getAvailableGraveSites(int cemeteryId) async {
     final response = await _api.get('/api/gravesite', queryParams: {
       'cemeteryId': cemeteryId,
