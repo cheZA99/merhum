@@ -102,9 +102,22 @@ class DeceasedProvider extends ChangeNotifier {
     }
   }
 
+  int? lastCreatedId;
+
+  Future<String?> uploadPhoto(int id, String filePath) async {
+    try {
+      return await _service.uploadPhoto(id, filePath);
+    } on DioException catch (e) {
+      errorMessage = _parseError(e);
+      notifyListeners();
+      return null;
+    }
+  }
+
   Future<bool> create(Map<String, dynamic> data) async {
     try {
-      await _service.create(data);
+      final created = await _service.create(data);
+      lastCreatedId = created.id;
       currentPage = 1;
       await loadAll();
       return true;

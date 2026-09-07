@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../models/deceased_model.dart';
 import '../models/procedure_status_model.dart';
 import '../models/status_history_model.dart';
@@ -65,6 +66,13 @@ class DeceasedService {
       '/api/deceased/$id/status',
       data: {'statusId': statusId, 'note': note},
     );
+  }
+
+  Future<String?> uploadPhoto(int id, String filePath) async {
+    final form = FormData.fromMap({'file': await MultipartFile.fromFile(filePath)});
+    final response = await _api.post('/api/deceased/$id/photo', data: form);
+    final raw = response.data as Map<String, dynamic>;
+    return raw['photoUrl'] as String?;
   }
 
   Future<List<int>> getObituaryPdf(String slug) =>

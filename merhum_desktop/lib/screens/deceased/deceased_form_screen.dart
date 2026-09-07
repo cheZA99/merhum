@@ -1,6 +1,11 @@
+import 'dart:io';
+
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+
+import '../../config/api_config.dart';
 import '../../models/deceased_model.dart';
 import '../../providers/deceased_provider.dart';
 import '../../utils/constants.dart';
@@ -24,6 +29,23 @@ class _DeceasedFormScreenState extends State<DeceasedFormScreen> {
   late final TextEditingController _contactPhoneCtrl;
   late final TextEditingController _contactEmailCtrl;
   late final TextEditingController _photoUrlCtrl;
+  String? _pickedPhotoPath;
+  String? _pickedPhotoName;
+
+  Future<void> _pickPhoto() async {
+    const images = XTypeGroup(
+      label: 'Slike',
+      extensions: ['jpg', 'jpeg', 'png', 'webp'],
+    );
+
+    final file = await openFile(acceptedTypeGroups: const [images]);
+    if (file == null || !mounted) return;
+
+    setState(() {
+      _pickedPhotoPath = file.path;
+      _pickedPhotoName = file.name;
+    });
+  }
 
   DateTime? _dateOfBirth;
   DateTime? _dateOfDeath;
@@ -129,6 +151,12 @@ class _DeceasedFormScreenState extends State<DeceasedFormScreen> {
         ? await provider.update(widget.deceased!.id, data)
         : await provider.create(data);
 
+    // the upload endpoint needs an id, so a new record is saved first
+    if (success && _pickedPhotoPath != null) {
+      final id = _isEdit ? widget.deceased!.id : provider.lastCreatedId;
+      if (id != null) await provider.uploadPhoto(id, _pickedPhotoPath!);
+    }
+
     if (!mounted) return;
     setState(() => _isSaving = false);
 
@@ -152,7 +180,6 @@ class _DeceasedFormScreenState extends State<DeceasedFormScreen> {
         backgroundColor: Colors.white,
         foregroundColor: AppColors.textDark,
         elevation: 1,
-        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.close),
@@ -335,16 +362,42 @@ class _DeceasedFormScreenState extends State<DeceasedFormScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
-                      _field(
-                        controller: _photoUrlCtrl,
-                        label: 'URL fotografije',
-                        validator: (_) => null,
+                      const Text('Fotografija', style: AppTextStyles.body),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          OutlinedButton.icon(
+                            onPressed: _isSaving ? null : _pickPhoto,
+                            icon: const Icon(Icons.image_outlined, size: 18),
+                            label: const Text('Odaberi sliku'),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _pickedPhotoName ??
+                                  (_photoUrlCtrl.text.isEmpty
+                                      ? 'Nije odabrana'
+                                      : 'Postojeća slika'),
+                              style: AppTextStyles.caption,
+                            ),
+                          ),
+                        ],
                       ),
-                      if (_photoUrlCtrl.text.isNotEmpty)
+                      if (_pickedPhotoPath != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Image.file(
+                            File(_pickedPhotoPath!),
+                            height: 80,
+                            alignment: Alignment.centerLeft,
+                            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                          ),
+                        )
+                      else if (_photoUrlCtrl.text.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Image.network(
-                            _photoUrlCtrl.text,
+                            '$apiBaseUrl${_photoUrlCtrl.text}',
                             height: 80,
                             alignment: Alignment.centerLeft,
                             errorBuilder: (_, __, ___) =>
