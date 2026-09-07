@@ -260,8 +260,13 @@ class _PredictionCard extends StatelessWidget {
     );
   }
 
+  // the backend caps the estimate at 50 years, so anything at the cap is reported as a range
+  static const double _horizonMonths = 600;
+
   Widget _buildPredictionBox() {
-    final months = prediction.predictedMonthsUntilFull.toStringAsFixed(1);
+    final value = prediction.predictedMonthsUntilFull;
+    final beyondHorizon = value >= _horizonMonths;
+    final months = value.toStringAsFixed(1);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -274,7 +279,9 @@ class _PredictionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Procjena: još $months mjeseci do popunjenja',
+            beyondHorizon
+                ? 'Procjena: popunjenje nije očekivano u narednih 50 godina'
+                : 'Procjena: još $months mjeseci do popunjenja',
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -282,10 +289,11 @@ class _PredictionCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            'Očekivani datum popunjenja: ${dateFormat.format(prediction.estimatedFullDate)}',
-            style: AppTextStyles.body,
-          ),
+          if (!beyondHorizon)
+            Text(
+              'Očekivani datum popunjenja: ${dateFormat.format(prediction.estimatedFullDate)}',
+              style: AppTextStyles.body,
+            ),
           const SizedBox(height: 2),
           Text(
             'Prosječno ukopa mjesečno: ${prediction.averageBurialsPerMonth.toStringAsFixed(1)}',

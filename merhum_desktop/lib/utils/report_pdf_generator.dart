@@ -10,13 +10,36 @@ const _months = [
 ];
 
 class ReportPdfGenerator {
+  static pw.ThemeData? _theme;
+  static bool _themeChecked = false;
+
+  /// The built in pdf fonts cover Latin-1 only, so a system font is loaded for Bosnian letters.
+  static Future<pw.ThemeData?> _systemFontTheme() async {
+    if (_themeChecked) return _theme;
+    _themeChecked = true;
+
+    try {
+      final regular = File(r'C:\Windows\Fonts\segoeui.ttf');
+      final bold = File(r'C:\Windows\Fonts\segoeuib.ttf');
+      if (!regular.existsSync() || !bold.existsSync()) return null;
+
+      _theme = pw.ThemeData.withFont(
+        base: pw.Font.ttf((await regular.readAsBytes()).buffer.asByteData()),
+        bold: pw.Font.ttf((await bold.readAsBytes()).buffer.asByteData()),
+      );
+    } catch (_) {
+      _theme = null;
+    }
+    return _theme;
+  }
+
   static Future<File> generateAndOpen(
     String title,
     List<pw.Widget> content,
     String fileName, {
     bool open = true,
   }) async {
-    final pdf = pw.Document();
+    final pdf = pw.Document(theme: await _systemFontTheme());
     final now = DateTime.now();
 
     pdf.addPage(
