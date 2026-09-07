@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import '../../config/api_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/deceased_service.dart';
 import '../../utils/api_error.dart';
 import '../../utils/constants.dart';
+import '../../utils/media_url.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -158,7 +158,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   CircleAvatar(
                     radius: 48,
                     backgroundColor: AppColors.primaryLight,
-                    backgroundImage: _photoUrl != null ? NetworkImage('$apiBaseUrl$_photoUrl') : null,
+                    backgroundImage: _photoUrl != null ? NetworkImage(mediaUrl(_photoUrl)!) : null,
                     child: _photoUrl == null
                         ? const Icon(Icons.person, size: 48, color: Colors.white)
                         : null,

@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../models/obituary_model.dart';
 import '../utils/constants.dart';
+import '../utils/media_url.dart';
 import '../utils/date_formatter.dart';
 
 class ObituaryCardWidget extends StatelessWidget {
@@ -66,7 +67,7 @@ class ObituaryCardWidget extends StatelessWidget {
     if (obituary.photoUrl != null && obituary.photoUrl!.isNotEmpty) {
       return CircleAvatar(
         radius: 25,
-        backgroundImage: CachedNetworkImageProvider(obituary.photoUrl!),
+        backgroundImage: CachedNetworkImageProvider(mediaUrl(obituary.photoUrl)!),
         backgroundColor: AppColors.background,
       );
     }

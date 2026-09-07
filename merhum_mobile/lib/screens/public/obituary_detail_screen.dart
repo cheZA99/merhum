@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/obituary_provider.dart';
 import '../../utils/constants.dart';
+import '../../utils/media_url.dart';
 import '../../utils/validators.dart';
 import '../../utils/date_formatter.dart';
 import '../../widgets/loading_widget.dart';
@@ -250,10 +251,11 @@ class _ObituaryDetailScreenState extends State<ObituaryDetailScreen> {
   }
 
   Widget _buildPhoto(String? url, double radius) {
-    if (url != null && url.isNotEmpty) {
+    final resolved = mediaUrl(url);
+    if (resolved != null) {
       return CircleAvatar(
         radius: radius,
-        backgroundImage: CachedNetworkImageProvider(url),
+        backgroundImage: CachedNetworkImageProvider(resolved),
         backgroundColor: Colors.white24,
       );
     }
