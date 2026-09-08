@@ -48,6 +48,10 @@ public class ReferenceDataService : IReferenceDataService
     {
         var country = await _db.Countries.FindAsync(id);
         if (country == null) return false;
+
+        if (await _db.Cities.AnyAsync(c => c.CountryId == id))
+            throw new InvalidOperationException("Država ima evidentirane gradove i ne može se obrisati.");
+
         _db.Countries.Remove(country);
         await _db.SaveChangesAsync();
         return true;
@@ -97,6 +101,15 @@ public class ReferenceDataService : IReferenceDataService
     {
         var city = await _db.Cities.FindAsync(id);
         if (city == null) return false;
+
+        var inUse = await _db.Deceased.AnyAsync(d => d.CityId == id)
+            || await _db.Mosques.AnyAsync(m => m.CityId == id)
+            || await _db.Cemeteries.AnyAsync(c => c.CityId == id)
+            || await _db.FuneralHomes.AnyAsync(f => f.CityId == id)
+            || await _db.Users.AnyAsync(u => u.CityId == id);
+        if (inUse)
+            throw new InvalidOperationException("Grad se koristi u drugim evidencijama i ne može se obrisati.");
+
         _db.Cities.Remove(city);
         await _db.SaveChangesAsync();
         return true;
@@ -139,6 +152,13 @@ public class ReferenceDataService : IReferenceDataService
     {
         var st = await _db.ServiceTypes.FindAsync(id);
         if (st == null) return false;
+
+        if (await _db.ServiceOfferings.AnyAsync(o => o.ServiceTypeId == id))
+            throw new InvalidOperationException("Vrsta usluge se koristi u ponudama i ne može se obrisati.");
+
+        if (await _db.ServiceOrders.AnyAsync(o => o.ServiceTypeId == id))
+            throw new InvalidOperationException("Vrsta usluge se koristi u narudžbama i ne može se obrisati.");
+
         _db.ServiceTypes.Remove(st);
         await _db.SaveChangesAsync();
         return true;
@@ -242,6 +262,10 @@ public class ReferenceDataService : IReferenceDataService
     {
         var section = await _db.CemeterySections.FindAsync(id);
         if (section == null) return false;
+
+        if (await _db.GraveSites.AnyAsync(g => g.SectionId == id))
+            throw new InvalidOperationException("Sektor ima evidentirana mezarska mjesta i ne može se obrisati.");
+
         _db.CemeterySections.Remove(section);
         await _db.SaveChangesAsync();
         return true;

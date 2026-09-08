@@ -380,7 +380,7 @@ class _DeceasedScreenState extends State<DeceasedScreen> {
         title: const Text('Obriši zapis'),
         content: Text(
           'Da li ste sigurni da želite obrisati zapis za ${deceased.fullName}?\n'
-          'Svi povezani podaci uključujući smrtovnicu i termine će biti obrisani.',
+          'Smrtovnica, saučešća, historija statusa, termini i narudžbe će biti obrisani.',
         ),
         actions: [
           TextButton(

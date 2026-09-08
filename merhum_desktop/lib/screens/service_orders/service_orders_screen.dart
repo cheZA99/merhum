@@ -205,7 +205,7 @@ class _ServiceOrdersScreenState extends State<ServiceOrdersScreen> {
         if (p.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (p.errorMessage != null) {
+        if (p.errorMessage != null && p.orders.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

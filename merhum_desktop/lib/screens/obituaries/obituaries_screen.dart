@@ -182,7 +182,7 @@ class _ObituariesScreenState extends State<ObituariesScreen> {
     return Consumer<ObituaryProvider>(
       builder: (context, p, _) {
         if (p.isLoading) return const Center(child: CircularProgressIndicator());
-        if (p.errorMessage != null) {
+        if (p.errorMessage != null && p.obituaries.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -441,14 +441,17 @@ class _ObituariesScreenState extends State<ObituariesScreen> {
       title: 'Brisanje smrtovnice',
       content: 'Jeste li sigurni da želite obrisati smrtovnicu za ${o.deceasedFullName}?',
       onConfirm: () async {
-        final ok = await context.read<ObituaryProvider>().delete(o.id);
-        if (ok && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Smrtovnica obrisana.'),
-                backgroundColor: AppColors.success),
-          );
-        }
+        final provider = context.read<ObituaryProvider>();
+        final ok = await provider.delete(o.id);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ok
+                ? 'Smrtovnica obrisana.'
+                : (provider.errorMessage ?? 'Greška pri brisanju smrtovnice.')),
+            backgroundColor: ok ? AppColors.success : AppColors.error,
+          ),
+        );
       },
     );
   }

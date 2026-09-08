@@ -83,6 +83,13 @@ public class MosqueService : IMosqueService
     {
         var mosque = await _db.Mosques.FindAsync(id);
         if (mosque == null) return false;
+
+        if (await _db.Imams.AnyAsync(i => i.MosqueId == id))
+            throw new InvalidOperationException("Mesdžid ima evidentirane imame, prvo ih premjestite ili obrišite.");
+
+        if (await _db.Appointments.AnyAsync(a => a.MosqueId == id))
+            throw new InvalidOperationException("Mesdžid je vezan za termine, umjesto brisanja ga deaktivirajte.");
+
         _db.Mosques.Remove(mosque);
         await _db.SaveChangesAsync();
         return true;

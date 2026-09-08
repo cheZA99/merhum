@@ -77,6 +77,13 @@ public class FuneralHomeService : IFuneralHomeService
     {
         var home = await _db.FuneralHomes.FindAsync(id);
         if (home == null) return false;
+
+        if (await _db.ServiceOrders.AnyAsync(o => o.FuneralHomeId == id))
+            throw new InvalidOperationException("Preduzeće ima narudžbe usluga, umjesto brisanja ga deaktivirajte.");
+
+        if (await _db.ServiceOfferings.AnyAsync(o => o.FuneralHomeId == id))
+            throw new InvalidOperationException("Preduzeće ima ponude usluga, prvo ih obrišite.");
+
         _db.FuneralHomes.Remove(home);
         await _db.SaveChangesAsync();
         return true;

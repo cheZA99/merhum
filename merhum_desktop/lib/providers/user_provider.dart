@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
 import '../services/user_service.dart';
@@ -49,8 +50,10 @@ class UserProvider extends ChangeNotifier {
       );
       _users = items;
       _totalCount = total;
-    } catch (e) {
-      _errorMessage = e.toString();
+    } on DioException catch (e) {
+      _errorMessage = _parseError(e);
+    } catch (_) {
+      _errorMessage = 'Neočekivana greška.';
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -69,8 +72,12 @@ class UserProvider extends ChangeNotifier {
       await _service.create(data);
       await loadAll();
       return true;
-    } catch (e) {
-      _errorMessage = e.toString();
+    } on DioException catch (e) {
+      _errorMessage = _parseError(e);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _errorMessage = 'Neočekivana greška.';
       notifyListeners();
       return false;
     }
@@ -81,8 +88,12 @@ class UserProvider extends ChangeNotifier {
       await _service.update(id, data);
       await loadAll();
       return true;
-    } catch (e) {
-      _errorMessage = e.toString();
+    } on DioException catch (e) {
+      _errorMessage = _parseError(e);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _errorMessage = 'Neočekivana greška.';
       notifyListeners();
       return false;
     }
@@ -93,8 +104,12 @@ class UserProvider extends ChangeNotifier {
       await _service.toggleLock(id);
       await loadAll();
       return true;
-    } catch (e) {
-      _errorMessage = e.toString();
+    } on DioException catch (e) {
+      _errorMessage = _parseError(e);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _errorMessage = 'Neočekivana greška.';
       notifyListeners();
       return false;
     }
@@ -105,8 +120,12 @@ class UserProvider extends ChangeNotifier {
       await _service.changeRole(id, role);
       await loadAll();
       return true;
-    } catch (e) {
-      _errorMessage = e.toString();
+    } on DioException catch (e) {
+      _errorMessage = _parseError(e);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _errorMessage = 'Neočekivana greška.';
       notifyListeners();
       return false;
     }
@@ -116,8 +135,12 @@ class UserProvider extends ChangeNotifier {
     try {
       await _service.resetPassword(id);
       return true;
-    } catch (e) {
-      _errorMessage = e.toString();
+    } on DioException catch (e) {
+      _errorMessage = _parseError(e);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _errorMessage = 'Neočekivana greška.';
       notifyListeners();
       return false;
     }
@@ -143,5 +166,27 @@ class UserProvider extends ChangeNotifier {
       _currentPage--;
       loadAll();
     }
+  }
+
+  String _parseError(DioException e) {
+    final data = e.response?.data;
+    if (data is Map) {
+      return data['message'] as String? ??
+          data['title'] as String? ??
+          'Greška servera.';
+    }
+    if (e.type == DioExceptionType.connectionError) {
+      return 'Nema konekcije sa serverom.';
+    }
+    if (e.response?.statusCode == 401) {
+      return 'Sesija je istekla. Prijavite se ponovo.';
+    }
+    if (e.response?.statusCode == 403) {
+      return 'Nemate ovlaštenja za ovu akciju.';
+    }
+    if (e.response?.statusCode == 404) {
+      return 'Zapis nije pronađen.';
+    }
+    return 'Neočekivana greška (${e.response?.statusCode}).';
   }
 }

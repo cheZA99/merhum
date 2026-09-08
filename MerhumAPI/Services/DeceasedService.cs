@@ -218,9 +218,35 @@ public class DeceasedService : IDeceasedService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        var deceased = await _db.Deceased.FindAsync(id);
+        var deceased = await _db.Deceased
+            .Include(d => d.StatusHistories)
+            .Include(d => d.Obituary)
+            .FirstOrDefaultAsync(d => d.Id == id);
         if (deceased == null) return false;
 
+        var hasSettledPayment = await _db.Payments.AnyAsync(p =>
+            p.ServiceOrder.DeceasedId == id
+            && (p.Status == PaymentStatus.Completed || p.Status == PaymentStatus.Refunded));
+        if (hasSettledPayment)
+            throw new InvalidOperationException("Preminuli ima plaćene usluge i zapis se ne može obrisati.");
+
+        var graveSite = await _db.GraveSites.FirstOrDefaultAsync(g => g.DeceasedId == id);
+        if (graveSite != null)
+        {
+            graveSite.DeceasedId = null;
+            graveSite.Status = GraveSiteStatus.Available;
+        }
+
+        if (deceased.Obituary != null)
+        {
+            var condolences = await _db.Condolences
+                .Where(c => c.ObituaryId == deceased.Obituary.Id)
+                .ToListAsync();
+            _db.Condolences.RemoveRange(condolences);
+            _db.Obituaries.Remove(deceased.Obituary);
+        }
+
+        _db.StatusHistories.RemoveRange(deceased.StatusHistories);
         _db.Deceased.Remove(deceased);
         await _db.SaveChangesAsync();
         return true;

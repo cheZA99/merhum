@@ -1,4 +1,5 @@
 using MerhumAPI.Common;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Text.Json;
 
@@ -38,6 +39,7 @@ public class GlobalExceptionMiddleware
             UnauthorizedAccessException => (HttpStatusCode.Forbidden, ex.Message),
             ArgumentException => (HttpStatusCode.BadRequest, ex.Message),
             InvalidOperationException => (HttpStatusCode.BadRequest, ex.Message),
+            DbUpdateException => (HttpStatusCode.Conflict, "Zapis je povezan s drugim podacima i ne može se obrisati."),
             _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred.")
         };
 

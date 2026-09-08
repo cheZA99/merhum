@@ -184,7 +184,7 @@ class _UsersScreenState extends State<UsersScreen> {
     return Consumer<UserProvider>(
       builder: (context, p, _) {
         if (p.isLoading) return const Center(child: CircularProgressIndicator());
-        if (p.errorMessage != null) {
+        if (p.errorMessage != null && p.users.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

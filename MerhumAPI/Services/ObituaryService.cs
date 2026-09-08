@@ -140,6 +140,10 @@ public class ObituaryService : IObituaryService
     {
         var obituary = await _db.Obituaries.FindAsync(id);
         if (obituary == null) return false;
+
+        var condolences = await _db.Condolences.Where(c => c.ObituaryId == id).ToListAsync();
+        _db.Condolences.RemoveRange(condolences);
+
         _db.Obituaries.Remove(obituary);
         await _db.SaveChangesAsync();
         return true;

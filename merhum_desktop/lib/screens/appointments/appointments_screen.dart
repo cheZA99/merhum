@@ -206,7 +206,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
         if (p.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (p.errorMessage != null) {
+        if (p.errorMessage != null && p.appointments.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -326,11 +326,11 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                 tooltip: 'Uredi',
                 onPressed: () => _openForm(appointment: a),
               ),
-              if (isAdmin)
+              if (isAdmin && a.status == 'Scheduled')
                 IconButton(
-                  icon: const Icon(Icons.delete, size: 18, color: AppColors.error),
-                  tooltip: 'Obriši',
-                  onPressed: () => _confirmDelete(a),
+                  icon: const Icon(Icons.event_busy, size: 18, color: AppColors.error),
+                  tooltip: 'Otkaži termin',
+                  onPressed: () => _confirmCancel(a),
                 ),
             ],
           ),
@@ -419,19 +419,24 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     );
   }
 
-  void _confirmDelete(AppointmentModel a) {
+  void _confirmCancel(AppointmentModel a) {
     final date = DateFormat(_dateFormat).format(a.funeralDateTime.toLocal());
     ConfirmationDialog.show(
       context,
       title: 'Otkazivanje termina',
       content: 'Jeste li sigurni da želite otkazati termin za ${a.deceasedFullName} zakazan za $date?',
       onConfirm: () async {
-        final ok = await context.read<AppointmentProvider>().delete(a.id);
-        if (ok && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Termin obrisan.'), backgroundColor: AppColors.success),
-          );
-        }
+        final provider = context.read<AppointmentProvider>();
+        final ok = await provider.delete(a.id);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ok
+                ? 'Termin otkazan.'
+                : (provider.errorMessage ?? 'Greška pri otkazivanju termina.')),
+            backgroundColor: ok ? AppColors.success : AppColors.error,
+          ),
+        );
       },
     );
   }

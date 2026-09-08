@@ -365,7 +365,7 @@ class _CemeteriesScreenState extends State<CemeteriesScreen> {
         title: const Text('Potvrdi brisanje'),
         content: Text(
           'Da li ste sigurni da želite obrisati groblje "${g.name}"?\n\n'
-          'Sva mezarska mjesta u ovom groblju će takođe biti obrisana.',
+          'Groblje se može obrisati samo dok nema mezarskih mjesta ni termina.',
         ),
         actions: [
           TextButton(

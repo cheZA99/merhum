@@ -132,6 +132,16 @@ public class CemeteryService : ICemeteryService
     {
         var cemetery = await _db.Cemeteries.FindAsync(id);
         if (cemetery == null) return false;
+
+        if (await _db.GraveSites.AnyAsync(g => g.CemeteryId == id))
+            throw new InvalidOperationException("Groblje ima evidentirana mezarska mjesta, umjesto brisanja ga deaktivirajte.");
+
+        if (await _db.Appointments.AnyAsync(a => a.CemeteryId == id))
+            throw new InvalidOperationException("Groblje je vezano za termine, umjesto brisanja ga deaktivirajte.");
+
+        var sections = await _db.CemeterySections.Where(s => s.CemeteryId == id).ToListAsync();
+        _db.CemeterySections.RemoveRange(sections);
+
         _db.Cemeteries.Remove(cemetery);
         await _db.SaveChangesAsync();
         return true;

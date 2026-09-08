@@ -119,7 +119,7 @@ class _MosquesScreenState extends State<MosquesScreen> {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (provider.errorMessage != null) {
+        if (provider.errorMessage != null && provider.mosques.isEmpty) {
           return Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,

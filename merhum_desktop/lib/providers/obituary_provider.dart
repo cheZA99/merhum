@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../models/obituary_model.dart';
 import '../services/obituary_service.dart';
@@ -64,8 +65,10 @@ class ObituaryProvider extends ChangeNotifier {
       );
       _obituaries = items;
       _totalCount = total;
-    } catch (e) {
-      _errorMessage = e.toString();
+    } on DioException catch (e) {
+      _errorMessage = _parseError(e);
+    } catch (_) {
+      _errorMessage = 'Neočekivana greška.';
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -78,8 +81,10 @@ class ObituaryProvider extends ChangeNotifier {
     notifyListeners();
     try {
       _selected = await _service.getById(id);
-    } catch (e) {
-      _errorMessage = e.toString();
+    } on DioException catch (e) {
+      _errorMessage = _parseError(e);
+    } catch (_) {
+      _errorMessage = 'Neočekivana greška.';
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -98,8 +103,12 @@ class ObituaryProvider extends ChangeNotifier {
       await _service.create(deceasedId, isPublic);
       await loadAll();
       return true;
-    } catch (e) {
-      _errorMessage = e.toString();
+    } on DioException catch (e) {
+      _errorMessage = _parseError(e);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _errorMessage = 'Neočekivana greška.';
       notifyListeners();
       return false;
     }
@@ -111,8 +120,12 @@ class ObituaryProvider extends ChangeNotifier {
       await loadAll();
       if (_selected?.id == id) await loadById(id);
       return true;
-    } catch (e) {
-      _errorMessage = e.toString();
+    } on DioException catch (e) {
+      _errorMessage = _parseError(e);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _errorMessage = 'Neočekivana greška.';
       notifyListeners();
       return false;
     }
@@ -123,8 +136,12 @@ class ObituaryProvider extends ChangeNotifier {
       await _service.delete(id);
       await loadAll();
       return true;
-    } catch (e) {
-      _errorMessage = e.toString();
+    } on DioException catch (e) {
+      _errorMessage = _parseError(e);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _errorMessage = 'Neočekivana greška.';
       notifyListeners();
       return false;
     }
@@ -135,8 +152,12 @@ class ObituaryProvider extends ChangeNotifier {
       await _service.approveCondolence(condolenceId);
       if (_selected != null) await loadById(_selected!.id);
       return true;
-    } catch (e) {
-      _errorMessage = e.toString();
+    } on DioException catch (e) {
+      _errorMessage = _parseError(e);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _errorMessage = 'Neočekivana greška.';
       notifyListeners();
       return false;
     }
@@ -147,8 +168,12 @@ class ObituaryProvider extends ChangeNotifier {
       await _service.deleteCondolence(condolenceId);
       if (_selected != null) await loadById(_selected!.id);
       return true;
-    } catch (e) {
-      _errorMessage = e.toString();
+    } on DioException catch (e) {
+      _errorMessage = _parseError(e);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _errorMessage = 'Neočekivana greška.';
       notifyListeners();
       return false;
     }
@@ -174,5 +199,27 @@ class ObituaryProvider extends ChangeNotifier {
       _currentPage--;
       loadAll();
     }
+  }
+
+  String _parseError(DioException e) {
+    final data = e.response?.data;
+    if (data is Map) {
+      return data['message'] as String? ??
+          data['title'] as String? ??
+          'Greška servera.';
+    }
+    if (e.type == DioExceptionType.connectionError) {
+      return 'Nema konekcije sa serverom.';
+    }
+    if (e.response?.statusCode == 401) {
+      return 'Sesija je istekla. Prijavite se ponovo.';
+    }
+    if (e.response?.statusCode == 403) {
+      return 'Nemate ovlaštenja za ovu akciju.';
+    }
+    if (e.response?.statusCode == 404) {
+      return 'Zapis nije pronađen.';
+    }
+    return 'Neočekivana greška (${e.response?.statusCode}).';
   }
 }
