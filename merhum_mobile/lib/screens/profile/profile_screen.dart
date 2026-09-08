@@ -22,7 +22,7 @@ class ProfileScreen extends StatelessWidget {
         return 'Porodica';
       case 'Imam':
         return 'Imam';
-      case 'PogrebnoPreduzeće':
+      case 'PogrebnoPreduzece':
         return 'Pogrebno preduzeće';
       default:
         return role;

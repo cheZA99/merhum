@@ -7,7 +7,7 @@ public static class Roles
     public const string Porodica = "Porodica";
     public const string JavniKorisnik = "JavniKorisnik";
     public const string Imam = "Imam";
-    public const string PogrebnoPreduzece = "PogrebnoPreduzeće";
+    public const string PogrebnoPreduzece = "PogrebnoPreduzece";
 
     public static readonly string[] All =
     {

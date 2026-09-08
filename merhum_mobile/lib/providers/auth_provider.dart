@@ -25,7 +25,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isPorodica => _role == 'Porodica';
   bool get isImam => _role == 'Imam';
-  bool get isFuneralHome => _role == 'PogrebnoPreduzeće';
+  bool get isFuneralHome => _role == 'PogrebnoPreduzece';
   bool get sessionExpired => _sessionExpired;
 
   Future<void> checkAuthStatus() async {

@@ -247,7 +247,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
         DropdownMenuItem(value: 'Porodica', child: Text('Porodica')),
         DropdownMenuItem(value: 'JavniKorisnik', child: Text('Javni korisnik')),
         DropdownMenuItem(value: 'Imam', child: Text('Imam')),
-        DropdownMenuItem(value: 'PogrebnoPreduzeće', child: Text('Pogrebno preduzeće')),
+        DropdownMenuItem(value: 'PogrebnoPreduzece', child: Text('Pogrebno preduzeće')),
       ],
       onChanged: isSelf ? null : (v) => setState(() => _selectedRole = v ?? _selectedRole),
     );

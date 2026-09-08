@@ -17,7 +17,7 @@ public class ServiceOrderController : ControllerBase
     public ServiceOrderController(IServiceOrderService serviceOrderService) => _serviceOrderService = serviceOrderService;
 
     [HttpGet]
-    [Authorize(Roles = "Porodica,JavniKorisnik,PogrebnoPreduzeće,Administrator")]
+    [Authorize(Roles = "Porodica,JavniKorisnik,PogrebnoPreduzece,Administrator")]
     public async Task<ActionResult<PagedResponse<ServiceOrderResponse>>> GetAll(
         [FromQuery] int? deceasedId,
         [FromQuery] ServiceOrderStatus? status,

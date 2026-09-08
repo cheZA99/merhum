@@ -74,7 +74,7 @@ builder.Services.AddAuthorization(options =>
 	options.AddPolicy("DesktopAccess", policy => policy.RequireRole("Administrator"));
 	options.AddPolicy("MobileAccess", policy => policy.RequireRole("Porodica", "JavniKorisnik", "Administrator"));
 	options.AddPolicy("ImamAccess", policy => policy.RequireRole("Imam", "Administrator"));
-	options.AddPolicy("PogrebnoAccess", policy => policy.RequireRole("PogrebnoPreduzeće", "Administrator"));
+	options.AddPolicy("PogrebnoAccess", policy => policy.RequireRole("PogrebnoPreduzece", "Administrator"));
 });
 
 builder.Services.AddMassTransit(x =>

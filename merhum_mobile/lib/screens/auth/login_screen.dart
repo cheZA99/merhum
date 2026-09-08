@@ -44,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
         case 'Imam':
           target = const ImamAppointmentsScreen();
           break;
-        case 'PogrebnoPreduzeće':
+        case 'PogrebnoPreduzece':
           target = const FuneralHomeOrdersScreen();
           break;
         default:

@@ -193,7 +193,7 @@ public static class SeedData
 			(Username: "mobile", FirstName: "Porodica", LastName: "Korisnik", Email: "mobile@merhum.ba", Password: "test", Role: "Porodica"),
 			(Username: "korisnik", FirstName: "Javni", LastName: "Korisnik", Email: "korisnik@merhum.ba", Password: "test", Role: "JavniKorisnik"),
 			(Username: "imam", FirstName: "Imam", LastName: "Korisnik", Email: "imam@merhum.ba", Password: "test", Role: "Imam"),
-			(Username: "pogrebnopreduzece", FirstName: "Pogrebno", LastName: "Preduzece", Email: "pogrebno@merhum.ba", Password: "test", Role: "PogrebnoPreduzeće")
+			(Username: "pogrebnopreduzece", FirstName: "Pogrebno", LastName: "Preduzece", Email: "pogrebno@merhum.ba", Password: "test", Role: "PogrebnoPreduzece")
 		};
 
 		var createdUsers = new Dictionary<string, ApplicationUser>();

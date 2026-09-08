@@ -110,7 +110,7 @@ public class AuthController : ControllerBase
         if (emailExisting != null)
             return Conflict(ApiResponse<object>.Fail("Email adresa je zauzeta."));
 
-        var validRoles = new[] { "Administrator", "Porodica", "JavniKorisnik", "Imam", "PogrebnoPreduzeće" };
+        var validRoles = new[] { "Administrator", "Porodica", "JavniKorisnik", "Imam", "PogrebnoPreduzece" };
         if (!validRoles.Contains(request.Role))
             return BadRequest(ApiResponse<object>.Fail("Neispravna uloga."));
 

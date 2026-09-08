@@ -127,7 +127,7 @@ class _UsersScreenState extends State<UsersScreen> {
               DropdownMenuItem(value: 'Porodica', child: Text('Porodica')),
               DropdownMenuItem(value: 'JavniKorisnik', child: Text('Javni korisnik')),
               DropdownMenuItem(value: 'Imam', child: Text('Imam')),
-              DropdownMenuItem(value: 'PogrebnoPreduzeće', child: Text('Pogrebno preduzeće')),
+              DropdownMenuItem(value: 'PogrebnoPreduzece', child: Text('Pogrebno preduzeće')),
             ],
             onChanged: (v) {
               setState(() => _filterRole = v);
@@ -362,7 +362,7 @@ class _UsersScreenState extends State<UsersScreen> {
         color = Colors.orange.shade700;
         label = 'Imam';
         break;
-      case 'PogrebnoPreduzeće':
+      case 'PogrebnoPreduzece':
         color = Colors.purple.shade700;
         label = 'Pogrebno preduzeće';
         break;
