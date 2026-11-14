@@ -1,10 +1,14 @@
 version: 2
 
+# One grouped PR per ecosystem per month, so CI runs a handful of times instead of once per package.
+# Major versions are not offered: they usually need code changes (or a newer .NET/Dart SDK) and are
+# upgraded by hand when needed. Packages that release together, like MailKit and MimeKit, land in one PR.
+
 updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     groups:
       actions:
         patterns: ["*"]
@@ -12,43 +16,33 @@ updates:
   - package-ecosystem: nuget
     directory: /
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 5
+      interval: monthly
     ignore:
-      - dependency-name: "Microsoft.*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "System.*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "MassTransit*"
+      - dependency-name: "*"
         update-types: ["version-update:semver-major"]
     groups:
-      microsoft:
-        patterns: ["Microsoft.*", "System.*"]
-        update-types: [minor, patch]
-      testing:
-        patterns: ["xunit*", "coverlet*", "Testcontainers*", "Microsoft.NET.Test.Sdk"]
-      other:
+      nuget:
         patterns: ["*"]
-        update-types: [minor, patch]
 
   - package-ecosystem: pub
     directories:
       - /merhum_mobile
       - /merhum_desktop
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 5
+      interval: monthly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       pub:
         patterns: ["*"]
-        update-types: [minor, patch]
 
   - package-ecosystem: docker
     directories:
       - /MerhumAPI
       - /MerhumWorker
     schedule:
-      interval: weekly
+      interval: monthly
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
