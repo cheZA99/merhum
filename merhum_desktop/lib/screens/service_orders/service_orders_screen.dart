@@ -442,7 +442,7 @@ class _ServiceOrdersScreenState extends State<ServiceOrdersScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Povrat sredstava'),
         content: Text(
-            'Izvršiti povrat za nalog "${o.serviceTypeName ?? ''}" u iznosu od ${o.price.toStringAsFixed(2)} KM?'),
+            'Izvršiti povrat za nalog "${o.serviceTypeName}" u iznosu od ${o.price.toStringAsFixed(2)} KM?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Odustani')),
           FilledButton(
