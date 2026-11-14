@@ -1,0 +1,57 @@
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "Microsoft.*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "System.*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "MassTransit*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      microsoft:
+        patterns: ["Microsoft.*", "System.*"]
+        update-types: [minor, patch]
+      testing:
+        patterns: ["xunit*", "coverlet*", "Testcontainers*", "Microsoft.NET.Test.Sdk"]
+      other:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: pub
+    directories:
+      - /merhum_mobile
+      - /merhum_desktop
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      pub:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directories:
+      - /MerhumAPI
+      - /MerhumWorker
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      dotnet-images:
+        patterns: ["*"]

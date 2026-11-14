@@ -1,0 +1,57 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: GitHub Environment to deploy to
+        required: true
+        type: string
+      image:
+        description: Full image reference to deploy
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ steps.deploy.outputs.webapp-url }}
+    concurrency:
+      group: deploy-${{ inputs.environment }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: migrations
+          path: migrations
+
+      - name: Apply database migrations
+        env:
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION }}
+          JWT__Key: design-time-placeholder-key-not-a-secret
+        run: |
+          chmod +x migrations/efbundle
+          ./migrations/efbundle --connection "$DB_CONNECTION"
+
+      - name: Deploy to App Service
+        id: deploy
+        uses: azure/webapps-deploy@02a81bead70021f5284939794bcec79c271ab383 # v3.0.8
+        with:
+          app-name: ${{ vars.AZURE_APP_NAME }}
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
+          images: ${{ inputs.image }}
+
+      - name: Smoke test
+        env:
+          APP_URL: ${{ steps.deploy.outputs.webapp-url }}
+        run: |
+          curl --fail --silent --show-error \
+            --retry 12 --retry-delay 10 --retry-all-errors --max-time 15 \
+            "${APP_URL%/}/health"

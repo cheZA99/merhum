@@ -11,6 +11,10 @@ Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-co
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MerhumContracts", "MerhumContracts\MerhumContracts.csproj", "{59E55915-19D9-4487-A6C0-4B37815F6EFF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{5A2342A1-7340-4678-A7E4-D136D170F9A5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Merhum.Tests", "tests\Merhum.Tests\Merhum.Tests.csproj", "{4B50C32E-DDA3-4060-9DCC-6E4F4C40812C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -65,8 +69,23 @@ Global
 		{59E55915-19D9-4487-A6C0-4B37815F6EFF}.Release|x64.Build.0 = Release|Any CPU
 		{59E55915-19D9-4487-A6C0-4B37815F6EFF}.Release|x86.ActiveCfg = Release|Any CPU
 		{59E55915-19D9-4487-A6C0-4B37815F6EFF}.Release|x86.Build.0 = Release|Any CPU
+		{4B50C32E-DDA3-4060-9DCC-6E4F4C40812C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B50C32E-DDA3-4060-9DCC-6E4F4C40812C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B50C32E-DDA3-4060-9DCC-6E4F4C40812C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4B50C32E-DDA3-4060-9DCC-6E4F4C40812C}.Debug|x64.Build.0 = Debug|Any CPU
+		{4B50C32E-DDA3-4060-9DCC-6E4F4C40812C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4B50C32E-DDA3-4060-9DCC-6E4F4C40812C}.Debug|x86.Build.0 = Debug|Any CPU
+		{4B50C32E-DDA3-4060-9DCC-6E4F4C40812C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B50C32E-DDA3-4060-9DCC-6E4F4C40812C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B50C32E-DDA3-4060-9DCC-6E4F4C40812C}.Release|x64.ActiveCfg = Release|Any CPU
+		{4B50C32E-DDA3-4060-9DCC-6E4F4C40812C}.Release|x64.Build.0 = Release|Any CPU
+		{4B50C32E-DDA3-4060-9DCC-6E4F4C40812C}.Release|x86.ActiveCfg = Release|Any CPU
+		{4B50C32E-DDA3-4060-9DCC-6E4F4C40812C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4B50C32E-DDA3-4060-9DCC-6E4F4C40812C} = {5A2342A1-7340-4678-A7E4-D136D170F9A5}
 	EndGlobalSection
 EndGlobal

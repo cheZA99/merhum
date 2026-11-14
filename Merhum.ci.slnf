@@ -1,0 +1,11 @@
+{
+  "solution": {
+    "path": "Merhum.sln",
+    "projects": [
+      "MerhumAPI\\MerhumAPI.csproj",
+      "MerhumContracts\\MerhumContracts.csproj",
+      "MerhumWorker\\MerhumWorker.csproj",
+      "tests\\Merhum.Tests\\Merhum.Tests.csproj"
+    ]
+  }
+}
