@@ -98,7 +98,6 @@ class ReportPdfGenerator {
   static pw.Widget _table({
     required List<String> headers,
     required List<List<String>> rows,
-    List<String>? totalsRow,
     List<double>? columnWidths,
   }) {
     final colCount = headers.length;

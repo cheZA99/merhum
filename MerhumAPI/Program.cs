@@ -180,6 +180,8 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddDirectoryBrowser();
 
+builder.Services.AddHealthChecks().AddDbContextCheck<ApplicationDbContext>("database");
+
 var app = builder.Build();
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
@@ -197,6 +199,7 @@ app.UseCors("FlutterPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 try
 {
@@ -209,3 +212,5 @@ catch (Exception ex)
 }
 
 app.Run();
+
+public partial class Program { }

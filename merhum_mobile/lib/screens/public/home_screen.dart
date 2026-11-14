@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/obituary_provider.dart';
 import '../../utils/constants.dart';
-import '../../widgets/obituary_card_widget.dart';
 import '../../widgets/funeral_card_widget.dart';
 import '../../widgets/bottom_nav_widget.dart';
 import '../auth/login_screen.dart';
