@@ -1,0 +1,14 @@
+[project]
+name = "merhum-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "cheZA99", email = "amerzelic08@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.165.0",
+    "httpx>=0.28.1",
+    "python-dotenv>=1.2.4",
+]
