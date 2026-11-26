@@ -16,11 +16,30 @@ SYSTEM_PROMPT = (
     "Odgovarajte kratko, na bosanskom jeziku (ijekavica: uvijek, mjesto, vrijeme), sa suosjećajnim tonom. "
     "Pišite samo običan tekst: bez emojija i bez markdowna (bez zvjezdica, naslova i listi). "
     "Za podatke o grobljima koristite alat search_cemeteries. "
+    "Za cijene, usluge i pogrebna preduzeća koristite alat list_service_prices; sve cijene su u KM. "
     "Odgovarajte isključivo na osnovu rezultata alata i nikada ne izmišljajte brojeve. "
-    "Ako alat ne vrati podatke, recite iskreno da ih nemate."
+    "Ako alat ne vrati podatke, recite iskreno da ih nemate. "
+    # The chat has no history, so a clarifying question could never be answered; cover both meanings instead.
+    "Ako pitanje korisnika može razumno značiti više stvari, nemojte postavljati pitanje za pojašnjenje, "
+    "nego u istom odgovoru kratko odgovorite za dva najvjerovatnija značenja "
+    "(na primjer, za \"najjeftinija usluga\" navedite najjeftiniju uslugu uopšte i najjeftiniji ukop). "
+    "Ako je značenje jasno, odgovorite direktno."
 )
 
 logger = logging.getLogger(__name__)
+
+
+def remove_markdown(text: str) -> str:
+    # The prompt forbids markdown but the model sometimes ignores it, and the apps show the reply as raw text.
+    text = text.replace("**", "").replace("__", "")
+
+    lines = []
+    for line in text.split("\n"):
+        stripped = line.lstrip()
+        if stripped.startswith("#"):
+            line = stripped.lstrip("#").lstrip()
+        lines.append(line)
+    return "\n".join(lines)
 
 
 async def answer(settings: Settings, authorization: str, user_message: str) -> str:
@@ -59,7 +78,7 @@ async def run_loop(settings: Settings, authorization: str, user_message: str) ->
             if not content:
                 raise AgentError("Groq returned an empty answer.")
             logger.info("Final answer after %d model call(s).", iteration)
-            return content
+            return remove_markdown(content)
 
         # Send back only the fields the API documents, not gpt-oss's extra "reasoning" text.
         messages.append(

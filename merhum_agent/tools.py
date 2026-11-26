@@ -5,7 +5,7 @@ import time
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from config import Settings
-from merhum_api import get_cemeteries
+from merhum_api import get_cemeteries, get_service_prices
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,25 @@ SEARCH_CEMETERIES_TOOL = {
     },
 }
 
-TOOLS = [SEARCH_CEMETERIES_TOOL]
+LIST_SERVICE_PRICES_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "list_service_prices",
+        "description": (
+            "Returns active funeral services offered by funeral homes in the Merhum system, "
+            "with funeralHomeName, serviceTypeName and price. All prices are in KM (convertible marks, BAM). "
+            "Use this tool whenever the user asks about prices, costs, services or funeral homes. "
+            "It takes no arguments and returns all funeral homes, so compare or filter the results yourself."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+}
+
+TOOLS = [SEARCH_CEMETERIES_TOOL, LIST_SERVICE_PRICES_TOOL]
 
 
 class SearchCemeteriesArguments(BaseModel):
@@ -71,11 +89,40 @@ async def run_search_cemeteries(settings: Settings, authorization: str, argument
     return json.dumps(cemeteries, ensure_ascii=False)
 
 
+class ListServicePricesArguments(BaseModel):
+    # No fields: the tool takes no arguments, so any argument the model sends is rejected.
+    model_config = ConfigDict(extra="forbid")
+
+
+def parse_service_prices_arguments(arguments_json: str) -> ListServicePricesArguments:
+    try:
+        return ListServicePricesArguments.model_validate_json(arguments_json)
+    except ValidationError as error:
+        raise AgentError(f"Invalid arguments for list_service_prices: {arguments_json}") from error
+
+
+async def run_list_service_prices(settings: Settings, authorization: str, arguments_json: str) -> str:
+    parse_service_prices_arguments(arguments_json)
+
+    started = time.perf_counter()
+    prices = await get_service_prices(settings, authorization)
+    elapsed_ms = (time.perf_counter() - started) * 1000
+
+    logger.info(
+        "Tool list_service_prices returned %d result(s) in %.0f ms",
+        len(prices),
+        elapsed_ms,
+    )
+    return json.dumps(prices, ensure_ascii=False)
+
+
 async def run_tool(settings: Settings, authorization: str, tool_call: dict) -> str:
     name = tool_call["function"]["name"]
     arguments_json = tool_call["function"]["arguments"]
 
     if name == "search_cemeteries":
         return await run_search_cemeteries(settings, authorization, arguments_json)
+    if name == "list_service_prices":
+        return await run_list_service_prices(settings, authorization, arguments_json)
 
     raise AgentError(f"Model asked for an unknown tool: {name}")
